@@ -50,7 +50,10 @@ Shoot_RNAse <- system.file("extdata", "Shoot_test_SE.bam", package = "ggRibo", m
 Root_Ribo <- system.file("extdata", "riboRoot.bed", package = "ggRibo", mustWork = TRUE) #Root Ribo-seq data
 Shoot_Ribo <- system.file("extdata", "riboShoot.bed", package = "ggRibo", mustWork = TRUE) #Shoot Ribo-seq data
 ```
-Note the riboseq files is a table with the following  organization:  
+**Note the riboseq files is a table with the following  organization:**
+(1) No column names  
+(2) Four columns for "counts", "chromosome number", "chromosome position", "strand" from left to right 
+*The riboseq file contain the number and distribution of the 1st position of the P-site of ribosome footprint. Alternatively, you could create files from other sequencing data with single-nucleotide resolution (SNR). SNR data include, but not limit to, PARE-seq, CAGE-seq, or TI-seq, which defines the 5' nucleotide of mRNA degredation intermediates, the 5' CAP positions or the transcription start sites, or transation initiation sites, respectively.*
 ```
 1   1  1000000      +
 3   1 10000007      +
@@ -59,6 +62,7 @@ Note the riboseq files is a table with the following  organization:
 1   1 10000018      +
 4   1 10000019      +
 ```
+
 **Setup variables for the ggRibo function:**  
 ```
 #Define sample names  
