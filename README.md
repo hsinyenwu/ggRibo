@@ -58,6 +58,8 @@ RNAseqData=c(Root_RNA,Shoot_RNA)
 #RNA-seq is paired-end or single-end?
 RNAseqBamPairorSingle=c("paired","paired")
 
+# Please do not change the names of the following variables "Samples", "RiboseqData", "RNAseqData", "RNAseqBamPairorSingle" or you have to change the input variable names for the ggRibo function.
+
 # check single-end data
 # RNAseqData=c(Root_RNAse,Shoot_RNAse)
 # RNAseqBamPairorSingle=c("single","single")
@@ -65,6 +67,8 @@ RNAseqBamPairorSingle=c("paired","paired")
 #Load example transcriptome annotation file
 gtf_import(annotation=agtf,format="gtf",dataSource="Araport",organism="Arabidopsis thaliana")
 ```
+**Please do not change the names of the following variables "Samples", "RiboseqData", "RNAseqData", "RNAseqBamPairorSingle" or you have to change the corresponding input parameters for the ggRibo function.**
+
 #### Plot different isoforms 
 ```
 ggRibo(gene_id="AT4G21910",tx_id="AT4G21910.1",
