@@ -154,8 +154,8 @@ ggRibo(
   Extend=50)
 ```
 ![image](https://github.com/user-attachments/assets/3b69990f-8e8e-4ef2-9324-689fde936fc4)
-
-Show DNA sequence and focus on the minimum uORF. 
+There is a strong peak in the 5'UTR suggesting the presence of a translated uORF.  
+Show DNA sequence and focus on the uORF.  
 **Need plot_range, show_seq = TRUE, FASTA**
 ```
 ggRibo(
