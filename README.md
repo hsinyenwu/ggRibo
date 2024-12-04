@@ -116,8 +116,12 @@ ggRibo(gene_id="AT3G02470",tx_id="AT3G02470.1",
 ![image](https://github.com/user-attachments/assets/7dba3356-8459-493e-afcb-6dfd5cc69c0a)
 
 #### Check sequences for the uORF
-Download (1) GTF (Araport11+CTRL_20181206.gtf) (2) FASTA (TAIR10_chr_all_2.fas) (3) RNA bam file (RNA_CTRL_merged.bam) (4) Ribo file (CTRL_expressed_P_sites_sort_count) from [here](https://data.mendeley.com/datasets/89j7snbm2r/2)
-Load data
+Download:  
+(1) GTF (Araport11+CTRL_20181206.gtf)  
+(2) FASTA (TAIR10_chr_all_2.fas)  
+(3) RNA bam file (RNA_CTRL_merged.bam)   
+(4) Ribo file (CTRL_expressed_P_sites_sort_count) from [here]  (https://data.mendeley.com/datasets/89j7snbm2r/2)  
+Load data and import gtfs:
 ```
 library(ggRibo)
 CTRL_RNA="~/Desktop/CTRL_v1/RNA_CTRL_merged.bam"
