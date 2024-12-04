@@ -97,7 +97,7 @@ gtf_import(annotation=agtf,format="gtf",dataSource="Araport",organism="Arabidops
 **Please do not change the names of the following variables "Samples", "RiboseqData", "RNAseqData", "RNAseqBamPairorSingle" or you have to change the corresponding input parameters for the ggRibo function.**
 
 #### Plot different isoforms 
-It is clear that the root an shoot in Arabidopsis express different transcripts. And the 4th isoforms is likely not translated.
+It is clear that the root an shoot in Arabidopsis express different transcripts. And the 4th isoforms is likely not transcribed and translated.
 ```
 ggRibo(gene_id="AT4G21910",tx_id="AT4G21910.1",
        Y_scale="each",Extend=c(400,50),
