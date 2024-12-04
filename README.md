@@ -40,6 +40,7 @@ install_github("hsinyenwu/ggRibo")
 #### Load RNA-seq, Ribo-seq and annotation files 
 ```
 #Path for example data from ggRibo package
+#You can create paths for your own data files
 agtf <- system.file("extdata", "TAIR10.29_part.gtf", package = "ggRibo", mustWork = TRUE) #Annotation
 ugtf <- system.file("extdata", "AT3G02468.gtf", package = "ggRibo", mustWork = TRUE) #uORF gtf
 Root_RNA <- system.file("extdata", "Root_test_PE.bam", package = "ggRibo", mustWork = TRUE) #Root RNA-seq data
@@ -48,7 +49,18 @@ Root_RNAse <- system.file("extdata", "Root_test_SE.bam", package = "ggRibo", mus
 Shoot_RNAse <- system.file("extdata", "Shoot_test_SE.bam", package = "ggRibo", mustWork = TRUE) #Shoot RNA-seq data
 Root_Ribo <- system.file("extdata", "riboRoot.bed", package = "ggRibo", mustWork = TRUE) #Root Ribo-seq data
 Shoot_Ribo <- system.file("extdata", "riboShoot.bed", package = "ggRibo", mustWork = TRUE) #Shoot Ribo-seq data
-
+```
+Note the riboseq files is a table with the following  organization:  
+```
+1   1  1000000      +
+3   1 10000007      +
+3   1 10000010      +
+3   1 10000016      +
+1   1 10000018      +
+4   1 10000019      +
+```
+**Setup variables for the ggRibo function:**  
+```
 #Define sample names  
 Samples=c("Root","Shoot")
 #Load Ribo-seq data
@@ -63,7 +75,9 @@ RNAseqBamPairorSingle=c("paired","paired")
 # check single-end data
 # RNAseqData=c(Root_RNAse,Shoot_RNAse)
 # RNAseqBamPairorSingle=c("single","single")
-
+```
+**Load transcriptome annotation:**  
+```
 #Load example transcriptome annotation file
 gtf_import(annotation=agtf,format="gtf",dataSource="Araport",organism="Arabidopsis thaliana")
 ```
