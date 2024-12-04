@@ -113,7 +113,27 @@ ggRibo(gene_id="AT3G02470",tx_id="AT3G02470.1",
 ![image](https://github.com/user-attachments/assets/7dba3356-8459-493e-afcb-6dfd5cc69c0a)
 
 #### Check sequences for the uORF
-Download GTF (Araport11+CTRL_20181206.gtf) and FASTA (TAIR10_chr_all_2.fas) from [here](https://data.mendeley.com/datasets/89j7snbm2r/2)
+Download (1) GTF (Araport11+CTRL_20181206.gtf) (2) FASTA (TAIR10_chr_all_2.fas) (3) RNA bam file (RNA_CTRL_merged.bam) (4) Ribo file (CTRL_expressed_P_sites_sort_count) from [here](https://data.mendeley.com/datasets/89j7snbm2r/2)
+
+```
+library(ggRibo)
+CTRL_RNA="~/Desktop/CTRL_v1/RNA_CTRL_merged.bam"
+CTRL_ribo="~/Desktop/CTRL_v1/CTRL_expressed_P_sites_sort_count"
+FA <- FaFile("~/Desktop/Leaky_scanning/TAIR10_chr_all_2.fas")
+Samples = c("Seedlings")
+RiboseqData = Ribo_data(c(CTRL_ribo),SampleNames=Samples)
+RNAseqData = CTRL_RNA
+RNAseqBamPairorSingle="paired"
+gtf_import(annotation="~/Desktop/CTRL_v1/Araport11+CTRL_20181206.gtf",format="gtf",dataSource="Araport",organism="Arabidopsis thaliana")
+
+#minimum uORF
+ggRibo(
+  gene_id = "AT3G62270",
+  tx_id = "AT3G62270.1",
+  NAME="BOR2",
+  Extend=50)
+```
+
 
 #### Key parameters for ggRibo
 (1) Extend (integer or a two integer vector): extend the plot range for both side of the plot. You can either use one number, which means same extension for both side, or use a vector with two values to extend left and right sides differently.  
