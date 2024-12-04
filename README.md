@@ -1,6 +1,9 @@
 ### Introduction
-Ribo-seq (ribosome profiling) is a powerful technique for studying mRNA translation by deep sequencing ribosome-protected footprints. A key feature of Ribo-seq data is three-nucleotide periodicity, which reflects the ribosome’s codon-by-codon progression during translation. Three-nucleotide periodicity facilitates the discovery of unannotated translation events and provides insights into translational regulation. Here we present ggRibo, an R package designed for visualizing three-nucleotide periodicity within a genomic context. ggRibo enables visual confirmation of translated and unannotated isoforms, as well as additional translation events, including upstream open reading frames (ORFs), downstream ORFs, stop codon readthrough, and correction of misannotated ORFs due to genome sequencing error. Additionally, ggRibo supports the visualization of other omics data with single-nucleotide resolution, such as degradome sequencing, transcription start site sequencing and translation initiation site sequencing. Comparing multiple types of data improves our understanding of co-translational events or features associate with translational regulation. By providing an intuitive and flexible platform, ggRibo advances the analysis of translation and related processes, offering a valuable resource for studies in gene expression and translational regulation.
+Ribo-seq (ribosome profiling) is a powerful technique for studying mRNA translation by deep sequencing ribosome-protected footprints. A key feature of Ribo-seq data is three-nucleotide periodicity, which reflects the ribosome’s codon-by-codon progression during translation. Three-nucleotide periodicity facilitates the discovery of unannotated translation events and provides insights into translational regulation. Here we present ggRibo, an R package designed for visualizing three-nucleotide periodicity within a genomic context. ggRibo enables visual confirmation of translated and unannotated isoforms, as well as additional translation events, including upstream open reading frames (ORFs), downstream ORFs, stop codon readthrough, and correction of misannotated ORFs due to genome sequencing error. Additionally, ggRibo enables the comparison of Ribo-seq data with other sequencing methods that provide single nucleotide resolution (SNR), such as Translation Initiation sequencing (TI-seq), degradome sequencing (PARE-seq, Parallel Analysis of RNA Ends and GMUCT, Genome-Wide Mapping of Uncapped Transcripts), and Cap Analysis of Gene Expression sequencing (CAGE-seq). In SNR data, only one nucleotide position within each sequencing read carries the entire biological meaning for that read. For example, the P-site nucleotide of TI-seq reads indicates translation initiation sites on mRNAs, the first nucleotide of degradome-seq reads marks the 5’ end of RNA degradation intermediates, and the first nucleotide of CAGE-seq reads denotes transcription start sites. By integrating these diverse datasets, ggRibo enables researchers to identify factors that influence translation or are associated with translational processes, thereby facilitating the generation of hypotheses about the mechanisms governing diverse steps of gene expression and mRNA translation.  
 
+#### Genomic-context Ribo-seq plot provides a bird’s-eye view of the translation for all isoforms
+It is nearly impossible to check which transcript(s) is translated with the single transcript style plot. 
+<img width="843" alt="image" src="https://github.com/user-attachments/assets/84000fe1-f9bf-44d4-b7e5-d4154cddaf2f">
 
 ### Install ggRibo and its required packages:
 (1) Install required packages.
@@ -42,6 +45,7 @@ install_github("hsinyenwu/ggRibo")
 ```
 ### Basic usage of ggRibo
 #### Load RNA-seq, Ribo-seq and annotation files 
+<img width="1233" alt="image" src="https://github.com/user-attachments/assets/7b265639-ea69-4b31-88f5-edc6e5092248">
 ```
 #Path for example data from ggRibo package
 #You can create paths for your own data files
@@ -53,7 +57,6 @@ Root_RNAse <- system.file("extdata", "Root_test_SE.bam", package = "ggRibo", mus
 Shoot_RNAse <- system.file("extdata", "Shoot_test_SE.bam", package = "ggRibo", mustWork = TRUE) #Shoot RNA-seq data
 Root_Ribo <- system.file("extdata", "riboRoot.bed", package = "ggRibo", mustWork = TRUE) #Root Ribo-seq data
 Shoot_Ribo <- system.file("extdata", "riboShoot.bed", package = "ggRibo", mustWork = TRUE) #Shoot Ribo-seq data
-
 ```
 **Note the riboseq files is a table with the following  organization:**  
 (1) No column names.  
