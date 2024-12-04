@@ -112,6 +112,9 @@ ggRibo(gene_id="AT3G02470",tx_id="AT3G02470.1",
 ```
 ![image](https://github.com/user-attachments/assets/7dba3356-8459-493e-afcb-6dfd5cc69c0a)
 
+#### Check sequences for the uORF
+Download GTF (Araport11+CTRL_20181206.gtf) and FASTA (TAIR10_chr_all_2.fas) from [here](https://data.mendeley.com/datasets/89j7snbm2r/2)
+
 #### Key parameters for ggRibo
 (1) Extend (integer or a two integer vector): extend the plot range for both side of the plot. You can either use one number, which means same extension for both side, or use a vector with two values to extend left and right sides differently.  
 (2) Y_scale (Boolean): the y-axis scale for each sample for the gene of interest. It could be "each", means each sample scale by itself to its max. The alternative is "all", means all samples are scaled together (same max Y-axis scale).  
