@@ -1,6 +1,5 @@
-Install ggRibo and its required packages:
-
-Install required packages.
+#### Install ggRibo and its required packages:
+(1) Install required packages.
 ```
 # Install BiocManager if not already installed
 if (!requireNamespace("BiocManager", quietly = TRUE)) {
@@ -31,37 +30,42 @@ cran_packages <- c(
 
 install.packages(setdiff(cran_packages, rownames(installed.packages())))
 ```
-Install RiboPlotR.
+(2) Install RiboPlotR.
 ```
 #Install RiboPlotR
 library(devtools)
 install_github("hsinyenwu/ggRibo")
 ```
-
+### Basic usage of ggRibo
+#### Load RNA-seq, Ribo-seq and annotation files 
 ```
-# Load example datasets
+#Path for example data from ggRibo package
 agtf <- system.file("extdata", "TAIR10.29_part.gtf", package = "ggRibo", mustWork = TRUE) #Annotation
-ugtf <- system.file("extdata", "AT3G02468.gtf", package = "ggRibo", mustWork = TRUE) #uORF annotation
-RRNA <- system.file("extdata", "Root_test_PE.bam", package = "ggRibo", mustWork = TRUE) #Root RNA-seq data
-SRNA <- system.file("extdata", "Shoot_test_PE.bam", package = "ggRibo", mustWork = TRUE) #Shoot RNA-seq data
-RRNAse <- system.file("extdata", "Root_test_SE.bam", package = "ggRibo", mustWork = TRUE) #Root RNA-seq data
-SRNAse <- system.file("extdata", "Shoot_test_SE.bam", package = "ggRibo", mustWork = TRUE) #Shoot RNA-seq data
-RRibo <- system.file("extdata", "riboRoot.bed", package = "ggRibo", mustWork = TRUE) #Root Ribo-seq data
-SRibo <- system.file("extdata", "riboShoot.bed", package = "ggRibo", mustWork = TRUE) #Shoot Ribo-seq data
+ugtf <- system.file("extdata", "AT3G02468.gtf", package = "ggRibo", mustWork = TRUE) #uORF gtf
+Root_RNA <- system.file("extdata", "Root_test_PE.bam", package = "ggRibo", mustWork = TRUE) #Root RNA-seq data
+Shoot_RNA <- system.file("extdata", "Shoot_test_PE.bam", package = "ggRibo", mustWork = TRUE) #Shoot RNA-seq data
+Root_RNAse <- system.file("extdata", "Root_test_SE.bam", package = "ggRibo", mustWork = TRUE) #Root RNA-seq data
+Shoot_RNAse <- system.file("extdata", "Shoot_test_SE.bam", package = "ggRibo", mustWork = TRUE) #Shoot RNA-seq data
+Root_Ribo <- system.file("extdata", "riboRoot.bed", package = "ggRibo", mustWork = TRUE) #Root Ribo-seq data
+Shoot_Ribo <- system.file("extdata", "riboShoot.bed", package = "ggRibo", mustWork = TRUE) #Shoot Ribo-seq data
 
-FA <- FaFile("~/Desktop/Leaky_scanning/TAIR10_chr_all_2.fas")
+#Define sample names  
 Samples=c("Root","Shoot")
-RiboseqData=Ribo_data(c(RRibo,SRibo),SampleNames=Samples)
-RNAseqData=c(RRNA,SRNA)
+#Load Ribo-seq data
+RiboseqData=Ribo_data(c(Root_Ribo,Shoot_Ribo),SampleNames=Samples)
+#Make list for paths of RNA-seq datasets 
+RNAseqData=c(Root_RNA,Shoot_RNA)
+#RNA-seq is paired-end or single-end?
 RNAseqBamPairorSingle=c("paired","paired")
 
 # check single-end data
-# RNAseqData=c(RRNAse,SRNAse)
+# RNAseqData=c(Root_RNAse,Shoot_RNAse)
 # RNAseqBamPairorSingle=c("single","single")
 
+#Load example transcriptome annotation file
 gtf_import(annotation=agtf,format="gtf",dataSource="Araport",organism="Arabidopsis thaliana")
-eORF_import(annotation=ugtf, format="gtf",dataSource="Araport",organism="Arabidopsis thaliana")
 ```
+#### Plot different isoforms 
 ```
 ggRibo(gene_id="AT4G21910",tx_id="AT4G21910.1",
        Y_scale="each",Extend=c(400,50),
@@ -73,11 +77,12 @@ ggRibo(gene_id="AT4G21910",tx_id="AT4G21910.2",
        Y_scale="each",Extend=c(400,50),
        NAME = "MATE efflux family protein")
 ```
-
 ![image](https://github.com/user-attachments/assets/c217a5ef-d2ff-4069-bdf7-a54c29ab7f22)
 
-
+#### Plot a uORF
 ```
+#Load CPuORF gtf
+eORF_import(annotation=ugtf, format="gtf",dataSource="Araport",organism="Arabidopsis thaliana")
 ggRibo(gene_id="AT3G02470",tx_id="AT3G02470.1",
        eORF.tx_id = "AT3G02468.1",
        Y_scale="each",Extend=50,
