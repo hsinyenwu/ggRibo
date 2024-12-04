@@ -105,6 +105,8 @@ ggRibo(gene_id="AT4G21910",tx_id="AT4G21910.2",
 #### Plot a uORF
 ```
 #Load CPuORF gtf
+# eORF means extra ORF. the eORF_import could be used to import gtf/gff3 for uORF, overlapping uORF, nested ORF, overlapping dORF and dORF.  
+
 eORF_import(annotation=ugtf, format="gtf",dataSource="Araport",organism="Arabidopsis thaliana")
 ggRibo(gene_id="AT3G02470",tx_id="AT3G02470.1",
        eORF.tx_id = "AT3G02468.1",
@@ -127,8 +129,6 @@ RNAseqData = CTRL_RNA
 RNAseqBamPairorSingle="paired"
 gtf_import(annotation="/path/to/Araport11+CTRL_20181206.gtf",format="gtf",dataSource="Araport",organism="Arabidopsis thaliana")
 eORF_import(annotation="/path/to/CiPS_TuORFs_Sep5d_2024.gff3", format="gff3",dataSource="Araport",organism="Arabidopsis thaliana")
-
-
 ```
 Make the simple plot.
 ```
@@ -139,7 +139,9 @@ ggRibo(
   NAME="SnRK2.2",
   Extend=50)
 ```
-Add DNA sequence and focus on the minimum uORF.
+![image](https://github.com/user-attachments/assets/3b69990f-8e8e-4ef2-9324-689fde936fc4)
+
+Show DNA sequence and focus on the minimum uORF.
 ```
 ggRibo(
   gene_id = "AT3G50500",
@@ -150,6 +152,7 @@ ggRibo(
   show_seq = TRUE,FASTA = FA,
   Extend=50)
 ```
+![image](https://github.com/user-attachments/assets/3363a6b5-1447-470a-b9ce-d484782ca9ff)
 
 
 #### Key parameters for ggRibo
