@@ -49,6 +49,7 @@ Root_RNAse <- system.file("extdata", "Root_test_SE.bam", package = "ggRibo", mus
 Shoot_RNAse <- system.file("extdata", "Shoot_test_SE.bam", package = "ggRibo", mustWork = TRUE) #Shoot RNA-seq data
 Root_Ribo <- system.file("extdata", "riboRoot.bed", package = "ggRibo", mustWork = TRUE) #Root Ribo-seq data
 Shoot_Ribo <- system.file("extdata", "riboShoot.bed", package = "ggRibo", mustWork = TRUE) #Shoot Ribo-seq data
+
 ```
 **Note the riboseq files is a table with the following  organization:**
 (1) No column names  
@@ -114,7 +115,7 @@ ggRibo(gene_id="AT3G02470",tx_id="AT3G02470.1",
 
 #### Check sequences for the uORF
 Download (1) GTF (Araport11+CTRL_20181206.gtf) (2) FASTA (TAIR10_chr_all_2.fas) (3) RNA bam file (RNA_CTRL_merged.bam) (4) Ribo file (CTRL_expressed_P_sites_sort_count) from [here](https://data.mendeley.com/datasets/89j7snbm2r/2)
-
+Load data
 ```
 library(ggRibo)
 CTRL_RNA="~/Desktop/CTRL_v1/RNA_CTRL_merged.bam"
@@ -124,13 +125,29 @@ Samples = c("Seedlings")
 RiboseqData = Ribo_data(c(CTRL_ribo),SampleNames=Samples)
 RNAseqData = CTRL_RNA
 RNAseqBamPairorSingle="paired"
-gtf_import(annotation="~/Desktop/CTRL_v1/Araport11+CTRL_20181206.gtf",format="gtf",dataSource="Araport",organism="Arabidopsis thaliana")
+gtf_import(annotation="/path/to/Araport11+CTRL_20181206.gtf",format="gtf",dataSource="Araport",organism="Arabidopsis thaliana")
+eORF_import(annotation="/path/to/CiPS_TuORFs_Sep5d_2024.gff3", format="gff3",dataSource="Araport",organism="Arabidopsis thaliana")
 
+
+```
+Make the simple plot.
+```
 #minimum uORF
 ggRibo(
-  gene_id = "AT3G62270",
-  tx_id = "AT3G62270.1",
-  NAME="BOR2",
+  gene_id = "AT3G50500",
+  tx_id = "AT3G50500.1",
+  NAME="SnRK2.2",
+  Extend=50)
+```
+Add DNA sequence and focus on the minimum uORF.
+```
+ggRibo(
+  gene_id = "AT3G50500",
+  tx_id = "AT3G50500.1",
+  eORF.tx_id = "AT3G50500.1_227_232",
+  NAME="SnRK2.2",
+  plot_range = c(18743960,18743920),
+  show_seq = TRUE,FASTA = FA,
   Extend=50)
 ```
 
