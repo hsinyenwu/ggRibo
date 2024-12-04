@@ -5,7 +5,11 @@ Version: 0.1.0
 Author: Larry Wu
 Maintainer: The package maintainer <larrywu@msu.edu>
 Description: This package provides tools for visualizing translated ORFs from Ribo-seq results, particularly focusing on open reading frames. The ggRibo function allows analyzing RNA-seq and Ribo-seq coverage in the genomic context. The ggRibo function also helps visualizing other single-nucleotide resolution (SNR) data together with Ribo-seq data.
-Imports: GenomicRanges,
+License: MIT
+Encoding: UTF-8
+LazyData: true
+Depends: R (>= 4.0.0)
+    GenomicRanges,
     GenomicFeatures,
     GenomicAlignments,
     Rsamtools,
@@ -17,10 +21,7 @@ Imports: GenomicRanges,
     txdbmaker,
     R6,
     BiocParallel
-License: MIT
-Encoding: UTF-8
-LazyData: true
-Depends: R (>= 4.0.0)
+
 RoxygenNote: 7.3.2
 URL: https://github.com/hsinyenwu/ggRibo
 BugReports: https://github.com/hsinyenwu/ggRibo/issues
