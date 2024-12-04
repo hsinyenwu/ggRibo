@@ -132,7 +132,8 @@ RiboseqData = Ribo_data(c(CTRL_ribo),SampleNames=Samples)
 RNAseqData = CTRL_RNA
 RNAseqBamPairorSingle="paired"
 gtf_import(annotation="/path/to/Araport11+CTRL_20181206.gtf",format="gtf",dataSource="Araport",organism="Arabidopsis thaliana")
-eORF_import(annotation="/path/to/CiPS_TuORFs_Sep5d_2024.gff3", format="gff3",dataSource="Araport",organism="Arabidopsis thaliana")
+CiPS_TuORFs_gff3 <- system.file("extdata", "CiPS_TuORFs_Sep5d_2024.gff3", package = "ggRibo", mustWork = TRUE) #Load uORFs
+eORF_import(annotation=CiPS_TuORFs_gff3, format="gff3",dataSource="Araport",organism="Arabidopsis thaliana")
 ```
 Make the simple plot.
 ```
