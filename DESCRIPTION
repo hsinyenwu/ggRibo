@@ -8,7 +8,7 @@ Description: This package provides tools for visualizing translated ORFs from Ri
 License: MIT
 Encoding: UTF-8
 LazyData: true
-Depends: R (>= 4.0.0)
+Depends: R (>= 4.0.0),
     GenomicRanges,
     GenomicFeatures,
     GenomicAlignments,
