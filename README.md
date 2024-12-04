@@ -145,7 +145,8 @@ ggRibo(
 ```
 ![image](https://github.com/user-attachments/assets/3b69990f-8e8e-4ef2-9324-689fde936fc4)
 
-Show DNA sequence and focus on the minimum uORF.
+Show DNA sequence and focus on the minimum uORF. 
+**Need plot_range, show_seq = TRUE, FASTA**
 ```
 ggRibo(
   gene_id = "AT3G50500",
