@@ -1,4 +1,8 @@
-#### Install ggRibo and its required packages:
+### Introduction
+Ribo-seq (ribosome profiling) is a powerful technique for studying mRNA translation by deep sequencing ribosome-protected footprints. A key feature of Ribo-seq data is three-nucleotide periodicity, which reflects the ribosome’s codon-by-codon progression during translation. Three-nucleotide periodicity facilitates the discovery of unannotated translation events and provides insights into translational regulation. Here we present ggRibo, an R package designed for visualizing three-nucleotide periodicity within a genomic context. ggRibo enables visual confirmation of translated and unannotated isoforms, as well as additional translation events, including upstream open reading frames (ORFs), downstream ORFs, stop codon readthrough, and correction of misannotated ORFs due to genome sequencing error. Additionally, ggRibo supports the visualization of other omics data with single-nucleotide resolution, such as degradome sequencing, transcription start site sequencing and translation initiation site sequencing. Comparing multiple types of data improves our understanding of co-translational events or features associate with translational regulation. By providing an intuitive and flexible platform, ggRibo advances the analysis of translation and related processes, offering a valuable resource for studies in gene expression and translational regulation.
+
+
+### Install ggRibo and its required packages:
 (1) Install required packages.
 ```
 # Install BiocManager if not already installed
