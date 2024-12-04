@@ -30,9 +30,9 @@ cran_packages <- c(
 
 install.packages(setdiff(cran_packages, rownames(installed.packages())))
 ```
-(2) Install RiboPlotR.
+(2) Install ggRibo.
 ```
-#Install RiboPlotR
+#Install ggRibo
 library(devtools)
 install_github("hsinyenwu/ggRibo")
 ```
