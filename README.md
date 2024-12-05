@@ -151,7 +151,7 @@ eORF_import(annotation=CiPS_TuORFs_gff3, format="gff3",dataSource="Araport",orga
 ```
 Make the simple plot.
 ```
-#minimum uORF
+# plot the entire gene
 ggRibo(
   gene_id = "AT3G50500",
   tx_id = "AT3G50500.1",
@@ -163,6 +163,7 @@ There is a strong peak in the 5'UTR suggesting the presence of a translated uORF
 Show DNA sequence and focus on the uORF.  
 **Need plot_range, show_seq = TRUE, FASTA**
 ```
+# show minimum uORF
 ggRibo(
   gene_id = "AT3G50500",
   tx_id = "AT3G50500.1",
