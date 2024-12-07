@@ -512,7 +512,7 @@ plotDNAandAA <- function(GeneTxInfo, plot_range = NULL, FASTA = NULL) {
   # Define fill colors
   fill_colors <- c(
     nucleotide_colors,
-    "Start" = "#00f900",
+    "Start" = "green",
     "Stop" = "red",
     frame_color_map
   )
@@ -574,7 +574,6 @@ plotDNAandAA <- function(GeneTxInfo, plot_range = NULL, FASTA = NULL) {
         na.rm = TRUE
       )
     ) +
-    # Plot start/stop codons on top with thicker line width
     suppressWarnings(
       geom_tile(
         data = aa_start_stop_df,
@@ -582,7 +581,7 @@ plotDNAandAA <- function(GeneTxInfo, plot_range = NULL, FASTA = NULL) {
         width = 3,
         height = 0.2,
         color = ifelse(long_range, NA, "darkgrey"),
-        linewidth = 1, # Increased line width for start/stop codons
+        linewidth = 0.5, # Increased line width for start/stop codons
         show.legend = TRUE,
         na.rm = TRUE
       )
@@ -605,6 +604,7 @@ plotDNAandAA <- function(GeneTxInfo, plot_range = NULL, FASTA = NULL) {
   }
 
   # Define fill scale with name set to NULL to remove legend title
+  # Override the legend aesthetics to remove grey line around the legend keys
   p_dna_aa <- p_dna_aa +
     scale_fill_manual(
       name = NULL,
@@ -612,7 +612,7 @@ plotDNAandAA <- function(GeneTxInfo, plot_range = NULL, FASTA = NULL) {
       breaks = available_breaks,
       na.value = "grey",
       guide = guide_legend(
-        override.aes = list(fill = fill_colors[available_breaks])
+        override.aes = list(colour = NA)
       )
     )
 
@@ -639,6 +639,8 @@ plotDNAandAA <- function(GeneTxInfo, plot_range = NULL, FASTA = NULL) {
   # Return the DNA and amino acid plot
   return(p_dna_aa)
 }
+
+
 
 #' Plot Gene Transcript Model
 #'
