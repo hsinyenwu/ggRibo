@@ -20,7 +20,7 @@ ggRibo(
 ![image](https://github.com/user-attachments/assets/d452f80e-7703-4295-85e4-b64860ca1e0c)
 
 ### Plot a gene with both coding or noncoding isoforms
-To make an example: I artifically removed the CDS for both *AT1G01060.5* and *AT1G01060.7* transcript for the *AT1G01060 (LHY)* gene.  
+To make an example: I artifically removed the CDSs for both *AT1G01060.5* and *AT1G01060.7* transcripts for the *AT1G01060 (LHY)* gene.  
 Plot the noncoding isoform *AT1G01060.7*  
 ```
 ggRibo(
