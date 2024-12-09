@@ -21,6 +21,7 @@ ggRibo(
 
 ### Plot a gene with both coding or noncoding isoforms
 To make an example: I artifically removed the CDS for both *AT1G01060.5* and *AT1G01060.7* transcript for the *AT1G01060 (LHY)* gene.  
+Plot the noncoding isoform *AT1G01060.7*  
 ```
 ggRibo(
   gene_id = "AT1G01060",
@@ -29,7 +30,7 @@ ggRibo(
   Extend=200)
 ```
 ![image](https://github.com/user-attachments/assets/d62096ae-79bf-421f-a15f-42dc6de4667f)
-
+Plot the noncoding isoform *AT1G01060.5*  
 ```
 ggRibo(
   gene_id = "AT1G01060",
