@@ -28,5 +28,12 @@ ggRibo(
   NAME="",
   Extend=200)
 ```
-![image](https://github.com/user-attachments/assets/fc99ea78-e5f9-4b64-9cd4-cd4f60b81ef4)
-
+![image](https://github.com/user-attachments/assets/fc99ea78-e5f9-4b64-9cd4-cd4f60b81ef4)  
+```
+ggRibo(
+  gene_id = "AT1G01060",
+  tx_id = "AT1G01060.5",
+  NAME="",
+  Extend=200)
+```
+![image](https://github.com/user-attachments/assets/d62096ae-79bf-421f-a15f-42dc6de4667f)
