@@ -640,8 +640,6 @@ plotDNAandAA <- function(GeneTxInfo, plot_range = NULL, FASTA = NULL) {
   return(p_dna_aa)
 }
 
-
-
 #' Plot Gene Transcript Model
 #'
 #' This function creates a gene model plot showing exons, UTRs, CDS, and optional eORFs for a given gene and its isoforms.
@@ -660,431 +658,335 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
   library(ggplot2)
   library(GenomicRanges)
 
-  # Extract necessary information from GeneTxInfo
   isoforms <- GeneTxInfo$num_isoforms
   genelim <- c(GeneTxInfo$range_left, GeneTxInfo$range_right)
   tx_names <- GeneTxInfo$tx_names
   tx_id <- GeneTxInfo$tx_id
   strand <- GeneTxInfo$strand
 
-  # Initialize lists to store plot data
   plot_data_list <- list()
   line_data_list <- list()
   idx <- 1
 
-  # Sort transcripts: main transcript first, others alphabetically
   other_tx_names <- setdiff(tx_names, tx_id)
   sorted_tx_names <- c(tx_id, sort(other_tx_names))
 
-  # Assign y-axis positions, with main transcript at the top
-  y_step <- 0.3  # Spacing between transcripts
-  y_positions <- seq(1, by = y_step, length.out = length(sorted_tx_names))
+  y_step <- 0.3
+  y_positions <- seq(1, by=y_step, length.out=length(sorted_tx_names))
   isoform_positions <- data.frame(
     isoform = sorted_tx_names,
-    y = rev(y_positions),  # Reverse to have main transcript at the top
+    y = rev(y_positions),
     stringsAsFactors = FALSE
   )
 
-  # Create a mapping from isoform to y-axis position
   isoform_y_map <- setNames(isoform_positions$y, isoform_positions$isoform)
 
-  # Process each isoform to extract features
   for (isoform in isoform_positions$isoform) {
     y_value <- isoform_y_map[isoform]
     isoform_data_list <- list()
-    isoform_idx <- 1  # Index for features within an isoform
+    isoform_idx <- 1
 
-    # Get the exons for the isoform
     exons_gr <- GeneTxInfo$exonByYFGtx[[isoform]]
-    if (length(exons_gr) == 0) {
+    if (length(exons_gr)==0) {
       warning(paste("Exons for isoform", isoform, "not found in exonByYFGtx"))
-      next  # Skip to next isoform if no exons found
+      next
     }
 
-    # Keep a copy of the original exons
-    exons_gr_original <- exons_gr
-
-    # Truncate exons to the plot_range if provided
     if (!is.null(plot_range)) {
-      segment_gr <- GRanges(seqnames = GeneTxInfo$chr,
-                            ranges = IRanges(plot_range[1], plot_range[2]),
-                            strand = GeneTxInfo$strand)
+      segment_gr <- GRanges(seqnames=GeneTxInfo$chr,
+                            ranges=IRanges(plot_range[1], plot_range[2]),
+                            strand=GeneTxInfo$strand)
       exons_gr <- pintersect(exons_gr, segment_gr)
-      # Remove any zero-width ranges
-      exons_gr <- exons_gr[width(exons_gr) > 0]
-      if (length(exons_gr) == 0) {
-        next  # Skip to next isoform if no exons within plot_range
+      exons_gr <- exons_gr[width(exons_gr)>0]
+      if (length(exons_gr)==0) {
+        next
       }
     }
 
-    # Get the transcript start and end positions
     transcript_start <- min(start(exons_gr))
     transcript_end <- max(end(exons_gr))
 
-    # Extract CDS regions
-    cds_ranges <- GeneTxInfo$xlimCds[[isoform]]  # Now a GRanges object
-    if (!is.null(cds_ranges) && length(cds_ranges) > 0) {
-      # Truncate CDS to the plot_range if provided
+    cds_ranges <- GeneTxInfo$xlimCds[[isoform]]
+    if (!is.null(cds_ranges) && length(cds_ranges)>0) {
       if (!is.null(plot_range)) {
+        segment_gr <- GRanges(seqnames=GeneTxInfo$chr,
+                              ranges=IRanges(plot_range[1], plot_range[2]),
+                              strand=GeneTxInfo$strand)
         cds_ranges <- pintersect(cds_ranges, segment_gr)
-        cds_ranges <- cds_ranges[width(cds_ranges) > 0]
+        cds_ranges <- cds_ranges[width(cds_ranges)>0]
       }
-      if (length(cds_ranges) > 0) {
+
+      if (length(cds_ranges)>0) {
         cds_df <- data.frame(
-          start = start(cds_ranges),
-          end = end(cds_ranges),
-          y = y_value,
-          feature = "CDS",
-          isoform = isoform,
-          height_factor = 1,
-          orf_id = NA,  # Add orf_id column with NA
-          row.names = NULL
+          start=start(cds_ranges),
+          end=end(cds_ranges),
+          y=y_value,
+          feature="CDS",
+          isoform=isoform,
+          height_factor=1,
+          orf_id=NA,
+          row.names=NULL
         )
         isoform_data_list[[isoform_idx]] <- cds_df
-        isoform_idx <- isoform_idx + 1
+        isoform_idx <- isoform_idx+1
       }
     }
 
-    # Extract 5' UTR regions and extend them by one nucleotide toward the CDS
-    fiveUTR_gr <- NULL
-    if (isoform %in% names(GeneTxInfo$fiveUTRByYFGtx)) {
-      fiveUTR_gr <- unlist(GeneTxInfo$fiveUTRByYFGtx[isoform])
-      if (length(fiveUTR_gr) > 0) {
-        # Extend 5' UTR toward the CDS by one nucleotide
-        if (strand == "+") {
-          end(fiveUTR_gr) <- end(fiveUTR_gr) + 1
-        } else {
-          start(fiveUTR_gr) <- start(fiveUTR_gr) - 1
-        }
-        # Truncate 5' UTR to the plot_range if provided
-        if (!is.null(plot_range)) {
-          fiveUTR_gr <- pintersect(fiveUTR_gr, segment_gr)
-          fiveUTR_gr <- fiveUTR_gr[width(fiveUTR_gr) > 0]
-        }
-        if (length(fiveUTR_gr) > 0) {
-          fiveUTR_df <- data.frame(
-            start = start(fiveUTR_gr),
-            end = end(fiveUTR_gr),
-            y = y_value,
-            feature = "5' UTR",
-            isoform = isoform,
-            height_factor = 1,
-            orf_id = NA,  # Add orf_id column with NA
-            row.names = NULL
-          )
-          isoform_data_list[[isoform_idx]] <- fiveUTR_df
-          isoform_idx <- isoform_idx + 1
-        }
-      }
-    }
+    no_cds_for_this_iso <- (length(cds_ranges)==0)
 
-    # Extract 3' UTR regions and extend them by one nucleotide toward the CDS
-    threeUTR_gr <- NULL
-    if (isoform %in% names(GeneTxInfo$threeUTRByYFGtx)) {
-      threeUTR_gr <- unlist(GeneTxInfo$threeUTRByYFGtx[isoform])
-      if (length(threeUTR_gr) > 0) {
-        # Extend 3' UTR toward the CDS by one nucleotide
-        if (strand == "+") {
-          start(threeUTR_gr) <- start(threeUTR_gr) - 1
-        } else {
-          end(threeUTR_gr) <- end(threeUTR_gr) + 1
-        }
-        # Truncate 3' UTR to the plot_range if provided
-        if (!is.null(plot_range)) {
-          threeUTR_gr <- pintersect(threeUTR_gr, segment_gr)
-          threeUTR_gr <- threeUTR_gr[width(threeUTR_gr) > 0]
-        }
-        if (length(threeUTR_gr) > 0) {
-          threeUTR_df <- data.frame(
-            start = start(threeUTR_gr),
-            end = end(threeUTR_gr),
-            y = y_value,
-            feature = "3' UTR",
-            isoform = isoform,
-            height_factor = 1,
-            orf_id = NA,  # Add orf_id column with NA
-            row.names = NULL
-          )
-          isoform_data_list[[isoform_idx]] <- threeUTR_df
-          isoform_idx <- isoform_idx + 1
-        }
-      }
-    }
-
-    # If eORF is present, check for overlap with exons and add rectangle
-    if (!is.null(eORFTxInfo)) {
-      for (eORF_idx in seq_along(eORFTxInfo$eORF.tx_id)) {
-        eORF_ranges <- eORFTxInfo$xlim.eORF[[eORF_idx]]  # GRanges object for eORF
-        if (length(eORF_ranges) > 0) {
-          # Truncate eORF to the plot_range if provided
+    if (!no_cds_for_this_iso) {
+      if (isoform %in% names(GeneTxInfo$fiveUTRByYFGtx)) {
+        fiveUTR_gr <- unlist(GeneTxInfo$fiveUTRByYFGtx[isoform])
+        if (length(fiveUTR_gr)>0) {
+          if (strand == "+") {
+            end(fiveUTR_gr) <- end(fiveUTR_gr)+1
+          } else {
+            start(fiveUTR_gr) <- start(fiveUTR_gr)-1
+          }
           if (!is.null(plot_range)) {
-            eORF_ranges <- pintersect(eORF_ranges, segment_gr)
-            eORF_ranges <- eORF_ranges[width(eORF_ranges) > 0]
-            if (length(eORF_ranges) == 0) {
-              next  # Skip if eORF is outside the plot_range
-            }
+            segment_gr <- GRanges(seqnames=GeneTxInfo$chr,
+                                  ranges=IRanges(plot_range[1],plot_range[2]),
+                                  strand=GeneTxInfo$strand)
+            fiveUTR_gr <- pintersect(fiveUTR_gr,segment_gr)
+            fiveUTR_gr <- fiveUTR_gr[width(fiveUTR_gr)>0]
           }
-          # Check for overlap with exons
-          overlap_exons <- findOverlaps(eORF_ranges, exons_gr)
-          if (length(overlap_exons) > 0) {
-            # Determine if ORF overlaps with main ORF (CDS)
-            overlaps_CDS <- FALSE
-            overlaps_fiveUTR <- FALSE
-            overlaps_threeUTR <- FALSE
-
-            # Check for overlap with CDS
-            if (!is.null(cds_ranges) && length(cds_ranges) > 0) {
-              overlap_cds <- findOverlaps(eORF_ranges, cds_ranges)
-              if (length(overlap_cds) > 0) {
-                overlaps_CDS <- TRUE
-              }
-            }
-
-            # Check for overlap with 5' UTR
-            if (!is.null(fiveUTR_gr) && length(fiveUTR_gr) > 0) {
-              overlap_five <- findOverlaps(eORF_ranges, fiveUTR_gr)
-              if (length(overlap_five) > 0) {
-                overlaps_fiveUTR <- TRUE
-              }
-            }
-
-            # Check for overlap with 3' UTR
-            if (!is.null(threeUTR_gr) && length(threeUTR_gr) > 0) {
-              overlap_three <- findOverlaps(eORF_ranges, threeUTR_gr)
-              if (length(overlap_three) > 0) {
-                overlaps_threeUTR <- TRUE
-              }
-            }
-
-            # Assign feature labels based on overlaps
-            if (overlaps_fiveUTR) {
-              if (overlaps_CDS) {
-                feature_label <- "ouORF"  # Overlapping uORF
-              } else {
-                feature_label <- "uORF"
-              }
-            } else if (overlaps_threeUTR) {
-              if (overlaps_CDS) {
-                feature_label <- "odORF"  # Overlapping dORF
-              } else {
-                feature_label <- "dORF"
-              }
-            } else if (overlaps_CDS) {
-              feature_label <- "nORF"  # Nested ORF
-            } else {
-              feature_label <- "ORF"
-            }
-
-            eORF_df <- data.frame(
-              start = start(eORF_ranges),
-              end = end(eORF_ranges),
-              y = y_value,
-              feature = feature_label,
-              isoform = isoform,
-              orf_id = feature_label,  # Use feature_label as orf_id for consistent coloring and labeling
-              height_factor = ifelse(overlaps_CDS, 8/15, 1),  # Reduced height_factor for overlapping ORFs
-              row.names = NULL
+          if (length(fiveUTR_gr)>0) {
+            fiveUTR_df <- data.frame(
+              start=start(fiveUTR_gr),
+              end=end(fiveUTR_gr),
+              y=y_value,
+              feature="5' UTR",
+              isoform=isoform,
+              height_factor=1,
+              orf_id=NA,
+              row.names=NULL
             )
-
-            isoform_data_list[[isoform_idx]] <- eORF_df
-            isoform_idx <- isoform_idx + 1
+            isoform_data_list[[isoform_idx]] <- fiveUTR_df
+            isoform_idx <- isoform_idx+1
           }
         }
       }
-    }
 
-    # Combine feature data for the isoform
-    if (length(isoform_data_list) > 0) {
-      isoform_df <- do.call(rbind, isoform_data_list)
-      plot_data_list[[idx]] <- isoform_df
-      idx <- idx + 1
-    }
+      if (isoform %in% names(GeneTxInfo$threeUTRByYFGtx)) {
+        threeUTR_gr <- unlist(GeneTxInfo$threeUTRByYFGtx[isoform])
+        if (length(threeUTR_gr)>0) {
+          if (strand == "+") {
+            start(threeUTR_gr) <- start(threeUTR_gr)-1
+          } else {
+            end(threeUTR_gr) <- end(threeUTR_gr)+1
+          }
+          if (!is.null(plot_range)) {
+            segment_gr <- GRanges(seqnames=GeneTxInfo$chr,
+                                  ranges=IRanges(plot_range[1], plot_range[2]),
+                                  strand=GeneTxInfo$strand)
+            threeUTR_gr <- pintersect(threeUTR_gr, segment_gr)
+            threeUTR_gr <- threeUTR_gr[width(threeUTR_gr)>0]
+          }
+          if (length(threeUTR_gr)>0) {
+            threeUTR_df <- data.frame(
+              start=start(threeUTR_gr),
+              end=end(threeUTR_gr),
+              y=y_value,
+              feature="3' UTR",
+              isoform=isoform,
+              height_factor=1,
+              orf_id=NA,
+              row.names=NULL
+            )
+            isoform_data_list[[isoform_idx]] <- threeUTR_df
+            isoform_idx <- isoform_idx+1
+          }
+        }
+      }
 
-    # Add the transcript line (intron regions)
-    intron_df_list <- list()
-    if (length(exons_gr) > 1) {
-      exons_sorted <- exons_gr[order(start(exons_gr))]
-      for (i in seq_len(length(exons_sorted) - 1)) {
-        intron_start <- end(exons_sorted[i])
-        intron_end <- start(exons_sorted[i + 1])
-        intron_df <- data.frame(
-          xstart = intron_start,
-          xend = intron_end,
-          y = y_value,
-          isoform = isoform,
-          row.names = NULL
+    } else {
+      # no CDS => ncRNA
+      exons_plot <- exons_gr
+      if (!is.null(plot_range)) {
+        segment_gr <- GRanges(seqnames=GeneTxInfo$chr,
+                              ranges=IRanges(plot_range[1],plot_range[2]),
+                              strand=GeneTxInfo$strand)
+        exons_plot <- pintersect(exons_plot, segment_gr)
+        exons_plot <- exons_plot[width(exons_plot)>0]
+      }
+      if (length(exons_plot)>0) {
+        ncRNA_df <- data.frame(
+          start=start(exons_plot),
+          end=end(exons_plot),
+          y=y_value,
+          feature="ncRNA",
+          isoform=isoform,
+          height_factor=1,
+          orf_id=NA,
+          row.names=NULL
         )
-        intron_df_list[[length(intron_df_list) + 1]] <- intron_df
+        isoform_data_list[[isoform_idx]] <- ncRNA_df
+        isoform_idx <- isoform_idx+1
       }
     }
 
-    # Handle intron lines beyond exons when plot_range is provided
+    intron_df_list <- list()
+    if (length(exons_gr)>1) {
+      exons_sorted <- exons_gr[order(start(exons_gr))]
+      for (ii in seq_len(length(exons_sorted)-1)) {
+        intron_start <- end(exons_sorted[ii])
+        intron_end <- start(exons_sorted[ii+1])
+        intron_df <- data.frame(
+          xstart=intron_start,
+          xend=intron_end,
+          y=y_value,
+          isoform=isoform,
+          row.names=NULL
+        )
+        intron_df_list[[length(intron_df_list)+1]] <- intron_df
+      }
+    }
+
     if (!is.null(plot_range)) {
       segment_left <- plot_range[1]
       segment_right <- plot_range[2]
       exons_sorted <- exons_gr[order(start(exons_gr))]
 
-      # Left side
-      if (start(exons_sorted[1]) > segment_left) {
+      if (start(exons_sorted[1])>segment_left) {
         intron_df <- data.frame(
-          xstart = segment_left,
-          xend = start(exons_sorted[1]),
-          y = y_value,
-          isoform = isoform,
-          row.names = NULL
+          xstart=segment_left,
+          xend=start(exons_sorted[1]),
+          y=y_value,
+          isoform=isoform,
+          row.names=NULL
         )
-        intron_df_list[[length(intron_df_list) + 1]] <- intron_df
+        intron_df_list[[length(intron_df_list)+1]] <- intron_df
       }
 
-      # Right side
-      if (end(exons_sorted[length(exons_sorted)]) < segment_right) {
+      if (end(exons_sorted[length(exons_sorted)])<segment_right) {
         intron_df <- data.frame(
-          xstart = end(exons_sorted[length(exons_sorted)]),
-          xend = segment_right,
-          y = y_value,
-          isoform = isoform,
-          row.names = NULL
+          xstart=end(exons_sorted[length(exons_sorted)]),
+          xend=segment_right,
+          y=y_value,
+          isoform=isoform,
+          row.names=NULL
         )
-        intron_df_list[[length(intron_df_list) + 1]] <- intron_df
+        intron_df_list[[length(intron_df_list)+1]] <- intron_df
       }
     }
 
-    # Combine intron data
-    if (length(intron_df_list) > 0) {
-      intron_data <- do.call(rbind, intron_df_list)
-      line_data_list[[length(line_data_list) + 1]] <- intron_data
+    if (length(intron_df_list)>0) {
+      intron_data <- do.call(rbind,intron_df_list)
+      line_data_list[[length(line_data_list)+1]] <- intron_data
+    }
+
+    if (length(isoform_data_list)>0) {
+      isoform_df <- do.call(rbind, isoform_data_list)
+      plot_data_list[[idx]] <- isoform_df
+      idx <- idx+1
     }
   }
 
-  # Combine data frames for plotting
-  if (length(plot_data_list) > 0) {
+  if (length(plot_data_list)>0) {
     plot_data <- do.call(rbind, plot_data_list)
   } else {
     stop("No valid exons or features found to plot.")
   }
 
-  if (length(line_data_list) > 0) {
-    line_data <- do.call(rbind, line_data_list)
+  if (length(line_data_list)>0) {
+    line_data <- do.call(rbind,line_data_list)
   } else {
     line_data <- data.frame()
   }
 
-  # Ensure orf_id exists and is character
   if (!"orf_id" %in% names(plot_data)) {
     plot_data$orf_id <- NA
   }
   plot_data$orf_id <- as.character(plot_data$orf_id)
 
-  # Set the factor levels of 'feature' to rearrange the legend order
-  feature_order <- c("uORF", "ouORF", "nORF", "odORF", "dORF", "5' UTR", "CDS", "3' UTR")
-  plot_data$feature <- factor(plot_data$feature, levels = feature_order)
+  feature_order <- c("uORF","ouORF","nORF","odORF","dORF","5' UTR","CDS","3' UTR","ncRNA")
+  plot_data$feature <- factor(plot_data$feature, levels=feature_order)
 
-  # Calculate ymin and ymax based on height_factor
   plot_data$height <- 0.08 * plot_data$height_factor
   plot_data$ymin <- plot_data$y - plot_data$height
   plot_data$ymax <- plot_data$y + plot_data$height
 
-  # Get unique features present in the data
   unique_features <- levels(plot_data$feature)[levels(plot_data$feature) %in% plot_data$feature]
-  unique_orf_ids <- unique(plot_data$orf_id[!is.na(plot_data$orf_id)])
 
-  # Define color mappings for features
   feature_colors <- c(
-    "uORF" = "yellow",
-    "ouORF" = "#FFD700",
-    "nORF" = "orange",
-    "odORF" = "#FFD700",
-    "dORF" = "yellow",
-    "5' UTR" = "lightgrey",
-    "CDS" = "black",
-    "3' UTR" = "white"
+    "uORF"="yellow",
+    "ouORF"="#FFD700",
+    "nORF"="orange",
+    "odORF"="#FFD700",
+    "dORF"="yellow",
+    "5' UTR"="lightgrey",
+    "CDS"="black",
+    "3' UTR"="white",
+    "ncRNA"="#FFB6C1"
   )
 
-  # Filter colors for features present in the data
   feature_colors <- feature_colors[unique_features]
 
-  # Adjust legend text size and key size based on the number of unique features
   num_legend_items <- length(unique_features)
-  legend_text_size <- 8  # Base legend text size
-  base_key_size <- 1     # Base legend key size in lines
-
-  # Adjust key size
-  if (num_legend_items > 3) {
+  legend_text_size <- 8
+  base_key_size <-1
+  if (num_legend_items>3) {
     key_size <- base_key_size * 3 / num_legend_items
   } else {
     key_size <- base_key_size
   }
+  key_size <- max(0.8,key_size)
 
-  # Ensure key size does not become too small
-  key_size <- max(0.8, key_size)
-
-  # Create the gene model plot
   p_gene <- ggplot()
 
-  # Plot intron lines first (as background)
-  if (nrow(line_data) > 0) {
+  if (nrow(line_data)>0) {
     p_gene <- p_gene +
-      geom_segment(data = line_data, aes(x = xstart, xend = xend, y = y, yend = y),
-                   color = "black", inherit.aes = FALSE)
+      geom_segment(data=line_data,aes(x=xstart,xend=xend,y=y,yend=y),color="black",inherit.aes=FALSE)
   }
 
-  # Plot the filled CDS and UTR rectangles on top
-  if (nrow(plot_data[is.na(plot_data$orf_id), ]) > 0) {
-    p_gene <- p_gene +
-      geom_rect(data = plot_data[is.na(plot_data$orf_id), ],
-                aes(xmin = start, xmax = end, ymin = ymin, ymax = ymax, fill = feature),
-                color = "black", inherit.aes = FALSE)
-  }
+  p_gene <- p_gene +
+    geom_rect(data=plot_data[is.na(plot_data$orf_id), ],
+              aes(xmin=start, xmax=end, ymin=ymin, ymax=ymax, fill=feature),
+              color="black", inherit.aes=FALSE)
 
-  # Plot ORFs separately to ensure consistent coloring and labeling
-  if (nrow(plot_data[!is.na(plot_data$orf_id), ]) > 0) {
+  if (nrow(plot_data[!is.na(plot_data$orf_id), ])>0) {
     p_gene <- p_gene +
-      geom_rect(data = plot_data[!is.na(plot_data$orf_id), ],
-                aes(xmin = start, xmax = end, ymin = ymin, ymax = ymax, fill = orf_id),
-                color = "black", inherit.aes = FALSE)
+      geom_rect(data=plot_data[!is.na(plot_data$orf_id), ],
+                aes(xmin=start, xmax=end, ymin=ymin, ymax=ymax, fill=orf_id),
+                color="black", inherit.aes=FALSE)
   }
 
   p_gene <- p_gene +
     scale_fill_manual(
-      name = "Feature",
-      values = feature_colors,
-      breaks = unique_features,
-      labels = unique_features,
-      guide = guide_legend(
-        override.aes = list(fill = feature_colors),
-        ncol = 1,  # Arrange legend items in a single column
-        keyheight = unit(key_size, "lines"),
-        keywidth = unit(1, "lines")
+      name="Feature",
+      values=feature_colors,
+      breaks=unique_features,
+      labels=unique_features,
+      guide=guide_legend(
+        override.aes = list(fill=feature_colors),
+        ncol=1,
+        keyheight=unit(key_size,"lines"),
+        keywidth=unit(1,"lines")
       )
     ) +
     theme_bw() +
     theme(
-      legend.position = "right",      # Position legend on the right
-      legend.title = element_blank(),
-      legend.text = element_text(size = legend_text_size),
-      legend.key.size = unit(key_size, "lines"),
-      axis.text.y = element_text(size = transcript_label_font_size),
-      axis.ticks.y = element_blank(),
-      axis.title.y = element_text(size = 12),
-      plot.margin = unit(c(-0.2, 0.2, 0, 1.5), "lines"),  # Increased left margin
-      panel.grid = element_blank(),   # Remove all grid lines
-      panel.border = element_blank()  # Remove plot outline
+      legend.position="right",
+      legend.title=element_blank(),
+      legend.text=element_text(size=legend_text_size),
+      legend.key.size=unit(key_size,"lines"),
+      axis.text.y=element_text(size=transcript_label_font_size),
+      axis.ticks.y=element_blank(),
+      axis.title.y=element_text(size=12),
+      plot.margin=unit(c(-0.2,0.2,0,1.5),"lines"),
+      panel.grid=element_blank(),
+      panel.border=element_blank()
     ) +
     xlab("Genomic Position") +
     ylab("") +
-    coord_cartesian(clip = "off")  # Prevent clipping of labels
+    coord_cartesian(clip="off")
 
-  # Adjust padding to reduce the gap when there are fewer transcripts
-  padding <- 0.1  # Reduced padding for all cases
-
-  # Adjust x-axis scale based on strand direction
-  if (strand == "-") {
-    p_gene <- p_gene + scale_x_reverse(limits = c(max(genelim), min(genelim)))
+  if (strand=="-") {
+    p_gene <- p_gene + scale_x_reverse(limits=c(max(genelim), min(genelim)))
   } else {
-    p_gene <- p_gene + scale_x_continuous(limits = c(min(genelim), max(genelim)))
+    p_gene <- p_gene + scale_x_continuous(limits=c(min(genelim), max(genelim)))
   }
 
-  # Set y-axis labels using isoform names, bolding the main transcript
   labels <- sapply(isoform_positions$isoform, function(x) {
     if (x == tx_id) {
       paste0("bold('", x, "')")
@@ -1092,54 +994,16 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
       paste0("'", x, "'")
     }
   })
-  labels <- parse(text = labels)
+  labels <- parse(text=labels)
 
-  # Set y-axis labels and limits with adjusted padding
+  padding <- 0.1
+
   p_gene <- p_gene + scale_y_continuous(
-    breaks = isoform_positions$y,
-    labels = labels,
-    limits = c(min(isoform_positions$y) - padding,
-               max(isoform_positions$y) + padding)
+    breaks=isoform_positions$y,
+    labels=labels,
+    limits=c(min(isoform_positions$y)-padding,
+             max(isoform_positions$y)+padding)
   )
-
-  # Optionally add vertical lines for ORF start and end positions
-  if (plot_ORF_ranges && !is.null(eORFTxInfo)) {
-    # Collect all start and end positions of overlapping ORFs
-    for (eORF_idx in seq_along(eORFTxInfo$eORF.tx_id)) {
-      eORF_ranges <- eORFTxInfo$xlim.eORF[[eORF_idx]]
-      eORF_left_pos <- eORFTxInfo$eORF_left[eORF_idx]
-      eORF_right_pos <- eORFTxInfo$eORF_right[eORF_idx]
-
-      # Adjust line types based on strand
-      if (strand == "+") {
-        start_pos <- eORF_left_pos
-        end_pos <- eORF_right_pos
-      } else {
-        start_pos <- eORF_right_pos
-        end_pos <- eORF_left_pos
-      }
-
-      # Determine color based on whether the ORF overlaps with the main ORF
-      overlaps_CDS <- FALSE
-      if (!is.null(GeneTxInfo$xlimCds[[tx_id]]) && length(GeneTxInfo$xlimCds[[tx_id]]) > 0) {
-        cds_ranges <- GeneTxInfo$xlimCds[[tx_id]]
-        overlap_cds <- findOverlaps(eORF_ranges, cds_ranges)
-        if (length(overlap_cds) > 0) {
-          overlaps_CDS <- TRUE
-        }
-      }
-      if (overlaps_CDS) {
-        line_color <- "orange"
-      } else {
-        line_color <- "green"
-      }
-
-      # Add solid line for eORF start and dashed line for eORF end
-      p_gene <- p_gene +
-        geom_vline(xintercept = start_pos, linetype = "solid", color = line_color, alpha = 0.5) +
-        geom_vline(xintercept = end_pos, linetype = "dashed", color = line_color, alpha = 0.5)
-    }
-  }
 
   return(p_gene)
 }
@@ -1224,13 +1088,8 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
     stop("GRangeInfo (e.g., Txome_Range) must be provided.")
   }
 
-  # Ensure the transcript ID exists
-  if (!(tx_id %in% names(GRangeInfo$cdsByTx))) {
-    stop(paste("Transcript ID", tx_id, "not found in GRangeInfo$cdsByTx."))
-  }
-
   # Handle eORF annotation
-  has_overlapping_ORF <- FALSE  # Initialize flag
+  has_overlapping_ORF <- FALSE
   if (!is.null(eORF.tx_id)) {
     if (is.null(eORFRangeInfo)) {
       if (exists("eORF_Range", envir = .GlobalEnv)) {
@@ -1239,65 +1098,98 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
         stop("eORFRangeInfo (e.g., eORF_Range) must be provided when eORF.tx_id is specified.")
       }
     }
-    # Ensure that all eORF.tx_ids exist in eORFRangeInfo
     missing_tx_ids <- setdiff(eORF.tx_id, names(eORFRangeInfo$eORFByTx))
     if (length(missing_tx_ids) > 0) {
       stop(paste("eORF Transcript IDs", paste(missing_tx_ids, collapse = ", "), "not found in eORFRangeInfo$eORFByTx."))
     }
   }
 
-  # Create Gene_info object for the gene of interest
+  # Create a Gene_info object for the gene of interest
   txByYFG <- GRangeInfo$txByGene[gene_id]
 
   if (length(txByYFG) == 0 || length(txByYFG[[1]]) == 0) {
     stop(paste("No transcripts found for gene ID", gene_id))
   }
 
-  # Number of isoforms and their names
   num_isoforms <- length(txByYFG[[1]])
   if (!"tx_name" %in% names(mcols(txByYFG[[1]]))) {
     stop("Transcript names ('tx_name') not found in GRangeInfo$txByGene. Please ensure 'tx_name' is a metadata column.")
   }
   tx_names <- txByYFG[[1]]$tx_name
 
-  # Strand and chromosome information
+  # Check which tx_names are in GRangeInfo$cdsByTx
+  tx_names_in_cdsByTx <- intersect(tx_names, names(GRangeInfo$cdsByTx))
+
+  # If all isoforms are noncoding
+  if (length(tx_names_in_cdsByTx) == 0) {
+    # all transcripts considered, likely no CDS => ncRNA scenario
+    message("This is a noncoding gene (no annotated CDS for all isoforms). The frame is calculated from the 1st position of the transcript. Please provide the CDS ranges in a gtf if you have evidence that an ORF is translated.")
+  } else {
+    if (!(tx_id %in% tx_names_in_cdsByTx)) {
+      # Main transcript no ORF
+      message(paste("The transcript", tx_id, "does not have an annotated ORF. The frame is calculated from the 1st position of the transcript. Please provide the CDS ranges in a gtf if you have evidence that an ORF is translated."), call.=FALSE)
+      # Ensure tx_id is included even if no CDS
+      if (!(tx_id %in% tx_names)) {
+        stop(paste("Transcript ID", tx_id, "not found in gene."))
+      } else {
+        tx_names <- unique(c(tx_id, tx_names))
+      }
+    }
+  }
+
   strand_info <- as.character(strand(unlist(txByYFG)))[1]
   chr <- as.character(seqnames(unlist(txByYFG)))[1]
 
-  # Sort transcript names and prioritize the main transcript
+  # Sort transcripts
   other_tx_names <- setdiff(tx_names, tx_id)
   tx_names <- c(tx_id, sort(other_tx_names))
 
   # Extract CDS and exon information
-  cdsByYFGtx <- GRangeInfo$cdsByTx[tx_names]
-  exonByYFGtx <- GRangeInfo$exonsByTx[tx_names]
+  cdsByYFGtx_all <- GRangeInfo$cdsByTx
+  cdsByYFGtx <- cdsByYFGtx_all[intersect(tx_names, names(cdsByYFGtx_all))]
+  for (nct in tx_names) {
+    if (!nct %in% names(cdsByYFGtx)) {
+      cdsByYFGtx[[nct]] <- GRanges()
+    }
+  }
+
+  exonByYFGtx_all <- GRangeInfo$exonsByTx
+  exonByYFGtx <- exonByYFGtx_all[intersect(tx_names, names(exonByYFGtx_all))]
+  for (nct in tx_names) {
+    if (!nct %in% names(exonByYFGtx)) {
+      exonByYFGtx[[nct]] <- GRanges()
+    }
+  }
 
   # Adjust CDS ranges (Keep as GRanges)
   xlimCds <- list()
   for (i in seq_along(tx_names)) {
     cds <- cdsByYFGtx[[tx_names[i]]]
     if (length(cds) > 0) {
-      xlimCds[[i]] <- cds  # Keep as GRanges
+      xlimCds[[i]] <- cds
     } else {
       xlimCds[[i]] <- GRanges()
     }
   }
   names(xlimCds) <- tx_names
 
+  isoforms_w_3UTR <- tx_names[tx_names %in% names(GRangeInfo$threeUTR)]
+  threeUTRByYFGtx <- GRangeInfo$threeUTR[isoforms_w_3UTR]
+
+  isoforms_w_5UTR <- tx_names[tx_names %in% names(GRangeInfo$fiveUTR)]
+  fiveUTRByYFGtx <- GRangeInfo$fiveUTR[isoforms_w_5UTR]
+
   # Define genomic range with extension or plot_range
   if (!is.null(plot_range)) {
     plot_range <- sort(plot_range)
-    # Use the provided plot_range
     range_left <- plot_range[1]
     range_right <- plot_range[2]
-    gene_ranges <- GRanges(seqnames = chr,
-                           ranges = IRanges(range_left, range_right),
-                           strand = strand_info)
+    gene_ranges <- GRanges(seqnames=chr,
+                           ranges=IRanges(range_left, range_right),
+                           strand=strand_info)
   } else {
-    # Use gene ranges, extended by 'Extend'
     gene_ranges <- reduce(unlist(txByYFG))
 
-    # Determine Extend_left and Extend_right
     if (length(Extend) == 1) {
       Extend_left <- Extend
       Extend_right <- Extend
@@ -1308,7 +1200,6 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
       stop("Extend must be a numeric value or a vector of two numeric values.")
     }
 
-    # Adjust range_left and range_right based on strand
     if (strand_info == "+") {
       range_left <- min(start(gene_ranges)) - Extend_left
       range_right <- max(end(gene_ranges)) + Extend_right
@@ -1319,19 +1210,12 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
       stop("Invalid strand information.")
     }
 
-    gene_ranges <- GRanges(seqnames = chr,
-                           ranges = IRanges(range_left, range_right),
-                           strand = strand_info)
+    gene_ranges <- GRanges(seqnames=chr,
+                           ranges=IRanges(range_left, range_right),
+                           strand=strand_info)
   }
 
-  # Extract UTR information
-  isoforms_w_3UTR <- tx_names[tx_names %in% names(GRangeInfo$threeUTR)]
-  threeUTRByYFGtx <- GRangeInfo$threeUTR[isoforms_w_3UTR]
-
-  isoforms_w_5UTR <- tx_names[tx_names %in% names(GRangeInfo$fiveUTR)]
-  fiveUTRByYFGtx <- GRangeInfo$fiveUTR[isoforms_w_5UTR]
-
-  # Filter Ribo-seq data based on genomic range and strand
+  # Filter Ribo-seq data
   if (!is.null(Riboseq)) {
     Riboseq_list <- lapply(seq_along(Riboseq), function(x) {
       Riboseq[[x]][Riboseq[[x]]$chr == chr &
@@ -1340,98 +1224,92 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
                      Riboseq[[x]]$strand == strand_info, ]
     })
   } else {
-    Riboseq_list <- list()  # Ensure Riboseq_list is always a list
+    Riboseq_list <- list()
   }
 
-  # Assign cds_left and cds_right
-  if (length(xlimCds[[tx_id]]) > 0) {
-    cds_left <- min(start(xlimCds[[tx_id]]))
-    cds_right <- max(end(xlimCds[[tx_id]]))
+  main_cds <- xlimCds[[tx_id]]
+  if (length(main_cds) > 0) {
+    cds_left <- min(start(main_cds))
+    cds_right <- max(end(main_cds))
   } else {
     cds_left <- NA
     cds_right <- NA
+    # No second warning here, just rely on the one we printed if needed.
   }
 
-  # Create Gene_info object
   GeneTxInfo <- Gene_info$new(
-    gene_id = gene_id,
-    tx_id = tx_id,
-    txByGene = txByYFG,
-    cdsByYFGtx = cdsByYFGtx,
-    chr = chr,
-    generanges = gene_ranges,
-    generangesplus = gene_ranges,  # Use gene_ranges directly
-    range_left = range_left,
-    range_right = range_right,
-    num_isoforms = num_isoforms,
-    tx_names = tx_names,
-    isoforms.w.3UTR = isoforms_w_3UTR,
-    isoforms.w.5UTR = isoforms_w_5UTR,
-    threeUTRByYFGtx = threeUTRByYFGtx,
-    fiveUTRByYFGtx = fiveUTRByYFGtx,
-    exonByYFGtx = exonByYFGtx,
-    Extend = Extend,
-    strand = strand_info,
-    xlimCds = xlimCds,
-    Riboseq_list = Riboseq_list,
-    cds_left = cds_left,
-    cds_right = cds_right
+    gene_id=gene_id,
+    tx_id=tx_id,
+    txByGene=txByYFG,
+    cdsByYFGtx=cdsByYFGtx,
+    chr=chr,
+    generanges=gene_ranges,
+    generangesplus=gene_ranges,
+    range_left=range_left,
+    range_right=range_right,
+    num_isoforms=length(tx_names),
+    tx_names=tx_names,
+    isoforms.w.3UTR=isoforms_w_3UTR,
+    isoforms.w.5UTR=isoforms_w_5UTR,
+    threeUTRByYFGtx=threeUTRByYFGtx,
+    fiveUTRByYFGtx=fiveUTRByYFGtx,
+    exonByYFGtx=exonByYFGtx,
+    Extend=Extend,
+    strand=strand_info,
+    xlimCds=xlimCds,
+    Riboseq_list=Riboseq_list,
+    cds_left=cds_left,
+    cds_right=cds_right
   )
 
   # Handle eORF if provided
-  if (!is.null(eORF.tx_id)) {
-    # Get the ranges for all eORF.tx_ids
-    xlim.eORF <- eORFRangeInfo$eORFByTx[eORF.tx_id]  # List of GRanges objects
+  if (!is.null(eORF.tx_id) && length(tx_names)>0) {
+    xlim.eORF <- eORFRangeInfo$eORFByTx[eORF.tx_id]
+    eORF_left <- sapply(xlim.eORF,function(gr) min(start(gr)))
+    eORF_right <- sapply(xlim.eORF,function(gr) max(end(gr)))
 
-    # Collect eORF_left and eORF_right for each eORF
-    eORF_left <- sapply(xlim.eORF, function(gr) min(start(gr)))
-    eORF_right <- sapply(xlim.eORF, function(gr) max(end(gr)))
-
-    if (length(Riboseq_list) > 0) {
+    if (length(Riboseq_list)>0) {
       eORF_Riboseq_list <- lapply(seq_along(Riboseq_list), function(i) {
         lapply(seq_along(xlim.eORF), function(e_idx) {
           eORF_gr <- xlim.eORF[[e_idx]]
           Riboseq_list[[i]][Riboseq_list[[i]]$position >= min(start(eORF_gr)) &
-                              Riboseq_list[[i]]$position <= max(end(eORF_gr)), ]
+                              Riboseq_list[[i]]$position <= max(end(eORF_gr)),]
         })
       })
     } else {
       eORF_Riboseq_list <- list()
     }
 
-    # Create eORF_info object
     eORFTxInfo <- eORF_info$new(
       eORF.tx_id = eORF.tx_id,
-      xlim.eORF = xlim.eORF,
       eORF_Riboseq_list = eORF_Riboseq_list,
+      xlim.eORF = xlim.eORF,
       eORF_left = eORF_left,
       eORF_right = eORF_right
     )
 
-    # Determine if there is at least one overlapping ORF
-    cds_ranges <- GeneTxInfo$cdsByYFGtx[[tx_id]]
-    for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
-      eORF_ranges <- eORFTxInfo$xlim.eORF[[j]]
-      overlaps_CDS <- findOverlaps(eORF_ranges, cds_ranges)
-      if (length(overlaps_CDS) > 0) {
-        has_overlapping_ORF <- TRUE
-        break  # No need to check further
+    main_cds_ranges <- GeneTxInfo$cdsByYFGtx[[tx_id]]
+    if (length(main_cds_ranges)>0) {
+      for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
+        eORF_ranges <- eORFTxInfo$xlim.eORF[[j]]
+        overlaps_CDS <- findOverlaps(eORF_ranges, main_cds_ranges)
+        if (length(overlaps_CDS)>0) {
+          has_overlapping_ORF <- TRUE
+          break
+        }
       }
     }
   } else {
     eORFTxInfo <- NULL
   }
 
-  # Set up BAM parameters for reading RNA-seq data
   if (!is.null(RNAseq)) {
-    what1 <- c("rname", "strand", "pos", "qwidth", "seq")
-    param <- ScanBamParam(which = GeneTxInfo$generangesplus, what = what1)
+    what1 <- c("rname","strand","pos","qwidth","seq")
+    param <- ScanBamParam(which=GeneTxInfo$generangesplus, what=what1)
   }
 
-  # Read RNA-seq data
   RNAseq_list <- list()
   if (!is.null(RNAseq)) {
-    # Validate RNAseqBamPaired
     if (is.null(RNAseqBamPaired)) {
       stop("RNAseqBamPaired must be provided when RNAseq data is supplied.")
     }
@@ -1440,43 +1318,36 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
       stop("Length of RNAseqBamPaired must match the number of RNAseq samples.")
     }
 
-    # Read each RNA-seq BAM file and compute coverage
     RNAseq_list <- lapply(seq_len(length(RNAseq)), function(i) {
       if (RNAseqBamPaired[i] == "paired") {
-        # Read paired-end alignments
         readPairs1 <- suppressWarnings(
-          readGAlignmentPairs(RNAseq[i], param = param, strandMode = 2)
+          readGAlignmentPairs(RNAseq[i], param=param, strandMode=2)
         )
-        if (length(readPairs1) == 0) {
+        if (length(readPairs1)==0) {
           warning(paste("No paired-end reads found in", RNAseq[i]))
-          Gtx1 <- numeric(length = width(GeneTxInfo$generangesplus))
+          Gtx1 <- numeric(length=width(GeneTxInfo$generangesplus))
         } else {
-          # Filter reads by strand
-          readPairs1 <- readPairs1[strand(readPairs1) == GeneTxInfo$strand]
-          if (length(readPairs1) == 0) {
-            warning(paste("No reads matching strand", GeneTxInfo$strand, "found in", RNAseq[i]))
-            Gtx1 <- numeric(length = width(GeneTxInfo$generangesplus))
+          readPairs1 <- readPairs1[strand(readPairs1)==GeneTxInfo$strand]
+          if (length(readPairs1)==0) {
+            warning(paste("No reads matching strand",GeneTxInfo$strand,"found in",RNAseq[i]))
+            Gtx1 <- numeric(length=width(GeneTxInfo$generangesplus))
           } else {
-            # Compute coverage over the gene region
             cvg1 <- coverage(readPairs1)
             Gtx1 <- as.numeric(cvg1[[GeneTxInfo$chr]][start(GeneTxInfo$generangesplus):end(GeneTxInfo$generangesplus)])
           }
         }
         Gtx1
       } else if (RNAseqBamPaired[i] == "single") {
-        # Read single-end alignments
-        alignments <- suppressWarnings(readGAlignments(RNAseq[i], param = param))
-        if (length(alignments) == 0) {
+        alignments <- suppressWarnings(readGAlignments(RNAseq[i], param=param))
+        if (length(alignments)==0) {
           warning(paste("No single-end reads found in", RNAseq[i]))
-          Gtx1 <- numeric(length = width(GeneTxInfo$generangesplus))
+          Gtx1 <- numeric(length=width(GeneTxInfo$generangesplus))
         } else {
-          # Filter reads by strand
-          alignments <- alignments[strand(alignments) == GeneTxInfo$strand]
-          if (length(alignments) == 0) {
-            warning(paste("No reads matching strand", GeneTxInfo$strand, "found in", RNAseq[i]))
-            Gtx1 <- numeric(length = width(GeneTxInfo$generangesplus))
+          alignments <- alignments[strand(alignments)==GeneTxInfo$strand]
+          if (length(alignments)==0) {
+            warning(paste("No reads matching strand",GeneTxInfo$strand,"found in",RNAseq[i]))
+            Gtx1 <- numeric(length=width(GeneTxInfo$generangesplus))
           } else {
-            # Compute coverage over the gene region
             cvg1 <- coverage(alignments)
             Gtx1 <- as.numeric(cvg1[[GeneTxInfo$chr]][start(GeneTxInfo$generangesplus):end(GeneTxInfo$generangesplus)])
           }
@@ -1489,581 +1360,509 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
     })
   }
 
-  # Determine maximum RNA-seq coverage across all samples
-  if (length(RNAseq_list) > 0) {
-    max_Y_global <- max(unlist(RNAseq_list), na.rm = TRUE)
+  if (length(RNAseq_list)>0) {
+    max_Y_global <- max(unlist(RNAseq_list), na.rm=TRUE)
   } else {
     max_Y_global <- 0
   }
 
-  # Adjust Ribo-seq counts if Ribo_fix_height is provided
   if (!is.null(Ribo_fix_height)) {
     message("Note: Y_scale parameter is disabled when Ribo_fix_height is not NULL.")
-    Y_scale <- NULL  # Disable Y_scale parameter
-    # Limit Ribo-seq counts to Ribo_fix_height
-    if (length(Riboseq_list) > 0) {
+    Y_scale <- NULL
+    if (length(Riboseq_list)>0) {
       Riboseq_list <- lapply(Riboseq_list, function(df) {
-        df$count <- pmin(df$count, Ribo_fix_height)
+        df$count <- pmin(df$count,Ribo_fix_height)
         df
       })
     }
   }
 
-  # Calculate global maximum Ribo-seq counts
-  if (length(Riboseq_list) > 0) {
+  if (length(Riboseq_list)>0) {
     all_counts <- unlist(lapply(Riboseq_list, function(df) df$count))
-    if (length(all_counts) > 0) {
-      max_P_global <- max(all_counts, na.rm = TRUE)
-      max_P_plot_global <- max_P_global + (1/10) * max_P_global  # Add 10% padding
+    if (length(all_counts)>0) {
+      max_P_global <- max(all_counts, na.rm=TRUE)
+      max_P_plot_global <- max_P_global + (1/10)*max_P_global
     } else {
-      max_P_global <- 0
-      max_P_plot_global <- 0
+      max_P_global <-0
+      max_P_plot_global<-0
     }
   } else {
-    max_P_global <- 0
-    max_P_plot_global <- 0
+    max_P_global<-0
+    max_P_plot_global<-0
   }
 
-  # Initialize list to store individual plots
   plot_list <- list()
 
-  # Generate plots for RNA-seq and Ribo-seq data
   if (!is.null(RNAseq)) {
-    # Define positions
     positions <- seq(start(GeneTxInfo$generangesplus), end(GeneTxInfo$generangesplus))
 
     for (i in seq_len(length(RNAseq))) {
       RNAseq_counts <- RNAseq_list[[i]]
-      RNAseq_df <- data.frame(position = positions, count = RNAseq_counts, row.names = NULL)
-
-      # Remove rows with NA counts
+      RNAseq_df <- data.frame(position=positions, count=RNAseq_counts, row.names=NULL)
       RNAseq_df <- RNAseq_df[!is.na(RNAseq_df$count), ]
+      RNAseq_df$isoform <- tx_id
 
-      # Prepare data for plotting
-      RNAseq_df$isoform <- tx_id  # Assign the isoform to the data
-
-      # Extract Ribo-seq data for the sample
-      if (length(Riboseq_list) > 0) {
+      if (length(Riboseq_list)>0) {
         RiboRslt <- Riboseq_list[[i]]
       } else {
         RiboRslt <- data.frame()
       }
 
-      # Determine scaling based on Y_scale parameter or Ribo_fix_height
       if (!is.null(Ribo_fix_height)) {
-        # Ribo_fix_height is provided, use it to scale Ribo-seq counts
-        current_max_Y <- max(RNAseq_counts, na.rm = TRUE)
-        if (current_max_Y == 0) {
-          scale_factor_Ribo <- 1
+        current_max_Y <- max(RNAseq_counts,na.rm=TRUE)
+        if (current_max_Y==0) {
+          scale_factor_Ribo <-1
         } else {
           scale_factor_Ribo <- current_max_Y / Ribo_fix_height
         }
-        y_limits <- c(0, current_max_Y * 1.1)
-      } else if (Y_scale == "all") {
+        y_limits <- c(0, current_max_Y*1.1)
+      } else if (Y_scale=="all") {
         current_max_Y <- max_Y_global
         current_max_P <- max_P_global
-        if (current_max_P > 0) {
+        if (current_max_P>0) {
           scale_factor_Ribo <- max_Y_global / max_P_global
         } else {
-          scale_factor_Ribo <- 1
+          scale_factor_Ribo <-1
         }
-        y_limits <- c(0, current_max_Y * 1.1)
-      } else if (Y_scale == "each") {
-        current_max_Y <- max(RNAseq_counts, na.rm = TRUE)
-        if (length(RiboRslt) > 0 && nrow(RiboRslt) > 0) {
-          current_max_P <- max(RiboRslt$count, na.rm = TRUE)
-          if (current_max_P > 0) {
+        y_limits <- c(0,current_max_Y*1.1)
+      } else if (Y_scale=="each") {
+        current_max_Y <- max(RNAseq_counts, na.rm=TRUE)
+        if (length(RiboRslt)>0 && nrow(RiboRslt)>0) {
+          current_max_P <- max(RiboRslt$count,na.rm=TRUE)
+          if (current_max_P>0) {
             scale_factor_Ribo <- current_max_Y / current_max_P
           } else {
-            scale_factor_Ribo <- 1
+            scale_factor_Ribo <-1
           }
         } else {
-          scale_factor_Ribo <- 1
+          scale_factor_Ribo <-1
         }
-        y_limits <- c(0, current_max_Y * 1.1)
+        y_limits <- c(0,current_max_Y*1.1)
       }
 
-      # Apply scaling factor to Ribo-seq counts
-      if (length(RiboRslt) > 0 && !is.null(scale_factor_Ribo)) {
-        RiboRslt$count_scaled <- RiboRslt$count * scale_factor_Ribo
+      if (length(RiboRslt)>0 && !is.null(scale_factor_Ribo)) {
+        RiboRslt$count_scaled <- RiboRslt$count*scale_factor_Ribo
       }
 
-      # Get sample color for current sample
       sample_color_i <- sample_color[i]
 
-      # Create the plot
       p <- ggplot() +
-        # RNA-seq data: plot as filled columns and line
-        geom_col(data = RNAseq_df, aes(x = position, y = count), fill = RNAbackground, color = RNAbackground, na.rm = TRUE) +
-        geom_step(data = RNAseq_df, aes(x = position, y = count), color = RNAcoverline, na.rm = TRUE) +
+        geom_col(data=RNAseq_df, aes(x=position, y=count), fill=RNAbackground, color=RNAbackground, na.rm=TRUE) +
+        geom_step(data=RNAseq_df, aes(x=position, y=count), color=RNAcoverline, na.rm=TRUE) +
         theme_bw() +
         theme(
-          axis.text.x = element_blank(),
-          axis.ticks.x = element_blank(),
-          legend.position = "none",  # Remove legend to maintain consistent width
-          plot.margin = unit(c(0, 0.2, 0, 0.2), "lines"),
-          panel.grid.major.x = element_blank(),  # Remove vertical grid lines
-          panel.grid.minor.x = element_blank(),
-          panel.grid.minor.y = element_blank(),
-          panel.grid.major.y = element_line(color = "lightgrey", linewidth = 0.3),  # Light horizontal grid lines
-          axis.title.y = element_text(size = 10),
-          panel.background = element_rect(fill = "white", color = NA)  # Set background to white
+          axis.text.x=element_blank(),
+          axis.ticks.x=element_blank(),
+          legend.position="none",
+          plot.margin=unit(c(0,0.2,0,0.2),"lines"),
+          panel.grid.major.x=element_blank(),
+          panel.grid.minor.x=element_blank(),
+          panel.grid.minor.y=element_blank(),
+          panel.grid.major.y=element_line(color="lightgrey",linewidth=0.3),
+          axis.title.y=element_text(size=10),
+          panel.background=element_rect(fill="white",color=NA)
         )
 
-      # Set x-axis scales based on strand and limits
-      if (GeneTxInfo$strand == "-") {
-        p <- p + scale_x_reverse(limits = c(GeneTxInfo$range_right, GeneTxInfo$range_left))
-        x_limits <- c(GeneTxInfo$range_right, GeneTxInfo$range_left)
+      if (GeneTxInfo$strand=="-") {
+        p <- p + scale_x_reverse(limits=c(GeneTxInfo$range_right,GeneTxInfo$range_left))
+        x_limits <- c(GeneTxInfo$range_right,GeneTxInfo$range_left)
       } else {
-        p <- p + scale_x_continuous(limits = c(GeneTxInfo$range_left, GeneTxInfo$range_right))
-        x_limits <- c(GeneTxInfo$range_left, GeneTxInfo$range_right)
+        p <- p + scale_x_continuous(limits=c(GeneTxInfo$range_left,GeneTxInfo$range_right))
+        x_limits <- c(GeneTxInfo$range_left,GeneTxInfo$range_right)
       }
 
-      # Remove x-axis label to save space
       p <- p + xlab("")
 
-      # Add eORF boundary lines before plotting Ribo-seq reads
-      if (!is.null(eORFTxInfo)) {
-        x_min <- min(x_limits)
-        x_max <- max(x_limits)
-        for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
-          eORF_ranges <- eORFTxInfo$xlim.eORF[[j]]
-          eORF_left <- eORF_right <- NULL  # Initialize variables
-          if (length(eORF_ranges) > 0) {
-            eORF_left <- min(start(eORF_ranges))
-            eORF_right <- max(end(eORF_ranges))
-          }
+      main_has_cds <- length(GeneTxInfo$xlimCds[[tx_id]])>0
 
-          # Determine color based on whether the ORF overlaps with the main ORF
-          overlaps_CDS <- FALSE
-          if (!is.null(GeneTxInfo$xlimCds[[tx_id]]) && length(GeneTxInfo$xlimCds[[tx_id]]) > 0) {
-            cds_ranges <- GeneTxInfo$xlimCds[[tx_id]]
-            overlap_cds <- findOverlaps(eORF_ranges, cds_ranges)
-            if (length(overlap_cds) > 0) {
-              overlaps_CDS <- TRUE
+      # Previously condition was (main_has_cds && plot_ORF_ranges),
+      # minimal fix: remove && plot_ORF_ranges for always plotting vertical lines:
+      if (main_has_cds) {
+        if (!is.null(eORFTxInfo)) {
+          x_min <- min(x_limits)
+          x_max <- max(x_limits)
+          for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
+            eORF_ranges <- eORFTxInfo$xlim.eORF[[j]]
+            eORF_left_pos <- if (length(eORF_ranges)>0) min(start(eORF_ranges)) else NA
+            eORF_right_pos <- if (length(eORF_ranges)>0) max(end(eORF_ranges)) else NA
+
+            overlaps_CDS <- FALSE
+            if (length(GeneTxInfo$xlimCds[[tx_id]])>0) {
+              cds_ranges <- GeneTxInfo$xlimCds[[tx_id]]
+              overlap_cds <- findOverlaps(eORF_ranges, cds_ranges)
+              if (length(overlap_cds)>0) {
+                overlaps_CDS <- TRUE
+              }
+            }
+            line_color <- if (overlaps_CDS) "orange" else "green"
+
+            if (GeneTxInfo$strand=="+") {
+              start_pos <- eORF_left_pos
+              end_pos <- eORF_right_pos
+            } else {
+              start_pos <- eORF_right_pos
+              end_pos <- eORF_left_pos
+            }
+
+            if (!is.null(start_pos) && !is.na(start_pos) && start_pos>=x_min && start_pos<=x_max) {
+              p <- p + geom_vline(xintercept=start_pos, linetype="solid", color=line_color, alpha=0.5)
+            }
+            if (!is.null(end_pos) && !is.na(end_pos) && end_pos>=x_min && end_pos<=x_max) {
+              p <- p + geom_vline(xintercept=end_pos, linetype="dashed", color=line_color, alpha=0.5)
             }
           }
-          if (overlaps_CDS) {
-            line_color <- "orange"
-          } else {
-            line_color <- "green"
-          }
+        }
 
-          # Adjust line types based on strand
-          if (GeneTxInfo$strand == "+") {
-            start_pos <- eORF_left
-            end_pos <- eORF_right
-          } else {
-            start_pos <- eORF_right
-            end_pos <- eORF_left
-          }
+        main_orf_start <- if (GeneTxInfo$strand=="+") GeneTxInfo$cds_left else GeneTxInfo$cds_right
+        main_orf_stop <- if (GeneTxInfo$strand=="+") GeneTxInfo$cds_right else GeneTxInfo$cds_left
 
-          # Add solid line for eORF start and dashed line for eORF end, checking if within x_limits
-          if (!is.null(start_pos) && !is.na(start_pos) && start_pos >= x_min && start_pos <= x_max) {
-            p <- p + geom_vline(xintercept = start_pos, linetype = "solid", color = line_color, alpha = 0.5)
+        x_min <- min(x_limits)
+        x_max <- max(x_limits)
+
+        if (!is.na(main_orf_start) && main_orf_start>=x_min && main_orf_start<=x_max) {
+          p <- p + geom_vline(xintercept=main_orf_start, linetype="dashed", color="black")
+        }
+        if (!is.na(main_orf_stop) && main_orf_stop>=x_min && main_orf_stop<=x_max) {
+          p <- p + geom_vline(xintercept=main_orf_stop, linetype="dashed", color="darkgrey")
+        }
+
+        if (fExtend>0) {
+          fExtend_start <- if(GeneTxInfo$strand=="+") main_orf_start - fExtend else main_orf_start + fExtend
+          if (!is.na(fExtend_start) && fExtend_start>=x_min && fExtend_start<=x_max) {
+            p <- p + geom_vline(xintercept=fExtend_start, linetype="dashed", color="blue")
           }
-          if (!is.null(end_pos) && !is.na(end_pos) && end_pos >= x_min && end_pos <= x_max) {
-            p <- p + geom_vline(xintercept = end_pos, linetype = "dashed", color = line_color, alpha = 0.5)
+        }
+
+        if (tExtend>0) {
+          tExtend_end <- if(GeneTxInfo$strand=="+") main_orf_stop + tExtend else main_orf_stop - tExtend
+          if (!is.na(tExtend_end) && tExtend_end>=x_min && tExtend_end<=x_max) {
+            p <- p + geom_vline(xintercept=tExtend_end, linetype="dashed", color="blue")
           }
         }
       }
 
-      # Add vertical lines for main ORF start (black dashed) and stop (grey dashed)
-      # Determine main ORF start and stop positions based on strand
-      main_orf_start <- if (GeneTxInfo$strand == "+") GeneTxInfo$cds_left else GeneTxInfo$cds_right
-      main_orf_stop <- if (GeneTxInfo$strand == "+") GeneTxInfo$cds_right else GeneTxInfo$cds_left
-
-      x_min <- min(x_limits)
-      x_max <- max(x_limits)
-
-      # Add vertical lines with specified colors, checking for NA and plotting range
-      if (!is.na(main_orf_start) && main_orf_start >= x_min && main_orf_start <= x_max) {
-        p <- p + geom_vline(xintercept = main_orf_start, linetype = "dashed", color = "black")
-      }
-      if (!is.na(main_orf_stop) && main_orf_stop >= x_min && main_orf_stop <= x_max) {
-        p <- p + geom_vline(xintercept = main_orf_stop, linetype = "dashed", color = "darkgrey")
-      }
-
-      # Add blue dashed lines for fExtend and tExtend regions
-      if (fExtend > 0) {
-        fExtend_start <- if (GeneTxInfo$strand == "+") main_orf_start - fExtend else main_orf_start + fExtend
-        # Add vertical line at fExtend_start
-        if (!is.na(fExtend_start) && fExtend_start >= x_min && fExtend_start <= x_max) {
-          p <- p + geom_vline(xintercept = fExtend_start, linetype = "dashed", color = "blue")
-        }
-      }
-
-      if (tExtend > 0) {
-        tExtend_end <- if (GeneTxInfo$strand == "+") main_orf_stop + tExtend else main_orf_stop - tExtend
-        # Add vertical line at tExtend_end
-        if (!is.na(tExtend_end) && tExtend_end >= x_min && tExtend_end <= x_max) {
-          p <- p + geom_vline(xintercept = tExtend_end, linetype = "dashed", color = "blue")
-        }
-      }
-
-      # Add Ribo-seq data if available
-      if (length(RiboRslt) > 0 && nrow(RiboRslt) > 0) {
+      if (length(RiboRslt)>0 && nrow(RiboRslt)>0) {
         cds_ranges <- GeneTxInfo$cdsByYFGtx[[tx_id]]
         exons <- GeneTxInfo$exonByYFGtx[[tx_id]]
 
-        if (!is.null(oORF_coloring) && oORF_coloring == "oORF_colors") {
-          # Handle 'oORF_colors' option
-
-          # Assign frames to Ribo_main reads, including overlapping positions
-          Ribo_main <- RiboRslt
-
-          # Assign frames to Ribo_main
-          Ribo_main <- assign_frames(Ribo_main, cds_ranges, GeneTxInfo$strand)
-
-          # For each read in Ribo_main, determine if it overlaps with overlapping ORFs
-          if (!is.null(eORFTxInfo)) {
-            # Create a GRanges object for Ribo_main positions
-            Ribo_gr <- GRanges(
-              seqnames = Ribo_main$chr,
-              ranges = IRanges(Ribo_main$position, Ribo_main$position),
-              strand = Ribo_main$strand
-            )
-
-            # Create a GRangesList of overlapping ORFs
-            overlapping_orfs <- GRangesList()
-            for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
-              eORF_ranges <- eORFTxInfo$xlim.eORF[[j]]
-              # Determine if eORF overlaps CDS
-              overlaps_CDS <- findOverlaps(eORF_ranges, cds_ranges)
-              if (length(overlaps_CDS) > 0) {
-                overlapping_orfs[[length(overlapping_orfs) + 1]] <- eORF_ranges
-              }
-            }
-
-            if (length(overlapping_orfs) > 0) {
-              overlapping_orfs_gr <- unlist(overlapping_orfs)
-              # Find overlaps between Ribo_gr and overlapping_orfs_gr
-              overlaps <- findOverlaps(Ribo_gr, overlapping_orfs_gr)
-              Ribo_main$region_type <- 'non_overlapping'
-              Ribo_main$region_type[queryHits(overlaps)] <- 'overlapping'
-            } else {
-              Ribo_main$region_type <- 'non_overlapping'
-            }
+        if (length(cds_ranges)==0) {
+          # Noncoding transcript: assign frames from first nucleotide
+          if (GeneTxInfo$strand=="+") {
+            exons_sorted <- sort(exons, decreasing=FALSE)
           } else {
-            Ribo_main$region_type <- 'non_overlapping'
+            exons_sorted <- sort(exons, decreasing=TRUE)
           }
 
-          # Apply Ribo_fix_height if provided
-          if (!is.null(Ribo_fix_height)) {
-            Ribo_main$count <- pmin(Ribo_main$count, Ribo_fix_height)
-          }
-          Ribo_main$count_scaled <- Ribo_main$count * scale_factor_Ribo
-
-          # Plot Ribo-seq reads based on sample_color_i
-          if (sample_color_i == "color") {
-            # Plot non_overlapping reads in grey
-            p <- p +
-              geom_segment(data = Ribo_main[Ribo_main$region_type == 'non_overlapping', ],
-                           aes(x = position, xend = position, y = 0, yend = count_scaled),
-                           color = 'grey')
-
-            # Plot overlapping reads colored by frame
-            p <- p +
-              geom_segment(data = Ribo_main[Ribo_main$region_type == 'overlapping', ],
-                           aes(x = position, xend = position, y = 0, yend = count_scaled, color = frame))
-
-            # Handle eORF Ribo-seq reads as before
-            if (!is.null(eORFTxInfo)) {
-              for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
-                eORF_Riboseq <- eORF_Riboseq_list[[i]][[j]]
-                eORF_ranges <- eORFTxInfo$xlim.eORF[[j]]
-                if (nrow(eORF_Riboseq) > 0) {
-                  # Apply Ribo_fix_height if provided
-                  if (!is.null(Ribo_fix_height)) {
-                    eORF_Riboseq$count <- pmin(eORF_Riboseq$count, Ribo_fix_height)
-                  }
-                  eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
-
-                  # Assign frames to eORF Ribo-seq reads
-                  eORF_Riboseq <- assign_frames(eORF_Riboseq, eORF_ranges, GeneTxInfo$strand)
-
-                  # Plot eORF Ribo-seq reads with frame coloring
-                  p <- p +
-                    geom_segment(data = eORF_Riboseq,
-                                 aes(x = position, xend = position, y = 0, yend = count_scaled, color = frame))
-                }
-              }
+          positions <- integer(0)
+          tx_positions <- integer(0)
+          cum_len <- 0
+          for (exn in seq_along(exons_sorted)) {
+            exon <- exons_sorted[exn]
+            pos <- seq(start(exon), end(exon))
+            if (GeneTxInfo$strand=="-") {
+              pos <- rev(pos)
             }
-
-            # Add color scale for frames
-            p <- p + scale_color_manual(values = frame_colors, na.value = "grey")
-
-          } else {
-            # Plot all Ribo-seq reads with specified color
-            p <- p +
-              geom_segment(data = Ribo_main,
-                           aes(x = position, xend = position, y = 0, yend = count_scaled), color = sample_color_i)
-            # Handle eORF Ribo-seq reads similarly
-            if (!is.null(eORFTxInfo)) {
-              for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
-                eORF_Riboseq <- eORF_Riboseq_list[[i]][[j]]
-                if (nrow(eORF_Riboseq) > 0) {
-                  # Apply Ribo_fix_height if provided
-                  if (!is.null(Ribo_fix_height)) {
-                    eORF_Riboseq$count <- pmin(eORF_Riboseq$count, Ribo_fix_height)
-                  }
-                  eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
-                  # Plot eORF Ribo-seq reads with specified color
-                  p <- p +
-                    geom_segment(data = eORF_Riboseq,
-                                 aes(x = position, xend = position, y = 0, yend = count_scaled), color = sample_color_i)
-                }
-              }
-            }
+            len <- length(pos)
+            tx_pos <- seq_len(len) + cum_len
+            positions <- c(positions, pos)
+            tx_positions <- c(tx_positions, tx_pos)
+            cum_len <- cum_len + len
           }
+          position_df <- data.frame(position=positions, tx_pos=tx_positions)
+          position_df$frame <- factor((position_df$tx_pos - 1) %% 3, levels=c(0,1,2))
 
-        } else if (!is.null(oORF_coloring) && oORF_coloring == "extend_mORF") {
-          # Existing code for 'extend_mORF' option
+          RiboRslt <- merge(RiboRslt, position_df[, c("position","frame")], by="position", all.x=TRUE)
 
-          # Initialize extended_cds_ranges with main CDS ranges
-          extended_cds_ranges <- cds_ranges
-
-          # Extend CDS ranges to include overlapping eORFs
-          if (!is.null(eORFTxInfo) && has_overlapping_ORF) {
-            for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
-              eORF_ranges <- eORFTxInfo$xlim.eORF[[j]]
-
-              # Determine if this eORF overlaps CDS
-              overlaps_CDS <- findOverlaps(eORF_ranges, cds_ranges)
-              if (length(overlaps_CDS) > 0) {
-                # Extend CDS ranges to include eORF
-                extended_cds_ranges <- reduce(c(extended_cds_ranges, eORF_ranges))
-              }
-            }
-          }
-
-          # Assign frames based on extended CDS ranges using main ORF frame
-          RiboRslt <- assign_frames_extended(RiboRslt, extended_cds_ranges, GeneTxInfo$strand, cds_ranges)
-
-          # Apply Ribo_fix_height if provided
           if (!is.null(Ribo_fix_height)) {
             RiboRslt$count <- pmin(RiboRslt$count, Ribo_fix_height)
             RiboRslt$count_scaled <- RiboRslt$count * scale_factor_Ribo
           }
 
-          # Plot Ribo-seq reads based on sample_color_i
-          if (sample_color_i == "color") {
-            # Plot Ribo-seq reads with assigned frames
+          if (sample_color_i=="color") {
             p <- p +
-              geom_segment(data = RiboRslt,
-                           aes(x = position, xend = position, y = 0, yend = count_scaled, color = frame))
+              geom_segment(data=RiboRslt,
+                           aes(x=position, xend=position, y=0, yend=count_scaled, color=frame))
+            p <- p + scale_color_manual(values=frame_colors, na.value="grey")
+          } else {
+            p <- p +
+              geom_segment(data=RiboRslt,
+                           aes(x=position, xend=position, y=0, yend=count_scaled),
+                           color=sample_color_i)
+          }
 
-            # Add code to handle uORFs (not overlapping uORFs)
+        } else {
+          # Coding transcripts logic below (unchanged)
+          if (!is.null(oORF_coloring) && oORF_coloring == "oORF_colors") {
+            Ribo_main <- RiboRslt
+            Ribo_main <- assign_frames(Ribo_main, cds_ranges, GeneTxInfo$strand)
+
             if (!is.null(eORFTxInfo)) {
+              Ribo_gr <- GRanges(
+                seqnames = Ribo_main$chr,
+                ranges = IRanges(Ribo_main$position, Ribo_main$position),
+                strand = Ribo_main$strand
+              )
+
+              overlapping_orfs <- GRangesList()
               for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
                 eORF_ranges <- eORFTxInfo$xlim.eORF[[j]]
-                eORF_Riboseq <- eORF_Riboseq_list[[i]][[j]]
-
-                # Determine if this eORF is a uORF (not overlapping uORF)
                 overlaps_CDS <- findOverlaps(eORF_ranges, cds_ranges)
-                overlaps_fiveUTR <- FALSE
-                fiveUTR_ranges <- GeneTxInfo$fiveUTRByYFGtx[[tx_id]]
-                if (!is.null(fiveUTR_ranges) && length(fiveUTR_ranges) > 0) {
-                  overlaps_fiveUTR <- length(findOverlaps(eORF_ranges, fiveUTR_ranges)) > 0
+                if (length(overlaps_CDS) > 0) {
+                  overlapping_orfs[[length(overlapping_orfs) + 1]] <- eORF_ranges
                 }
+              }
 
-                if (length(overlaps_CDS) == 0 && overlaps_fiveUTR) {
-                  # This is a uORF (not overlapping uORF)
-                  # Assign frames to uORF Ribo-seq reads based on uORF
+              if (length(overlapping_orfs) > 0) {
+                overlapping_orfs_gr <- unlist(overlapping_orfs)
+                overlaps <- findOverlaps(Ribo_gr, overlapping_orfs_gr)
+                Ribo_main$region_type <- 'non_overlapping'
+                Ribo_main$region_type[queryHits(overlaps)] <- 'overlapping'
+              } else {
+                Ribo_main$region_type <- 'non_overlapping'
+              }
+            } else {
+              Ribo_main$region_type <- 'non_overlapping'
+            }
+
+            if (!is.null(Ribo_fix_height)) {
+              Ribo_main$count <- pmin(Ribo_main$count, Ribo_fix_height)
+            }
+            Ribo_main$count_scaled <- Ribo_main$count * scale_factor_Ribo
+
+            if (sample_color_i == "color") {
+              p <- p + geom_segment(data=Ribo_main[Ribo_main$region_type=='non_overlapping',],
+                                    aes(x=position, xend=position, y=0, yend=count_scaled), color='grey')
+              p <- p + geom_segment(data=Ribo_main[Ribo_main$region_type=='overlapping',],
+                                    aes(x=position, xend=position, y=0, yend=count_scaled, color=frame))
+
+              if (!is.null(eORFTxInfo)) {
+                for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
+                  eORF_Riboseq <- eORF_Riboseq_list[[i]][[j]]
+                  eORF_ranges <- eORFTxInfo$xlim.eORF[[j]]
                   if (nrow(eORF_Riboseq) > 0) {
-                    # Apply Ribo_fix_height if provided
                     if (!is.null(Ribo_fix_height)) {
                       eORF_Riboseq$count <- pmin(eORF_Riboseq$count, Ribo_fix_height)
                     }
                     eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
                     eORF_Riboseq <- assign_frames(eORF_Riboseq, eORF_ranges, GeneTxInfo$strand)
+                    p <- p + geom_segment(data=eORF_Riboseq,
+                                          aes(x=position,xend=position,y=0,yend=count_scaled,color=frame))
+                  }
+                }
+              }
+              p <- p + scale_color_manual(values=frame_colors, na.value='grey')
 
-                    # Plot uORF Ribo-seq reads with frame coloring
+            } else {
+              p <- p + geom_segment(data=Ribo_main,
+                                    aes(x=position,xend=position,y=0,yend=count_scaled),color=sample_color_i)
+              if (!is.null(eORFTxInfo)) {
+                for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
+                  eORF_Riboseq <- eORF_Riboseq_list[[i]][[j]]
+                  if (nrow(eORF_Riboseq) > 0) {
+                    if (!is.null(Ribo_fix_height)) {
+                      eORF_Riboseq$count <- pmin(eORF_Riboseq$count,Ribo_fix_height)
+                    }
+                    eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
+                    p <- p + geom_segment(data=eORF_Riboseq,
+                                          aes(x=position,xend=position,y=0,yend=count_scaled),color=sample_color_i)
+                  }
+                }
+              }
+            }
+
+          } else if (!is.null(oORF_coloring) && oORF_coloring=="extend_mORF") {
+            extended_cds_ranges <- cds_ranges
+
+            if (!is.null(eORFTxInfo) && has_overlapping_ORF) {
+              for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
+                eORF_ranges <- eORFTxInfo$xlim.eORF[[j]]
+                overlaps_CDS <- findOverlaps(eORF_ranges, cds_ranges)
+                if (length(overlaps_CDS)>0) {
+                  extended_cds_ranges <- reduce(c(extended_cds_ranges, eORF_ranges))
+                }
+              }
+            }
+
+            RiboRslt <- assign_frames_extended(RiboRslt, extended_cds_ranges, GeneTxInfo$strand, cds_ranges)
+
+            if (!is.null(Ribo_fix_height)) {
+              RiboRslt$count <- pmin(RiboRslt$count,Ribo_fix_height)
+              RiboRslt$count_scaled <- RiboRslt$count * scale_factor_Ribo
+            }
+
+            if (sample_color_i=="color") {
+              p <- p +
+                geom_segment(data=RiboRslt,
+                             aes(x=position,xend=position,y=0,yend=count_scaled,color=frame))
+
+              if (!is.null(eORFTxInfo)) {
+                for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
+                  eORF_ranges <- eORFTxInfo$xlim.eORF[[j]]
+                  eORF_Riboseq <- eORF_Riboseq_list[[i]][[j]]
+
+                  overlaps_CDS <- findOverlaps(eORF_ranges, cds_ranges)
+                  overlaps_fiveUTR <- FALSE
+                  fiveUTR_ranges <- GeneTxInfo$fiveUTRByYFGtx[[tx_id]]
+                  if (!is.null(fiveUTR_ranges) && length(fiveUTR_ranges)>0) {
+                    if (length(findOverlaps(eORF_ranges, fiveUTR_ranges))>0) {
+                      overlaps_fiveUTR <- TRUE
+                    }
+                  }
+
+                  if (length(overlaps_CDS)==0 && overlaps_fiveUTR) {
+                    if (nrow(eORF_Riboseq)>0) {
+                      if (!is.null(Ribo_fix_height)) {
+                        eORF_Riboseq$count <- pmin(eORF_Riboseq$count,Ribo_fix_height)
+                      }
+                      eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
+                      eORF_Riboseq <- assign_frames(eORF_Riboseq, eORF_ranges, GeneTxInfo$strand)
+
+                      p <- p +
+                        geom_segment(data=eORF_Riboseq,
+                                     aes(x=position,xend=position,y=0,yend=count_scaled,color=frame))
+                    }
+                  }
+                }
+              }
+
+              p <- p + scale_color_manual(values=frame_colors, na.value='grey')
+
+            } else {
+              p <- p +
+                geom_segment(data=RiboRslt,
+                             aes(x=position,xend=position,y=0,yend=count_scaled),color=sample_color_i)
+              if (!is.null(eORFTxInfo)) {
+                for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
+                  eORF_Riboseq <- eORF_Riboseq_list[[i]][[j]]
+                  if (nrow(eORF_Riboseq)>0) {
+                    if (!is.null(Ribo_fix_height)) {
+                      eORF_Riboseq$count <- pmin(eORF_Riboseq$count,Ribo_fix_height)
+                    }
+                    eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
                     p <- p +
-                      geom_segment(data = eORF_Riboseq,
-                                   aes(x = position, xend = position, y = 0, yend = count_scaled, color = frame))
+                      geom_segment(data=eORF_Riboseq,
+                                   aes(x=position,xend=position,y=0,yend=count_scaled),color=sample_color_i)
                   }
                 }
               }
             }
 
-            # Add color scale for frames
-            p <- p + scale_color_manual(values = frame_colors, na.value = "grey")
+          } else if (fExtend>0 || tExtend>0) {
+            Ribo_main <- RiboRslt
+            if (!is.null(eORFTxInfo)) {
+              Ribo_main <- exclude_eORF_reads(Ribo_main, eORFTxInfo, GeneTxInfo$strand)
+            }
+
+            Ribo_main <- assign_frames_with_extension(Ribo_main, cds_ranges, exons, fExtend, tExtend, GeneTxInfo$strand)
+
+            if (!is.null(Ribo_fix_height)) {
+              Ribo_main$count <- pmin(Ribo_main$count,Ribo_fix_height)
+              Ribo_main$count_scaled <- Ribo_main$count * scale_factor_Ribo
+            }
+
+            if (sample_color_i=="color") {
+              p <- p +
+                geom_segment(data=Ribo_main,
+                             aes(x=position,xend=position,y=0,yend=count_scaled,color=frame))
+
+              if (!is.null(eORFTxInfo)) {
+                for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
+                  eORF_Riboseq <- eORF_Riboseq_list[[i]][[j]]
+                  eORF_ranges <- eORFTxInfo$xlim.eORF[[j]]
+                  if (nrow(eORF_Riboseq)>0) {
+                    if (!is.null(Ribo_fix_height)) {
+                      eORF_Riboseq$count <- pmin(eORF_Riboseq$count,Ribo_fix_height)
+                    }
+                    eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
+                    eORF_Riboseq <- assign_frames(eORF_Riboseq, eORF_ranges, GeneTxInfo$strand)
+
+                    p <- p +
+                      geom_segment(data=eORF_Riboseq,
+                                   aes(x=position,xend=position,y=0,yend=count_scaled,color=frame))
+                  }
+                }
+              }
+
+              p <- p + scale_color_manual(values=frame_colors, na.value="grey")
+
+            } else {
+              p <- p +
+                geom_segment(data=Ribo_main,
+                             aes(x=position,xend=position,y=0,yend=count_scaled),color=sample_color_i)
+              if (!is.null(eORFTxInfo)) {
+                for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
+                  eORF_Riboseq <- eORF_Riboseq_list[[i]][[j]]
+                  if (nrow(eORF_Riboseq)>0) {
+                    if (!is.null(Ribo_fix_height)) {
+                      eORF_Riboseq$count <- pmin(eORF_Riboseq$count,Ribo_fix_height)
+                    }
+                    eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
+                    p <- p +
+                      geom_segment(data=eORF_Riboseq,
+                                   aes(x=position,xend=position,y=0,yend=count_scaled),color=sample_color_i)
+                  }
+                }
+              }
+            }
 
           } else {
-            # Plot all Ribo-seq reads with specified color
-            p <- p +
-              geom_segment(data = RiboRslt,
-                           aes(x = position, xend = position, y = 0, yend = count_scaled), color = sample_color_i)
-            # Handle eORF Ribo-seq reads similarly
+            # Default coding transcripts frame assignment
+            Ribo_main <- RiboRslt
             if (!is.null(eORFTxInfo)) {
-              for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
-                eORF_Riboseq <- eORF_Riboseq_list[[i]][[j]]
-                if (nrow(eORF_Riboseq) > 0) {
-                  # Apply Ribo_fix_height if provided
-                  if (!is.null(Ribo_fix_height)) {
-                    eORF_Riboseq$count <- pmin(eORF_Riboseq$count, Ribo_fix_height)
-                  }
-                  eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
-                  # Plot eORF Ribo-seq reads with specified color
-                  p <- p +
-                    geom_segment(data = eORF_Riboseq,
-                                 aes(x = position, xend = position, y = 0, yend = count_scaled), color = sample_color_i)
-                }
-              }
-            }
-          }
-
-        } else if (fExtend > 0 || tExtend > 0) {
-          # Use assign_frames_with_extension
-          Ribo_main <- RiboRslt
-
-          # Exclude eORF positions if eORF information is available
-          if (!is.null(eORFTxInfo)) {
-            Ribo_main <- exclude_eORF_reads(Ribo_main, eORFTxInfo, GeneTxInfo$strand)
-          }
-
-          # Assign frames with extension into UTRs
-          Ribo_main <- assign_frames_with_extension(Ribo_main, cds_ranges, exons, fExtend, tExtend, GeneTxInfo$strand)
-
-          # Apply Ribo_fix_height if provided
-          if (!is.null(Ribo_fix_height)) {
-            Ribo_main$count <- pmin(Ribo_main$count, Ribo_fix_height)
-            Ribo_main$count_scaled <- Ribo_main$count * scale_factor_Ribo
-          }
-
-          # Plot Ribo-seq reads based on sample_color_i
-          if (sample_color_i == "color") {
-            # Plot Ribo-seq reads with assigned frames
-            p <- p +
-              geom_segment(data = Ribo_main,
-                           aes(x = position, xend = position, y = 0, yend = count_scaled, color = frame))
-
-            # Handle eORF Ribo-seq reads if eORFTxInfo is available
-            if (!is.null(eORFTxInfo)) {
-              for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
-                eORF_Riboseq <- eORF_Riboseq_list[[i]][[j]]
-                eORF_ranges <- eORFTxInfo$xlim.eORF[[j]]
-                if (nrow(eORF_Riboseq) > 0) {
-                  # Apply Ribo_fix_height if provided
-                  if (!is.null(Ribo_fix_height)) {
-                    eORF_Riboseq$count <- pmin(eORF_Riboseq$count, Ribo_fix_height)
-                  }
-                  eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
-
-                  # Assign frames to eORF Ribo-seq reads
-                  eORF_Riboseq <- assign_frames(eORF_Riboseq, eORF_ranges, GeneTxInfo$strand)
-
-                  # Plot eORF Ribo-seq reads with frame coloring
-                  p <- p +
-                    geom_segment(data = eORF_Riboseq,
-                                 aes(x = position, xend = position, y = 0, yend = count_scaled, color = frame))
-                }
-              }
+              eORF_positions <- unlist(lapply(seq_along(eORFTxInfo$xlim.eORF), function(j) {
+                ranges <- eORFTxInfo$xlim.eORF[[j]]
+                seq(min(start(ranges)), max(end(ranges)))
+              }))
+              Ribo_main <- Ribo_main[!(Ribo_main$position %in% eORF_positions), ]
             }
 
-            # Add color scale for frames
-            p <- p + scale_color_manual(values = frame_colors, na.value = "grey")
+            Ribo_main <- assign_frames(Ribo_main, cds_ranges, GeneTxInfo$strand)
 
-          } else {
-            # Plot all Ribo-seq reads with specified color
-            p <- p +
-              geom_segment(data = Ribo_main,
-                           aes(x = position, xend = position, y = 0, yend = count_scaled), color = sample_color_i)
-            # Handle eORF Ribo-seq reads similarly
-            if (!is.null(eORFTxInfo)) {
-              for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
-                eORF_Riboseq <- eORF_Riboseq_list[[i]][[j]]
-                if (nrow(eORF_Riboseq) > 0) {
-                  # Apply Ribo_fix_height if provided
-                  if (!is.null(Ribo_fix_height)) {
-                    eORF_Riboseq$count <- pmin(eORF_Riboseq$count, Ribo_fix_height)
-                  }
-                  eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
-                  # Plot eORF Ribo-seq reads with specified color
-                  p <- p +
-                    geom_segment(data = eORF_Riboseq,
-                                 aes(x = position, xend = position, y = 0, yend = count_scaled), color = sample_color_i)
-                }
-              }
-            }
-          }
-
-        } else {
-          # Default case
-          # Assign frames to main ORF reads
-          Ribo_main <- RiboRslt
-
-          # Exclude eORF positions if eORF information is available
-          if (!is.null(eORFTxInfo)) {
-            eORF_positions <- unlist(lapply(seq_along(eORFTxInfo$xlim.eORF), function(j) {
-              ranges <- eORFTxInfo$xlim.eORF[[j]]
-              seq(min(start(ranges)), max(end(ranges)))
-            }))
-            Ribo_main <- Ribo_main[!(Ribo_main$position %in% eORF_positions), ]
-          }
-
-          # Assign frames to main ORF reads
-          Ribo_main <- assign_frames(Ribo_main, cds_ranges, GeneTxInfo$strand)
-
-          # Apply Ribo_fix_height if provided
-          if (!is.null(Ribo_fix_height)) {
-            Ribo_main$count <- pmin(Ribo_main$count, Ribo_fix_height)
-            Ribo_main$count_scaled <- Ribo_main$count * scale_factor_Ribo
-          }
-
-          # Plot Ribo-seq reads based on sample_color_i
-          if (sample_color_i == "color") {
-            # Plot main ORF Ribo-seq reads with frame coloring
-            p <- p +
-              geom_segment(data = Ribo_main,
-                           aes(x = position, xend = position, y = 0, yend = count_scaled, color = frame))
-
-            # Handle eORF Ribo-seq reads if eORFTxInfo is available
-            if (!is.null(eORFTxInfo)) {
-              for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
-                eORF_Riboseq <- eORF_Riboseq_list[[i]][[j]]
-                eORF_ranges <- eORFTxInfo$xlim.eORF[[j]]
-                if (nrow(eORF_Riboseq) > 0) {
-                  # Apply Ribo_fix_height if provided
-                  if (!is.null(Ribo_fix_height)) {
-                    eORF_Riboseq$count <- pmin(eORF_Riboseq$count, Ribo_fix_height)
-                  }
-                  eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
-
-                  # Assign frames to eORF Ribo-seq reads
-                  eORF_Riboseq <- assign_frames(eORF_Riboseq, eORF_ranges, GeneTxInfo$strand)
-
-                  # Plot eORF Ribo-seq reads with frame coloring
-                  p <- p +
-                    geom_segment(data = eORF_Riboseq,
-                                 aes(x = position, xend = position, y = 0, yend = count_scaled, color = frame))
-                }
-              }
+            if (!is.null(Ribo_fix_height)) {
+              Ribo_main$count <- pmin(Ribo_main$count,Ribo_fix_height)
+              Ribo_main$count_scaled <- Ribo_main$count * scale_factor_Ribo
             }
 
-            # Add color scale for frames
-            p <- p + scale_color_manual(values = frame_colors, na.value = "grey")
+            if (sample_color_i=="color") {
+              p <- p +
+                geom_segment(data=Ribo_main,
+                             aes(x=position,xend=position,y=0,yend=count_scaled,color=frame))
 
-          } else {
-            # Plot all Ribo-seq reads with specified color
-            p <- p +
-              geom_segment(data = Ribo_main,
-                           aes(x = position, xend = position, y = 0, yend = count_scaled), color = sample_color_i)
-            # Handle eORF Ribo-seq reads similarly
-            if (!is.null(eORFTxInfo)) {
-              for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
-                eORF_Riboseq <- eORF_Riboseq_list[[i]][[j]]
-                if (nrow(eORF_Riboseq) > 0) {
-                  # Apply Ribo_fix_height if provided
-                  if (!is.null(Ribo_fix_height)) {
-                    eORF_Riboseq$count <- pmin(eORF_Riboseq$count, Ribo_fix_height)
+              if (!is.null(eORFTxInfo)) {
+                for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
+                  eORF_Riboseq <- eORF_Riboseq_list[[i]][[j]]
+                  eORF_ranges <- eORFTxInfo$xlim.eORF[[j]]
+                  if (nrow(eORF_Riboseq)>0) {
+                    if (!is.null(Ribo_fix_height)) {
+                      eORF_Riboseq$count <- pmin(eORF_Riboseq$count,Ribo_fix_height)
+                    }
+                    eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
+                    eORF_Riboseq <- assign_frames(eORF_Riboseq, eORF_ranges, GeneTxInfo$strand)
+                    p <- p +
+                      geom_segment(data=eORF_Riboseq,
+                                   aes(x=position,xend=position,y=0,yend=count_scaled,color=frame))
                   }
-                  eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
-                  # Plot eORF Ribo-seq reads with specified color
-                  p <- p +
-                    geom_segment(data = eORF_Riboseq,
-                                 aes(x = position, xend = position, y = 0, yend = count_scaled), color = sample_color_i)
+                }
+              }
+
+              p <- p + scale_color_manual(values=frame_colors, na.value="grey")
+
+            } else {
+              p <- p +
+                geom_segment(data=Ribo_main,
+                             aes(x=position,xend=position,y=0,yend=count_scaled),color=sample_color_i)
+              if (!is.null(eORFTxInfo)) {
+                for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
+                  eORF_Riboseq <- eORF_Riboseq_list[[i]][[j]]
+                  if (nrow(eORF_Riboseq)>0) {
+                    if (!is.null(Ribo_fix_height)) {
+                      eORF_Riboseq$count <- pmin(eORF_Riboseq$count,Ribo_fix_height)
+                    }
+                    eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
+                    p <- p +
+                      geom_segment(data=eORF_Riboseq,
+                                   aes(x=position,xend=position,y=0,yend=count_scaled),color=sample_color_i)
+                  }
                 }
               }
             }
@@ -2071,136 +1870,115 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
         }
       }
 
-      # Set y-axis limits and labels with adjusted limits to accommodate sample names
       p <- p + scale_y_continuous(
-        limits = y_limits,  # Set limits based on Y_scale or Ribo_fix_height
-        name = "RNA-seq \ncoverage",
-        sec.axis = sec_axis(~ . / scale_factor_Ribo, name = paste0(data_types[i], "\n counts"))
+        limits=y_limits,
+        name="RNA-seq \ncoverage",
+        sec.axis=sec_axis(~ . / scale_factor_Ribo, name = paste0(data_types[i], "\n counts"))
       )
 
-      # Remove x-axis label to save space
       p <- p + xlab("")
 
-      # Adjust x position and hjust for sample name annotation
-      delta_x <- 0  # Position sample names at the extreme left/right based on strand
-      x_label <- if (GeneTxInfo$strand == "-") {
+      delta_x <- 0
+      x_label <- if (GeneTxInfo$strand=="-") {
         GeneTxInfo$range_right - delta_x
       } else {
         GeneTxInfo$range_left + delta_x
       }
-      hjust_label <- 0  # Left aligned
+      hjust_label <- 0
 
-      # Adjust y position to move the label further up based on Y_scale
-      y_label <- if (!is.null(Ribo_fix_height) || Y_scale == "all") {
+      y_label <- if (!is.null(Ribo_fix_height) || Y_scale=="all") {
         current_max_Y
       } else {
-        current_max_Y + 0.01 * current_max_Y
+        current_max_Y + 0.01*current_max_Y
       }
 
-      # Add sample name inside the plot
       p <- p + annotate("text",
-                        x = x_label,
-                        y = y_label,
-                        label = SampleNames[i],
-                        hjust = hjust_label,
-                        vjust = 0,  # Align text at the bottom
-                        size = 3,
-                        fontface = "bold")
+                        x=x_label,y=y_label,
+                        label=SampleNames[i],
+                        hjust=hjust_label,vjust=0,
+                        size=3,fontface="bold")
 
-      # Adjust theme to reduce empty space and align labels
       p <- p + theme(
-        axis.text.x = element_blank(),
-        axis.ticks.x = element_blank(),
-        legend.position = "none",  # Suppress legend
-        plot.margin = unit(c(0, 0.2, -0.8, 0.2), "lines"),
-        panel.grid.major.x = element_blank(),  # Remove vertical grid lines
-        panel.grid.minor.x = element_blank(),
-        panel.grid.minor.y = element_blank(),
-        panel.grid.major.y = element_line(color = "lightgrey", linewidth = 0.3),
-        axis.title.y = element_text(size = 10)
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        legend.position="none",
+        plot.margin=unit(c(0,0.2,-0.8,0.2),"lines"),
+        panel.grid.major.x=element_blank(),
+        panel.grid.minor.x=element_blank(),
+        panel.grid.minor.y=element_blank(),
+        panel.grid.major.y=element_line(color="lightgrey",linewidth=0.3),
+        axis.title.y=element_text(size=10)
       )
 
-      # Store the ggplot object in plot_list
       plot_list[[i]] <- p
     }
   }
 
-  # Create the DNA and amino acid plot if show_seq is TRUE
   if (show_seq && !is.null(FASTA)) {
     dna_aa_plot <- plotDNAandAA(
-      GeneTxInfo = GeneTxInfo,
-      plot_range = plot_range,
-      FASTA = FASTA
+      GeneTxInfo=GeneTxInfo,
+      plot_range=plot_range,
+      FASTA=FASTA
     )
   } else {
     dna_aa_plot <- NULL
   }
 
-  # Create the gene model plot
   gene_model_plot <- plotGeneTxModel(
     GeneTxInfo = GeneTxInfo,
     eORFTxInfo = eORFTxInfo,
     plot_ORF_ranges = plot_ORF_ranges,
     plot_range = plot_range,
-    transcript_label_font_size = transcript_label_font_size  # Pass the new parameter
+    transcript_label_font_size = transcript_label_font_size
   )
 
-  # Adjust the height of the gene model plot dynamically based on the number of transcripts
   num_transcripts <- GeneTxInfo$num_isoforms
-  num_datasets <- ifelse(!is.null(RNAseq), length(RNAseq), 0)
+  num_datasets <- ifelse(!is.null(RNAseq),length(RNAseq),0)
 
-  # Define relative heights for the title, RNA-seq/Ribo-seq plots, gene model plot, and DNA/aa plot
-  title_height <- 0.2  # Title height
-  rna_ribo_height <- 0.8  # RNA-seq/Ribo-seq plot height
+  title_height <-0.2
+  rna_ribo_height <-0.8
 
-  # Adjust gene model height calculation based on number of transcripts
   if (is.null(gene_model_height_ratio)) {
-    # Adjust automatically based on number of transcripts
-    gene_model_height_ratio <- 0.2 + (num_transcripts) * 0.1
+    gene_model_height_ratio <-0.2+(num_transcripts)*0.1
   }
-  gene_model_height <- gene_model_height_ratio  # Use the computed or user-specified ratio
+  gene_model_height <- gene_model_height_ratio
 
-  # Adjust for DNA sequence if show_seq is TRUE
   if (show_seq && !is.null(FASTA)) {
-    dna_aa_height <- dna_aa_height_ratio  # Height for DNA/aa plot, adjusted by dna_aa_height_ratio
+    dna_aa_height <- dna_aa_height_ratio
   } else {
-    dna_aa_height <- 0
+    dna_aa_height <-0
   }
 
-  # Total height units is the sum of heights of all plots
-  total_height_units <- title_height + (num_datasets * rna_ribo_height) + dna_aa_height + gene_model_height
+  total_height_units <- title_height+(num_datasets*rna_ribo_height)+dna_aa_height+gene_model_height
 
-  # Adjust relative heights to proportionally allocate space
   rel_heights <- c(
     title_height,
-    rep(rna_ribo_height, num_datasets),
+    rep(rna_ribo_height,num_datasets),
     dna_aa_height,
     gene_model_height
   ) / total_height_units
 
-  # Create a title plot using ggplot2
-  title_plot <- ggplot() +
-    theme_void() +
+  title_plot <- ggplot()+
+    theme_void()+
     theme(
-      plot.margin = unit(c(0, 0, 0, 0), "lines")
-    ) +
+      plot.margin=unit(c(0,0,0,0),"lines")
+    )+
     annotate("text",
-             x = 0.5, y = 0.5,
-             label = paste(gene_id, "  ", NAME),
-             hjust = 0.5, vjust = 0.5,
-             fontface = "italic", size = 5)
+             x=0.5,y=0.5,
+             label=paste(gene_id," ",NAME),
+             hjust=0.5,vjust=0.5,
+             fontface="italic",size=5)
 
-  # Combine the plots using cowplot::plot_grid
   combined_plot <- cowplot::plot_grid(
     title_plot,
-    plotlist = c(plot_list, list(dna_aa_plot), list(gene_model_plot)),
-    ncol = 1,
-    align = "v",
-    rel_heights = rel_heights,
-    axis = "lr",
-    labels = NULL,
-    label_size = 10,
-    label_fontface = "plain"
+    plotlist=c(plot_list,list(dna_aa_plot),list(gene_model_plot)),
+    ncol=1,
+    align="v",
+    rel_heights=rel_heights,
+    axis="lr",
+    labels=NULL,
+    label_size=10,
+    label_fontface="plain"
   )
 
   return(combined_plot)
