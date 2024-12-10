@@ -659,151 +659,241 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
   library(ggplot2)
   library(GenomicRanges)
   
+  # Extract necessary information from GeneTxInfo
   isoforms <- GeneTxInfo$num_isoforms
   genelim <- c(GeneTxInfo$range_left, GeneTxInfo$range_right)
   tx_names <- GeneTxInfo$tx_names
   tx_id <- GeneTxInfo$tx_id
   strand <- GeneTxInfo$strand
   
+  # Initialize lists to store plot data
   plot_data_list <- list()
   line_data_list <- list()
   idx <- 1
   
+  # Sort transcripts: main transcript first, others alphabetically
   other_tx_names <- setdiff(tx_names, tx_id)
   sorted_tx_names <- c(tx_id, sort(other_tx_names))
   
-  y_step <- 0.3
-  y_positions <- seq(1, by=y_step, length.out=length(sorted_tx_names))
+  # Assign y-axis positions, with main transcript at the top
+  y_step <- 0.3  # Spacing between transcripts
+  y_positions <- seq(1, by = y_step, length.out = length(sorted_tx_names))
   isoform_positions <- data.frame(
     isoform = sorted_tx_names,
-    y = rev(y_positions),
+    y = rev(y_positions),  # Reverse to have main transcript at the top
     stringsAsFactors = FALSE
   )
   
+  # Create a mapping from isoform to y-axis position
   isoform_y_map <- setNames(isoform_positions$y, isoform_positions$isoform)
   
+  # Process each isoform to extract features
   for (isoform in isoform_positions$isoform) {
     y_value <- isoform_y_map[isoform]
     isoform_data_list <- list()
-    isoform_idx <- 1
+    isoform_idx <- 1  # Index for features within an isoform
     
+    # Get the exons for the isoform
     exons_gr <- GeneTxInfo$exonByYFGtx[[isoform]]
-    if (length(exons_gr)==0) {
+    if (length(exons_gr) == 0) {
       warning(paste("Exons for isoform", isoform, "not found in exonByYFGtx"))
-      next
+      next  # Skip to next isoform if no exons found
     }
     
+    # Keep a copy of the original exons
+    exons_gr_original <- exons_gr
+    
+    # Truncate exons to the plot_range if provided
     if (!is.null(plot_range)) {
-      segment_gr <- GRanges(seqnames=GeneTxInfo$chr,
-                            ranges=IRanges(plot_range[1], plot_range[2]),
-                            strand=GeneTxInfo$strand)
+      segment_gr <- GRanges(seqnames = GeneTxInfo$chr,
+                            ranges = IRanges(plot_range[1], plot_range[2]),
+                            strand = GeneTxInfo$strand)
       exons_gr <- pintersect(exons_gr, segment_gr)
-      exons_gr <- exons_gr[width(exons_gr)>0]
-      if (length(exons_gr)==0) {
-        next
+      # Remove any zero-width ranges
+      exons_gr <- exons_gr[width(exons_gr) > 0]
+      if (length(exons_gr) == 0) {
+        next  # Skip to next isoform if no exons within plot_range
       }
     }
     
+    # Get the transcript start and end positions
     transcript_start <- min(start(exons_gr))
     transcript_end <- max(end(exons_gr))
     
-    cds_ranges <- GeneTxInfo$xlimCds[[isoform]]
-    if (!is.null(cds_ranges) && length(cds_ranges)>0) {
+    # Extract CDS regions
+    cds_ranges <- GeneTxInfo$xlimCds[[isoform]]  # Now a GRanges object
+    if (!is.null(cds_ranges) && length(cds_ranges) > 0) {
+      # Truncate CDS to the plot_range if provided
       if (!is.null(plot_range)) {
-        segment_gr <- GRanges(seqnames=GeneTxInfo$chr,
-                              ranges=IRanges(plot_range[1], plot_range[2]),
-                              strand=GeneTxInfo$strand)
         cds_ranges <- pintersect(cds_ranges, segment_gr)
-        cds_ranges <- cds_ranges[width(cds_ranges)>0]
+        cds_ranges <- cds_ranges[width(cds_ranges) > 0]
       }
-      
-      if (length(cds_ranges)>0) {
+      if (length(cds_ranges) > 0) {
         cds_df <- data.frame(
-          start=start(cds_ranges),
-          end=end(cds_ranges),
-          y=y_value,
-          feature="CDS",
-          isoform=isoform,
-          height_factor=1,
-          orf_id=NA,
-          row.names=NULL
+          start = start(cds_ranges),
+          end = end(cds_ranges),
+          y = y_value,
+          feature = "CDS",
+          isoform = isoform,
+          height_factor = 1,
+          orf_id = NA,  # Add orf_id column with NA
+          row.names = NULL
         )
         isoform_data_list[[isoform_idx]] <- cds_df
-        isoform_idx <- isoform_idx+1
+        isoform_idx <- isoform_idx + 1
       }
     }
     
-    # Modified section:
-    original_cds <- GeneTxInfo$cdsByYFGtx[[isoform]]
-    no_cds_for_this_iso <- (length(original_cds)==0)
+    # Extract 5' UTR regions and extend them by one nucleotide toward the CDS
+    fiveUTR_gr <- NULL
+    if (isoform %in% names(GeneTxInfo$fiveUTRByYFGtx)) {
+      fiveUTR_gr <- unlist(GeneTxInfo$fiveUTRByYFGtx[isoform])
+      if (length(fiveUTR_gr) > 0) {
+        # Extend 5' UTR toward the CDS by one nucleotide
+        if (strand == "+") {
+          end(fiveUTR_gr) <- end(fiveUTR_gr) + 1
+        } else {
+          start(fiveUTR_gr) <- start(fiveUTR_gr) - 1
+        }
+        # Truncate 5' UTR to the plot_range if provided
+        if (!is.null(plot_range)) {
+          fiveUTR_gr <- pintersect(fiveUTR_gr, segment_gr)
+          fiveUTR_gr <- fiveUTR_gr[width(fiveUTR_gr) > 0]
+        }
+        if (length(fiveUTR_gr) > 0) {
+          fiveUTR_df <- data.frame(
+            start = start(fiveUTR_gr),
+            end = end(fiveUTR_gr),
+            y = y_value,
+            feature = "5' UTR",
+            isoform = isoform,
+            height_factor = 1,
+            orf_id = NA,  # Add orf_id column with NA
+            row.names = NULL
+          )
+          isoform_data_list[[isoform_idx]] <- fiveUTR_df
+          isoform_idx <- isoform_idx + 1
+        }
+      }
+    }
     
-    if (!no_cds_for_this_iso) {
-      if (isoform %in% names(GeneTxInfo$fiveUTRByYFGtx)) {
-        fiveUTR_gr <- unlist(GeneTxInfo$fiveUTRByYFGtx[isoform])
-        if (length(fiveUTR_gr)>0) {
-          if (strand == "+") {
-            end(fiveUTR_gr) <- end(fiveUTR_gr)+1
-          } else {
-            start(fiveUTR_gr) <- start(fiveUTR_gr)-1
-          }
+    # Extract 3' UTR regions and extend them by one nucleotide toward the CDS
+    threeUTR_gr <- NULL
+    if (isoform %in% names(GeneTxInfo$threeUTRByYFGtx)) {
+      threeUTR_gr <- unlist(GeneTxInfo$threeUTRByYFGtx[isoform])
+      if (length(threeUTR_gr) > 0) {
+        # Extend 3' UTR toward the CDS by one nucleotide
+        if (strand == "+") {
+          start(threeUTR_gr) <- start(threeUTR_gr) - 1
+        } else {
+          end(threeUTR_gr) <- end(threeUTR_gr) + 1
+        }
+        # Truncate 3' UTR to the plot_range if provided
+        if (!is.null(plot_range)) {
+          threeUTR_gr <- pintersect(threeUTR_gr, segment_gr)
+          threeUTR_gr <- threeUTR_gr[width(threeUTR_gr) > 0]
+        }
+        if (length(threeUTR_gr) > 0) {
+          threeUTR_df <- data.frame(
+            start = start(threeUTR_gr),
+            end = end(threeUTR_gr),
+            y = y_value,
+            feature = "3' UTR",
+            isoform = isoform,
+            height_factor = 1,
+            orf_id = NA,  # Add orf_id column with NA
+            row.names = NULL
+          )
+          isoform_data_list[[isoform_idx]] <- threeUTR_df
+          isoform_idx <- isoform_idx + 1
+        }
+      }
+    }
+    
+    # If eORF is present, check for overlap with exons and add rectangle
+    if (!is.null(eORFTxInfo)) {
+      for (eORF_idx in seq_along(eORFTxInfo$eORF.tx_id)) {
+        eORF_ranges <- eORFTxInfo$xlim.eORF[[eORF_idx]]  # GRanges object for eORF
+        if (length(eORF_ranges) > 0) {
+          # Truncate eORF to the plot_range if provided
           if (!is.null(plot_range)) {
-            segment_gr <- GRanges(seqnames=GeneTxInfo$chr,
-                                  ranges=IRanges(plot_range[1],plot_range[2]),
-                                  strand=GeneTxInfo$strand)
-            fiveUTR_gr <- pintersect(fiveUTR_gr,segment_gr)
-            fiveUTR_gr <- fiveUTR_gr[width(fiveUTR_gr)>0]
+            eORF_ranges <- pintersect(eORF_ranges, segment_gr)
+            eORF_ranges <- eORF_ranges[width(eORF_ranges) > 0]
+            if (length(eORF_ranges) == 0) {
+              next  # Skip if eORF is outside the plot_range
+            }
           }
-          if (length(fiveUTR_gr)>0) {
-            fiveUTR_df <- data.frame(
-              start=start(fiveUTR_gr),
-              end=end(fiveUTR_gr),
-              y=y_value,
-              feature="5' UTR",
-              isoform=isoform,
-              height_factor=1,
-              orf_id=NA,
-              row.names=NULL
+          # Check for overlap with exons
+          overlap_exons <- findOverlaps(eORF_ranges, exons_gr)
+          if (length(overlap_exons) > 0) {
+            # Determine if ORF overlaps with main ORF (CDS)
+            overlaps_CDS <- FALSE
+            overlaps_fiveUTR <- FALSE
+            overlaps_threeUTR <- FALSE
+            
+            # Check for overlap with CDS
+            if (!is.null(cds_ranges) && length(cds_ranges) > 0) {
+              overlap_cds <- findOverlaps(eORF_ranges, cds_ranges)
+              if (length(overlap_cds) > 0) {
+                overlaps_CDS <- TRUE
+              }
+            }
+            
+            # Check for overlap with 5' UTR
+            if (!is.null(fiveUTR_gr) && length(fiveUTR_gr) > 0) {
+              overlap_five <- findOverlaps(eORF_ranges, fiveUTR_gr)
+              if (length(overlap_five) > 0) {
+                overlaps_fiveUTR <- TRUE
+              }
+            }
+            
+            # Check for overlap with 3' UTR
+            if (!is.null(threeUTR_gr) && length(threeUTR_gr) > 0) {
+              overlap_three <- findOverlaps(eORF_ranges, threeUTR_gr)
+              if (length(overlap_three) > 0) {
+                overlaps_threeUTR <- TRUE
+              }
+            }
+            
+            # Assign feature labels based on overlaps
+            if (overlaps_fiveUTR) {
+              if (overlaps_CDS) {
+                feature_label <- "ouORF"  # Overlapping uORF
+              } else {
+                feature_label <- "uORF"
+              }
+            } else if (overlaps_threeUTR) {
+              if (overlaps_CDS) {
+                feature_label <- "odORF"  # Overlapping dORF
+              } else {
+                feature_label <- "dORF"
+              }
+            } else if (overlaps_CDS) {
+              feature_label <- "nORF"  # Nested ORF
+            } else {
+              feature_label <- "ORF"   # handle generic ORF case
+            }
+            
+            eORF_df <- data.frame(
+              start = start(eORF_ranges),
+              end = end(eORF_ranges),
+              y = y_value,
+              feature = feature_label,
+              isoform = isoform,
+              orf_id = feature_label,  # Use feature_label as orf_id for consistent coloring and labeling
+              height_factor = ifelse(overlaps_CDS, 8/15, 1),  # Reduced height_factor for overlapping ORFs
+              row.names = NULL
             )
-            isoform_data_list[[isoform_idx]] <- fiveUTR_df
-            isoform_idx <- isoform_idx+1
+            
+            isoform_data_list[[isoform_idx]] <- eORF_df
+            isoform_idx <- isoform_idx + 1
           }
         }
       }
-      
-      if (isoform %in% names(GeneTxInfo$threeUTRByYFGtx)) {
-        threeUTR_gr <- unlist(GeneTxInfo$threeUTRByYFGtx[isoform])
-        if (length(threeUTR_gr)>0) {
-          if (strand == "+") {
-            start(threeUTR_gr) <- start(threeUTR_gr)-1
-          } else {
-            end(threeUTR_gr) <- end(threeUTR_gr)+1
-          }
-          if (!is.null(plot_range)) {
-            segment_gr <- GRanges(seqnames=GeneTxInfo$chr,
-                                  ranges=IRanges(plot_range[1], plot_range[2]),
-                                  strand=GeneTxInfo$strand)
-            threeUTR_gr <- pintersect(threeUTR_gr, segment_gr)
-            threeUTR_gr <- threeUTR_gr[width(threeUTR_gr)>0]
-          }
-          if (length(threeUTR_gr)>0) {
-            threeUTR_df <- data.frame(
-              start=start(threeUTR_gr),
-              end=end(threeUTR_gr),
-              y=y_value,
-              feature="3' UTR",
-              isoform=isoform,
-              height_factor=1,
-              orf_id=NA,
-              row.names=NULL
-            )
-            isoform_data_list[[isoform_idx]] <- threeUTR_df
-            isoform_idx <- isoform_idx+1
-          }
-        }
-      }
-      
-    } else {
-      # no CDS => ncRNA
+    }
+    
+    # If still no features, treat as ncRNA
+    if (length(isoform_data_list) == 0) {
       exons_plot <- exons_gr
       if (!is.null(plot_range)) {
         segment_gr <- GRanges(seqnames=GeneTxInfo$chr,
@@ -828,168 +918,200 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
       }
     }
     
+    # Combine feature data for the isoform
+    if (length(isoform_data_list) > 0) {
+      isoform_df <- do.call(rbind, isoform_data_list)
+      plot_data_list[[idx]] <- isoform_df
+      idx <- idx + 1
+    }
+    
+    # Add the transcript line (intron regions)
     intron_df_list <- list()
-    if (length(exons_gr)>1) {
+    if (length(exons_gr) > 1) {
       exons_sorted <- exons_gr[order(start(exons_gr))]
-      for (ii in seq_len(length(exons_sorted)-1)) {
-        intron_start <- end(exons_sorted[ii])
-        intron_end <- start(exons_sorted[ii+1])
+      for (i in seq_len(length(exons_sorted) - 1)) {
+        intron_start <- end(exons_sorted[i])
+        intron_end <- start(exons_sorted[i + 1])
         intron_df <- data.frame(
-          xstart=intron_start,
-          xend=intron_end,
-          y=y_value,
-          isoform=isoform,
-          row.names=NULL
+          xstart = intron_start,
+          xend = intron_end,
+          y = y_value,
+          isoform = isoform,
+          row.names = NULL
         )
-        intron_df_list[[length(intron_df_list)+1]] <- intron_df
+        intron_df_list[[length(intron_df_list) + 1]] <- intron_df
       }
     }
     
+    # Handle intron lines beyond exons when plot_range is provided
     if (!is.null(plot_range)) {
       segment_left <- plot_range[1]
       segment_right <- plot_range[2]
       exons_sorted <- exons_gr[order(start(exons_gr))]
       
-      if (start(exons_sorted[1])>segment_left) {
+      # Left side
+      if (start(exons_sorted[1]) > segment_left) {
         intron_df <- data.frame(
-          xstart=segment_left,
-          xend=start(exons_sorted[1]),
-          y=y_value,
-          isoform=isoform,
-          row.names=NULL
+          xstart = segment_left,
+          xend = start(exons_sorted[1]),
+          y = y_value,
+          isoform = isoform,
+          row.names = NULL
         )
-        intron_df_list[[length(intron_df_list)+1]] <- intron_df
+        intron_df_list[[length(intron_df_list) + 1]] <- intron_df
       }
       
-      if (end(exons_sorted[length(exons_sorted)])<segment_right) {
+      # Right side
+      if (end(exons_sorted[length(exons_sorted)]) < segment_right) {
         intron_df <- data.frame(
-          xstart=end(exons_sorted[length(exons_sorted)]),
-          xend=segment_right,
-          y=y_value,
-          isoform=isoform,
-          row.names=NULL
+          xstart = end(exons_sorted[length(exons_sorted)]),
+          xend = segment_right,
+          y = y_value,
+          isoform = isoform,
+          row.names = NULL
         )
-        intron_df_list[[length(intron_df_list)+1]] <- intron_df
+        intron_df_list[[length(intron_df_list) + 1]] <- intron_df
       }
     }
     
-    if (length(intron_df_list)>0) {
-      intron_data <- do.call(rbind,intron_df_list)
-      line_data_list[[length(line_data_list)+1]] <- intron_data
-    }
-    
-    if (length(isoform_data_list)>0) {
-      isoform_df <- do.call(rbind, isoform_data_list)
-      plot_data_list[[idx]] <- isoform_df
-      idx <- idx+1
+    # Combine intron data
+    if (length(intron_df_list) > 0) {
+      intron_data <- do.call(rbind, intron_df_list)
+      line_data_list[[length(line_data_list) + 1]] <- intron_data
     }
   }
   
-  if (length(plot_data_list)>0) {
+  # Combine data frames for plotting
+  if (length(plot_data_list) > 0) {
     plot_data <- do.call(rbind, plot_data_list)
   } else {
     stop("No valid exons or features found to plot.")
   }
   
-  if (length(line_data_list)>0) {
-    line_data <- do.call(rbind,line_data_list)
+  if (length(line_data_list) > 0) {
+    line_data <- do.call(rbind, line_data_list)
   } else {
     line_data <- data.frame()
   }
   
+  # Ensure orf_id exists and is character
   if (!"orf_id" %in% names(plot_data)) {
     plot_data$orf_id <- NA
   }
   plot_data$orf_id <- as.character(plot_data$orf_id)
   
-  feature_order <- c("uORF","ouORF","nORF","odORF","dORF","5' UTR","CDS","3' UTR","ncRNA")
-  plot_data$feature <- factor(plot_data$feature, levels=feature_order)
+  # Set the factor levels of 'feature' to rearrange the legend order
+  feature_order <- c("uORF", "ouORF", "nORF", "ORF", "odORF", "dORF", "5' UTR", "CDS", "3' UTR", "ncRNA")
+  plot_data$feature <- factor(plot_data$feature, levels = feature_order)
   
+  # Calculate ymin and ymax based on height_factor
   plot_data$height <- 0.08 * plot_data$height_factor
   plot_data$ymin <- plot_data$y - plot_data$height
   plot_data$ymax <- plot_data$y + plot_data$height
   
+  # Get unique features present in the data
   unique_features <- levels(plot_data$feature)[levels(plot_data$feature) %in% plot_data$feature]
+  unique_orf_ids <- unique(plot_data$orf_id[!is.na(plot_data$orf_id)])
   
+  # Define color mappings for features
   feature_colors <- c(
-    "uORF"="yellow",
-    "ouORF"="#FFD700",
-    "nORF"="orange",
-    "odORF"="#FFD700",
-    "dORF"="yellow",
-    "5' UTR"="lightgrey",
-    "CDS"="black",
-    "3' UTR"="white",
-    "ncRNA"="#FFB6C1"
+    "uORF" = "yellow",
+    "ouORF" = "#FFD700",
+    "nORF" = "orange",
+    "ORF" = "lightblue",
+    "odORF" = "#FFD700",
+    "dORF" = "yellow",
+    "5' UTR" = "lightgrey",
+    "CDS" = "black",
+    "3' UTR" = "white",
+    "ncRNA" = "#FFB6C1"
   )
   
+  # Filter colors for features present in the data
   feature_colors <- feature_colors[unique_features]
   
+  # Adjust legend text size and key size based on the number of unique features
   num_legend_items <- length(unique_features)
-  legend_text_size <- 8
-  base_key_size <-1
-  if (num_legend_items>3) {
+  legend_text_size <- 8  # Base legend text size
+  base_key_size <- 1     # Base legend key size in lines
+  
+  # Adjust key size
+  if (num_legend_items > 3) {
     key_size <- base_key_size * 3 / num_legend_items
   } else {
     key_size <- base_key_size
   }
-  key_size <- max(0.8,key_size)
   
+  # Ensure key size does not become too small
+  key_size <- max(0.8, key_size)
+  
+  # Create the gene model plot
   p_gene <- ggplot()
   
-  if (nrow(line_data)>0) {
+  # Plot intron lines first (as background)
+  if (nrow(line_data) > 0) {
     p_gene <- p_gene +
-      geom_segment(data=line_data,aes(x=xstart,xend=xend,y=y,yend=y),color="black",inherit.aes=FALSE)
+      geom_segment(data = line_data, aes(x = xstart, xend = xend, y = y, yend = y),
+                   color = "black", inherit.aes = FALSE)
   }
   
-  p_gene <- p_gene +
-    geom_rect(data=plot_data[is.na(plot_data$orf_id), ],
-              aes(xmin=start, xmax=end, ymin=ymin, ymax=ymax, fill=feature),
-              color="black", inherit.aes=FALSE)
-  
-  if (nrow(plot_data[!is.na(plot_data$orf_id), ])>0) {
+  # Plot the filled CDS and UTR rectangles
+  if (nrow(plot_data[is.na(plot_data$orf_id), ]) > 0) {
     p_gene <- p_gene +
-      geom_rect(data=plot_data[!is.na(plot_data$orf_id), ],
-                aes(xmin=start, xmax=end, ymin=ymin, ymax=ymax, fill=orf_id),
-                color="black", inherit.aes=FALSE)
+      geom_rect(data = plot_data[is.na(plot_data$orf_id), ],
+                aes(xmin = start, xmax = end, ymin = ymin, ymax = ymax, fill = feature),
+                color = "black", inherit.aes = FALSE)
+  }
+  
+  # Plot ORFs: Changed fill mapping from orf_id to feature
+  if (nrow(plot_data[!is.na(plot_data$orf_id), ]) > 0) {
+    p_gene <- p_gene +
+      geom_rect(data = plot_data[!is.na(plot_data$orf_id), ],
+                aes(xmin = start, xmax = end, ymin = ymin, ymax = ymax, fill = feature),
+                color = "black", inherit.aes = FALSE)
   }
   
   p_gene <- p_gene +
     scale_fill_manual(
-      name="Feature",
-      values=feature_colors,
-      breaks=unique_features,
-      labels=unique_features,
-      guide=guide_legend(
-        override.aes = list(fill=feature_colors),
-        ncol=1,
-        keyheight=unit(key_size,"lines"),
-        keywidth=unit(1,"lines")
+      name = "Feature",
+      values = feature_colors,
+      breaks = unique_features,
+      labels = unique_features,
+      guide = guide_legend(
+        override.aes = list(fill = feature_colors),
+        ncol = 1,  # Arrange legend items in a single column
+        keyheight = unit(key_size, "lines"),
+        keywidth = unit(1, "lines")
       )
     ) +
     theme_bw() +
     theme(
-      legend.position="right",
-      legend.title=element_blank(),
-      legend.text=element_text(size=legend_text_size),
-      legend.key.size=unit(key_size,"lines"),
-      axis.text.y=element_text(size=transcript_label_font_size),
-      axis.ticks.y=element_blank(),
-      axis.title.y=element_text(size=12),
-      plot.margin=unit(c(-0.2,0.2,0,1.5),"lines"),
-      panel.grid=element_blank(),
-      panel.border=element_blank()
+      legend.position = "right",      # Position legend on the right
+      legend.title = element_blank(),
+      legend.text = element_text(size = legend_text_size),
+      legend.key.size = unit(key_size, "lines"),
+      axis.text.y = element_text(size = transcript_label_font_size),
+      axis.ticks.y = element_blank(),
+      axis.title.y = element_text(size = 12),
+      plot.margin = unit(c(-0.2, 0.2, 0, 1.5), "lines"),  # Increased left margin
+      panel.grid = element_blank(),   # Remove all grid lines
+      panel.border = element_blank()  # Remove plot outline
     ) +
     xlab("Genomic Position") +
     ylab("") +
-    coord_cartesian(clip="off")
+    coord_cartesian(clip = "off")  # Prevent clipping of labels
   
-  if (strand=="-") {
-    p_gene <- p_gene + scale_x_reverse(limits=c(max(genelim), min(genelim)))
+  # Adjust padding to reduce the gap when there are fewer transcripts
+  padding <- 0.1
+  
+  # Adjust x-axis scale based on strand direction
+  if (strand == "-") {
+    p_gene <- p_gene + scale_x_reverse(limits = c(max(genelim), min(genelim)))
   } else {
-    p_gene <- p_gene + scale_x_continuous(limits=c(min(genelim), max(genelim)))
+    p_gene <- p_gene + scale_x_continuous(limits = c(min(genelim), max(genelim)))
   }
   
+  # Set y-axis labels using isoform names, bolding the main transcript
   labels <- sapply(isoform_positions$isoform, function(x) {
     if (x == tx_id) {
       paste0("bold('", x, "')")
@@ -997,16 +1119,54 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
       paste0("'", x, "'")
     }
   })
-  labels <- parse(text=labels)
+  labels <- parse(text = labels)
   
-  padding <- 0.1
-  
+  # Set y-axis labels and limits with adjusted padding
   p_gene <- p_gene + scale_y_continuous(
-    breaks=isoform_positions$y,
-    labels=labels,
-    limits=c(min(isoform_positions$y)-padding,
-             max(isoform_positions$y)+padding)
+    breaks = isoform_positions$y,
+    labels = labels,
+    limits = c(min(isoform_positions$y) - padding,
+               max(isoform_positions$y) + padding)
   )
+  
+  # Optionally add vertical lines for ORF start and end positions
+  if (plot_ORF_ranges && !is.null(eORFTxInfo)) {
+    # Collect all start and end positions of overlapping ORFs
+    for (eORF_idx in seq_along(eORFTxInfo$eORF.tx_id)) {
+      eORF_ranges <- eORFTxInfo$xlim.eORF[[eORF_idx]]
+      eORF_left_pos <- eORFTxInfo$eORF_left[eORF_idx]
+      eORF_right_pos <- eORFTxInfo$eORF_right[eORF_idx]
+      
+      # Adjust line types based on strand
+      if (strand == "+") {
+        start_pos <- eORF_left_pos
+        end_pos <- eORF_right_pos
+      } else {
+        start_pos <- eORF_right_pos
+        end_pos <- eORF_left_pos
+      }
+      
+      # Determine color based on whether the ORF overlaps with the main ORF
+      overlaps_CDS <- FALSE
+      if (!is.null(GeneTxInfo$xlimCds[[tx_id]]) && length(GeneTxInfo$xlimCds[[tx_id]]) > 0) {
+        cds_ranges <- GeneTxInfo$xlimCds[[tx_id]]
+        overlap_cds <- findOverlaps(eORF_ranges, cds_ranges)
+        if (length(overlap_cds) > 0) {
+          overlaps_CDS <- TRUE
+        }
+      }
+      if (overlaps_CDS) {
+        line_color <- "orange"
+      } else {
+        line_color <- "green"
+      }
+      
+      # Add solid line for eORF start and dashed line for eORF end
+      p_gene <- p_gene +
+        geom_vline(xintercept = start_pos, linetype = "solid", color = line_color, alpha = 0.5) +
+        geom_vline(xintercept = end_pos, linetype = "dashed", color = line_color, alpha = 0.5)
+    }
+  }
   
   return(p_gene)
 }
