@@ -653,24 +653,25 @@ plotDNAandAA <- function(GeneTxInfo, plot_range = NULL, FASTA = NULL) {
 #'
 #' @return A `ggplot` object representing the gene model.
 #' @export
+
 plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = NULL, plot_ORF_ranges = FALSE, plot_range = NULL, transcript_label_font_size = 10) {
   # Load necessary libraries
   library(ggplot2)
   library(GenomicRanges)
-
+  
   isoforms <- GeneTxInfo$num_isoforms
   genelim <- c(GeneTxInfo$range_left, GeneTxInfo$range_right)
   tx_names <- GeneTxInfo$tx_names
   tx_id <- GeneTxInfo$tx_id
   strand <- GeneTxInfo$strand
-
+  
   plot_data_list <- list()
   line_data_list <- list()
   idx <- 1
-
+  
   other_tx_names <- setdiff(tx_names, tx_id)
   sorted_tx_names <- c(tx_id, sort(other_tx_names))
-
+  
   y_step <- 0.3
   y_positions <- seq(1, by=y_step, length.out=length(sorted_tx_names))
   isoform_positions <- data.frame(
@@ -678,20 +679,20 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
     y = rev(y_positions),
     stringsAsFactors = FALSE
   )
-
+  
   isoform_y_map <- setNames(isoform_positions$y, isoform_positions$isoform)
-
+  
   for (isoform in isoform_positions$isoform) {
     y_value <- isoform_y_map[isoform]
     isoform_data_list <- list()
     isoform_idx <- 1
-
+    
     exons_gr <- GeneTxInfo$exonByYFGtx[[isoform]]
     if (length(exons_gr)==0) {
       warning(paste("Exons for isoform", isoform, "not found in exonByYFGtx"))
       next
     }
-
+    
     if (!is.null(plot_range)) {
       segment_gr <- GRanges(seqnames=GeneTxInfo$chr,
                             ranges=IRanges(plot_range[1], plot_range[2]),
@@ -702,10 +703,10 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
         next
       }
     }
-
+    
     transcript_start <- min(start(exons_gr))
     transcript_end <- max(end(exons_gr))
-
+    
     cds_ranges <- GeneTxInfo$xlimCds[[isoform]]
     if (!is.null(cds_ranges) && length(cds_ranges)>0) {
       if (!is.null(plot_range)) {
@@ -715,7 +716,7 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
         cds_ranges <- pintersect(cds_ranges, segment_gr)
         cds_ranges <- cds_ranges[width(cds_ranges)>0]
       }
-
+      
       if (length(cds_ranges)>0) {
         cds_df <- data.frame(
           start=start(cds_ranges),
@@ -731,9 +732,11 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
         isoform_idx <- isoform_idx+1
       }
     }
-
-    no_cds_for_this_iso <- (length(cds_ranges)==0)
-
+    
+    # Modified section:
+    original_cds <- GeneTxInfo$cdsByYFGtx[[isoform]]
+    no_cds_for_this_iso <- (length(original_cds)==0)
+    
     if (!no_cds_for_this_iso) {
       if (isoform %in% names(GeneTxInfo$fiveUTRByYFGtx)) {
         fiveUTR_gr <- unlist(GeneTxInfo$fiveUTRByYFGtx[isoform])
@@ -766,7 +769,7 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
           }
         }
       }
-
+      
       if (isoform %in% names(GeneTxInfo$threeUTRByYFGtx)) {
         threeUTR_gr <- unlist(GeneTxInfo$threeUTRByYFGtx[isoform])
         if (length(threeUTR_gr)>0) {
@@ -798,7 +801,7 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
           }
         }
       }
-
+      
     } else {
       # no CDS => ncRNA
       exons_plot <- exons_gr
@@ -824,7 +827,7 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
         isoform_idx <- isoform_idx+1
       }
     }
-
+    
     intron_df_list <- list()
     if (length(exons_gr)>1) {
       exons_sorted <- exons_gr[order(start(exons_gr))]
@@ -841,12 +844,12 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
         intron_df_list[[length(intron_df_list)+1]] <- intron_df
       }
     }
-
+    
     if (!is.null(plot_range)) {
       segment_left <- plot_range[1]
       segment_right <- plot_range[2]
       exons_sorted <- exons_gr[order(start(exons_gr))]
-
+      
       if (start(exons_sorted[1])>segment_left) {
         intron_df <- data.frame(
           xstart=segment_left,
@@ -857,7 +860,7 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
         )
         intron_df_list[[length(intron_df_list)+1]] <- intron_df
       }
-
+      
       if (end(exons_sorted[length(exons_sorted)])<segment_right) {
         intron_df <- data.frame(
           xstart=end(exons_sorted[length(exons_sorted)]),
@@ -869,45 +872,45 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
         intron_df_list[[length(intron_df_list)+1]] <- intron_df
       }
     }
-
+    
     if (length(intron_df_list)>0) {
       intron_data <- do.call(rbind,intron_df_list)
       line_data_list[[length(line_data_list)+1]] <- intron_data
     }
-
+    
     if (length(isoform_data_list)>0) {
       isoform_df <- do.call(rbind, isoform_data_list)
       plot_data_list[[idx]] <- isoform_df
       idx <- idx+1
     }
   }
-
+  
   if (length(plot_data_list)>0) {
     plot_data <- do.call(rbind, plot_data_list)
   } else {
     stop("No valid exons or features found to plot.")
   }
-
+  
   if (length(line_data_list)>0) {
     line_data <- do.call(rbind,line_data_list)
   } else {
     line_data <- data.frame()
   }
-
+  
   if (!"orf_id" %in% names(plot_data)) {
     plot_data$orf_id <- NA
   }
   plot_data$orf_id <- as.character(plot_data$orf_id)
-
+  
   feature_order <- c("uORF","ouORF","nORF","odORF","dORF","5' UTR","CDS","3' UTR","ncRNA")
   plot_data$feature <- factor(plot_data$feature, levels=feature_order)
-
+  
   plot_data$height <- 0.08 * plot_data$height_factor
   plot_data$ymin <- plot_data$y - plot_data$height
   plot_data$ymax <- plot_data$y + plot_data$height
-
+  
   unique_features <- levels(plot_data$feature)[levels(plot_data$feature) %in% plot_data$feature]
-
+  
   feature_colors <- c(
     "uORF"="yellow",
     "ouORF"="#FFD700",
@@ -919,9 +922,9 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
     "3' UTR"="white",
     "ncRNA"="#FFB6C1"
   )
-
+  
   feature_colors <- feature_colors[unique_features]
-
+  
   num_legend_items <- length(unique_features)
   legend_text_size <- 8
   base_key_size <-1
@@ -931,26 +934,26 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
     key_size <- base_key_size
   }
   key_size <- max(0.8,key_size)
-
+  
   p_gene <- ggplot()
-
+  
   if (nrow(line_data)>0) {
     p_gene <- p_gene +
       geom_segment(data=line_data,aes(x=xstart,xend=xend,y=y,yend=y),color="black",inherit.aes=FALSE)
   }
-
+  
   p_gene <- p_gene +
     geom_rect(data=plot_data[is.na(plot_data$orf_id), ],
               aes(xmin=start, xmax=end, ymin=ymin, ymax=ymax, fill=feature),
               color="black", inherit.aes=FALSE)
-
+  
   if (nrow(plot_data[!is.na(plot_data$orf_id), ])>0) {
     p_gene <- p_gene +
       geom_rect(data=plot_data[!is.na(plot_data$orf_id), ],
                 aes(xmin=start, xmax=end, ymin=ymin, ymax=ymax, fill=orf_id),
                 color="black", inherit.aes=FALSE)
   }
-
+  
   p_gene <- p_gene +
     scale_fill_manual(
       name="Feature",
@@ -980,13 +983,13 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
     xlab("Genomic Position") +
     ylab("") +
     coord_cartesian(clip="off")
-
+  
   if (strand=="-") {
     p_gene <- p_gene + scale_x_reverse(limits=c(max(genelim), min(genelim)))
   } else {
     p_gene <- p_gene + scale_x_continuous(limits=c(min(genelim), max(genelim)))
   }
-
+  
   labels <- sapply(isoform_positions$isoform, function(x) {
     if (x == tx_id) {
       paste0("bold('", x, "')")
@@ -995,16 +998,16 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
     }
   })
   labels <- parse(text=labels)
-
+  
   padding <- 0.1
-
+  
   p_gene <- p_gene + scale_y_continuous(
     breaks=isoform_positions$y,
     labels=labels,
     limits=c(min(isoform_positions$y)-padding,
              max(isoform_positions$y)+padding)
   )
-
+  
   return(p_gene)
 }
 
@@ -1039,6 +1042,7 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
 #' @param sample_color Vector specifying colors for each sample or "color" to use default coloring.
 #' @param show_seq Logical indicating whether to display the DNA and amino acid sequence. Default is FALSE.
 #' @param FASTA FASTA file containing genomic sequences.
+#' @param plot_genomic_direction Plot the original direction of the gene in the genome according to the annotation (what you should see on the genome browser).
 #' @param dna_aa_height_ratio Numeric value to adjust the height of the DNA and amino acid sequence plot. Default is 0.5.
 #' @param gene_model_height_ratio Numeric value to adjust the height of the gene model plot. If NULL, it adjusts automatically based on the number of transcripts.
 #' @param transcript_label_font_size Optional numeric value to control the font size of the transcript ID labels in the gene model plot.
@@ -1071,6 +1075,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
                    dna_aa_height_ratio = 0.5,
                    gene_model_height_ratio = NULL,
                    transcript_label_font_size = 10,
+                   plot_genomic_direction = FALSE,
                    data_types = rep("Ribo-seq", length(SampleNames))) {
 
   # Validate data_types length
@@ -1122,13 +1127,10 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
 
   # If all isoforms are noncoding
   if (length(tx_names_in_cdsByTx) == 0) {
-    # all transcripts considered, likely no CDS => ncRNA scenario
     message("This is a noncoding gene (no annotated CDS for all isoforms). The frame is calculated from the 1st position of the transcript. Please provide the CDS ranges in a gtf if you have evidence that an ORF is translated.")
   } else {
     if (!(tx_id %in% tx_names_in_cdsByTx)) {
-      # Main transcript no ORF
-      message(paste("The transcript", tx_id, "does not have an annotated ORF. The frame is calculated from the 1st position of the transcript. Please provide the CDS ranges in a gtf if you have evidence that an ORF is translated."), call.=FALSE)
-      # Ensure tx_id is included even if no CDS
+      message(paste("The transcript", tx_id, "does not have an annotated ORF. The frame is calculated from the 1st position of the transcript. Please provide the CDS ranges in a gtf if you have evidence that an ORF is translated."))
       if (!(tx_id %in% tx_names)) {
         stop(paste("Transcript ID", tx_id, "not found in gene."))
       } else {
@@ -1234,7 +1236,6 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
   } else {
     cds_left <- NA
     cds_right <- NA
-    # No second warning here, just rely on the one we printed if needed.
   }
 
   GeneTxInfo <- Gene_info$new(
@@ -1318,6 +1319,10 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
       stop("Length of RNAseqBamPaired must match the number of RNAseq samples.")
     }
 
+    # Use min/max to define a single continuous range
+    global_start <- min(start(GeneTxInfo$generangesplus))
+    global_end <- max(end(GeneTxInfo$generangesplus))
+
     RNAseq_list <- lapply(seq_len(length(RNAseq)), function(i) {
       if (RNAseqBamPaired[i] == "paired") {
         readPairs1 <- suppressWarnings(
@@ -1333,7 +1338,11 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
             Gtx1 <- numeric(length=width(GeneTxInfo$generangesplus))
           } else {
             cvg1 <- coverage(readPairs1)
-            Gtx1 <- as.numeric(cvg1[[GeneTxInfo$chr]][start(GeneTxInfo$generangesplus):end(GeneTxInfo$generangesplus)])
+            if (is.null(cvg1[[GeneTxInfo$chr]])) {
+              Gtx1 <- numeric(length=width(GeneTxInfo$generangesplus))
+            } else {
+              Gtx1 <- as.numeric(cvg1[[GeneTxInfo$chr]][global_start:global_end])
+            }
           }
         }
         Gtx1
@@ -1349,7 +1358,11 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
             Gtx1 <- numeric(length=width(GeneTxInfo$generangesplus))
           } else {
             cvg1 <- coverage(alignments)
-            Gtx1 <- as.numeric(cvg1[[GeneTxInfo$chr]][start(GeneTxInfo$generangesplus):end(GeneTxInfo$generangesplus)])
+            if (is.null(cvg1[[GeneTxInfo$chr]])) {
+              Gtx1 <- numeric(length=width(GeneTxInfo$generangesplus))
+            } else {
+              Gtx1 <- as.numeric(cvg1[[GeneTxInfo$chr]][global_start:global_end])
+            }
           }
         }
         Gtx1
@@ -1394,7 +1407,10 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
   plot_list <- list()
 
   if (!is.null(RNAseq)) {
-    positions <- seq(start(GeneTxInfo$generangesplus), end(GeneTxInfo$generangesplus))
+    # Again, use global_start / global_end for positions
+    global_start <- min(start(GeneTxInfo$generangesplus))
+    global_end <- max(end(GeneTxInfo$generangesplus))
+    positions <- seq(global_start, global_end)
 
     for (i in seq_len(length(RNAseq))) {
       RNAseq_counts <- RNAseq_list[[i]]
@@ -1475,8 +1491,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
 
       main_has_cds <- length(GeneTxInfo$xlimCds[[tx_id]])>0
 
-      # Previously condition was (main_has_cds && plot_ORF_ranges),
-      # minimal fix: remove && plot_ORF_ranges for always plotting vertical lines:
+      # Always plotting vertical lines if main_has_cds:
       if (main_has_cds) {
         if (!is.null(eORFTxInfo)) {
           x_min <- min(x_limits)
@@ -1553,7 +1568,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
             exons_sorted <- sort(exons, decreasing=TRUE)
           }
 
-          positions <- integer(0)
+          positions_all <- integer(0)
           tx_positions <- integer(0)
           cum_len <- 0
           for (exn in seq_along(exons_sorted)) {
@@ -1564,11 +1579,11 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
             }
             len <- length(pos)
             tx_pos <- seq_len(len) + cum_len
-            positions <- c(positions, pos)
+            positions_all <- c(positions_all, pos)
             tx_positions <- c(tx_positions, tx_pos)
             cum_len <- cum_len + len
           }
-          position_df <- data.frame(position=positions, tx_pos=tx_positions)
+          position_df <- data.frame(position=positions_all, tx_pos=tx_positions)
           position_df$frame <- factor((position_df$tx_pos - 1) %% 3, levels=c(0,1,2))
 
           RiboRslt <- merge(RiboRslt, position_df[, c("position","frame")], by="position", all.x=TRUE)
@@ -1591,7 +1606,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
           }
 
         } else {
-          # Coding transcripts logic below (unchanged)
+          # Coding transcripts logic
           if (!is.null(oORF_coloring) && oORF_coloring == "oORF_colors") {
             Ribo_main <- RiboRslt
             Ribo_main <- assign_frames(Ribo_main, cds_ranges, GeneTxInfo$strand)
@@ -1909,6 +1924,31 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
         panel.grid.major.y=element_line(color="lightgrey",linewidth=0.3),
         axis.title.y=element_text(size=10)
       )
+      # Draw arrow on first plot only, adjusted arrow_y:
+      if (plot_genomic_direction == TRUE){
+        if (i == 1) {
+          x_min <- min(x_limits)
+          x_max <- max(x_limits)
+          arrow_y <- y_label * 1.05
+          arrow_length <- (x_max - x_min)*0.1
+          if (strand_info == "+") {
+            # Positive strand: arrow on the right side, from left to right
+            p <- p + annotate("segment",
+                              x = x_max - arrow_length, xend = x_max,
+                              y = arrow_y, yend = arrow_y,
+                              arrow = arrow(length=unit(0.1,"inches")),
+                              color="black")
+          } else {
+            # Negative strand: same position as before, but reverse x and xend
+            # so that the arrow direction is flipped without changing placement
+            p <- p + annotate("segment",
+                              x = x_min, xend = x_min + arrow_length,
+                              y = arrow_y, yend = arrow_y,
+                              arrow = arrow(length=unit(0.1,"inches")),
+                              color="black")
+          }
+        }
+      }
 
       plot_list[[i]] <- p
     }
