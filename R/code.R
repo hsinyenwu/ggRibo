@@ -2179,13 +2179,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
     labels=NULL,
     label_size=10,
     label_fontface="plain"
-  )
-
-# After has_overlapping_ORF is determined and before plotting:
-  if (oORF_coloring==TRUE && !has_overlapping_ORF) {
-    message("Please input an overlapping uORF or nested ORF range in a gtf format with eORFRangeInfo.")
-  }
-                                
+  )                             
   return(combined_plot)
 }
 
