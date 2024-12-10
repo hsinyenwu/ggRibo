@@ -20,6 +20,7 @@ ggRibo(
 ![image](https://github.com/user-attachments/assets/d452f80e-7703-4295-85e4-b64860ca1e0c)
 
 ### Plot a gene with both coding or noncoding isoforms
+The situation: **a gene with both coding and noncoding isoforms** occurs a lot in later versions of animal and plant annotations. Here we show that ggRibo can still plot those genes.  
 To make an example: I artifically removed the CDSs for both *AT1G01060.5* and *AT1G01060.7* transcripts for the *AT1G01060 (LHY)* gene.  
 Plot the noncoding isoform *AT1G01060.7*  
 ```
