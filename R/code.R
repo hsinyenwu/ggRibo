@@ -1182,7 +1182,7 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
 #' @param Extend Numeric value specifying the number of base pairs to extend the plot beyond the gene range. Default is 100.
 #' @param NAME Optional. Character string for an additional name or title to display in the plot.
 #' @param RNAcoverline Color for the RNA-seq coverage line. Default is "grey".
-#' @param RNAbackground Color for the RNA-seq coverage background. Default is "#FEFEAE".
+#' @param RNAbackground Color for the RNA-seq coverage background. Take one value or a vector of colors (same length as samples). Default is "#FEFEAE".
 #' @param left_margin Numeric value for the left margin extension in the plot. Default is 1.5.
 #' @param right_margin Numeric value for the right margin extension in the plot. Default is 1.5.
 #' @param fExtend Numeric value specifying the number of nucleotides to extend the frame assignment into the 5' UTR. Default is 0.
@@ -1246,6 +1246,13 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
   # Validate Y_scale parameter
   if (!(Y_scale %in% c("all", "each"))) {
     stop("Invalid Y_scale value. Please choose either 'all' or 'each'.")
+  }
+
+  # Check RNAbackground parameter
+  if (length(RNAbackground) == 1) {
+  RNAbackground <- rep(RNAbackground, length(SampleNames))
+  } else if (length(RNAbackground) != length(SampleNames)) {
+  stop("RNAbackground must be either a single color or a vector of colors with the same length as 'Samples'.")
   }
 
   # Ensure that required annotations are loaded
@@ -1623,7 +1630,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
       sample_color_i <- sample_color[i]
 
       p <- ggplot() +
-        geom_col(data=RNAseq_df, aes(x=position, y=count), fill=RNAbackground, color=RNAbackground, na.rm=TRUE) +
+        geom_col(data=RNAseq_df, aes(x=position, y=count), fill=RNAbackground[i], color=RNAbackground[i], na.rm=TRUE) +
         geom_step(data=RNAseq_df, aes(x=position, y=count), color=RNAcoverline, na.rm=TRUE) +
         theme_bw() +
         theme(
