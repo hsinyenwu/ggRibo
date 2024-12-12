@@ -120,7 +120,7 @@ ggRibo(
 ```
 ![image](https://github.com/user-attachments/assets/7cb5c658-e21f-416a-89c2-dc47286b25c0)
 
-**Deconvolute Ribo-seq reads to show the translation of overlapping uORF and main ORF**   
+## Deconvolution of Ribo-seq reads shows the translated frames of overlapping uORF and main ORF  
 **If we only assign frame colors to the annotated CDS**    
 ```
 ggRibo_decon(
