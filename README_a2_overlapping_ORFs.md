@@ -96,3 +96,17 @@ ggRibo(
   plot_range = c(21163130,21163250))
 ```
 ![image](https://github.com/user-attachments/assets/959f8d9b-1824-4e98-b5fb-ee484263314b)
+
+**Show the uoORF frame relative to the main ORF**
+```
+ggRibo(
+  gene_id = "AT3G57170",
+  tx_id = "AT3G57170.1",
+  eORF.tx_id = "AT3G57170.1",
+  NAME="Gpi1 family protein",
+  oORF_coloring = "extend_mORF",
+  Extend=200)
+```
+![image](https://github.com/user-attachments/assets/455b64ab-e5ad-43dd-8060-b3ad96f76f05)
+
+
