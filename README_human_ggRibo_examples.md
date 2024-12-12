@@ -27,7 +27,7 @@ eORF_import(annotation = uorf_path, format = "gtf", organism = "Homo sapiens")
 ggRibo(gene_id = "ENSG00000174547", tx_id = "ENST00000310999", eORF.tx_id = "ENST00000310999",
        NAME = "MRPL11")
 ```
-_Insert uORF1 here_
+![uORF1_MRPL11_Human_ESC_full_gene](https://github.com/user-attachments/assets/56a3143b-871b-4742-8e04-059b8e88b543)
 
 ## Add genome/peptide sequence
 ```
@@ -36,7 +36,7 @@ fasta <- FaFile("Homo_sapiens.GRCh38.dna.primary_assembly.fa")
 ggRibo(gene_id = "ENSG00000174547", tx_id = "ENST00000310999", eORF.tx_id = "ENST00000310999",
        NAME = "MRPL11", FASTA = fasta, show_seq = T)
 ```
-_Insert uORF2 here_
+![uORF2_MRPL11_Human_ESC_full_with_seq](https://github.com/user-attachments/assets/b43673d1-25e2-477c-8518-914922a9ec69)
 
 ## Closer look at uORF (adjusting plot range)
 ```
@@ -45,7 +45,7 @@ ggRibo(gene_id = "ENSG00000174547", tx_id = "ENST00000310999", eORF.tx_id = "ENS
        NAME = "MRPL11", FASTA = fasta, show_seq = T,
        plot_range = range, Extend = 0)
 ```
-_Insert uORF3 here_
+![uORF3_MRPL11_Human_ESC_zoom_with_seq](https://github.com/user-attachments/assets/6305f0c6-4564-4e9a-89b9-8b4cdd125530)
 
 ## Multiple samples
 ```
@@ -63,15 +63,14 @@ RNAseqBamPairorSingle <- rna_type
 gtf_path <- "Homo_sapiens.GRCh38.112.chr.gff3"
 gtf_import(annotation = gtf_path, format = "gff3", organism = "Homo sapiens")
 
-# Higher translation in Cardiomyocytes
 ggRibo(gene_id = "ENSG00000106211", tx_id = "ENST00000248553", NAME = "HSPB1")
-
-# Higher translation in iPSCs
 ggRibo(gene_id = "ENSG00000133112", tx_id = "ENST00000530705", NAME = "TPT1")
 ```
-_Insert TwoS1 here_
+<ins>Higher translation in Cardiomyocytes:</ins>
+![TwoSample1_HSPB1_Human](https://github.com/user-attachments/assets/846a182b-3325-43a9-8390-109a0f3dceee)
 
-_Insert TwoS2 here_
+<ins>Higher translation in iPSCs:</ins>
+![TwoSample2_TPT1_Human](https://github.com/user-attachments/assets/48489cdb-f1b8-4a11-b57f-a3be5ce74d6e)
 
 ## Plotting subset of transcripts
 Many genes are annotated with a large number of isoforms.
@@ -100,7 +99,7 @@ name <- "IFITM3"
 ### Plot all 27 isoforms of IFITM3
 ggRibo(gene_id = gene, tx_id = tx, NAME = name)
 
-### Plot subset
+### Plot subset of isoforms
 sub_Txome <- Txome_Range$clone()  # make copy of Txome_Range
 tx_subset <- c("ENST00000399808", "ENST00000680209", "ENST00000681198",
                "ENST00000681304", "ENST00000681840")  # define list of desired isoforms
@@ -109,6 +108,7 @@ sub_Txome$txByGene[[gene]] <- sub_Txome$txByGene[[gene]][sub_Txome$txByGene[[gen
 ggRibo(gene_id = gene, tx_id = tx, NAME = name, GRangeInfo = sub_Txome)  # use subsetted Txome object
 
 ```
-_Insert Iso1 here_
-
-_Insert Iso2 here_
+<ins>All 27 isoforms:</ins>
+![IsoSubset_IFITM3_human_allIsoforms](https://github.com/user-attachments/assets/5d67e9fc-e7d2-4e4d-b5a4-479347eaef78)
+<ins>Subset of 5 isoforms:</ins>
+![IsoSubset_IFITM3_human_subset](https://github.com/user-attachments/assets/b76272dd-cf67-4bae-9610-e2d1665568d6)
