@@ -51,4 +51,5 @@ ggRibo(
 ```
 ![image](https://github.com/user-attachments/assets/c3b7a1a4-0520-42b9-b130-1795735385c7)
 
+This is a <span style="color:red;">red</span> word, and this is a <span style="color:blue;">blue</span> word.
 
