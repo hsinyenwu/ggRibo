@@ -120,5 +120,29 @@ ggRibo(
 ```
 ![image](https://github.com/user-attachments/assets/7cb5c658-e21f-416a-89c2-dc47286b25c0)
 
+**Deconvolute Ribo-seq reads to show the translation of overlapping uORF and main ORF**   
+**If we only assign frame colors to the annotated CDS**    
+```
+ggRibo_decon(
+  gene_id = "AT3G57170",
+  tx_id = "AT3G57170.1",
+  NAME="Gpi1 family protein",
+  oORF_coloring = "extend_mORF",
+  Extend=200)
+```
+![image](https://github.com/user-attachments/assets/da6cd9b3-868e-4a8e-a65f-5ee77be6fe98)
+
+**We extend frame colors to the extra ORF (i.e., ouORF)**   
+```
+ggRibo_decon(
+  gene_id = "AT3G57170",
+  tx_id = "AT3G57170.1",
+  eORF.tx_id = "AT3G57170.1",
+  NAME="Gpi1 family protein",
+  oORF_coloring = "extend_mORF",
+  Extend=200)
+```
+![image](https://github.com/user-attachments/assets/bd25a85e-9354-45be-8363-003328c9d9bd)
+
 
 
