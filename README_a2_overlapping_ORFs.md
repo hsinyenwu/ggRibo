@@ -50,7 +50,9 @@ RNAseqBamPairorSingle="paired"
 gtf_import(annotation="~/path/to/Araport11+CTRL_20181206.gtf",format="gtf",dataSource="Araport",organism="Arabidopsis thaliana")
 #Load uORF ouORF gtf
 eORF_import(annotation="/path/to/AT3G57170_uORFs.gtf", format="gtf",dataSource="Araport",organism="Arabidopsis thaliana")
-
+```
+**Plot the overlapping uORF:**  
+```
 #Run the plotting function
 ggRibo(
   gene_id = "AT3G57170",
