@@ -1,4 +1,5 @@
-### Advanced ggRibo part 2: show Ribo-seq reads on overlapping translation events 
+### Advanced ggRibo part 2: show Ribo-seq reads on overlapped translation events 
+#### *(Also deconvolute the reading frames for overlapping translation events)* 
 
 Some uORFs could overlap with their main ORFs. Furthermore, ORFs inside the annotated ORFs (nested ORFs) could also be translated. Recently, studies has found downstream ORFs (dPRFs) and dORFs that overlap with the main ORFs (odORFs).       
 <img width="535" alt="image" src="https://github.com/user-attachments/assets/2b900fee-888a-40cc-803f-772898a3ed37">
@@ -120,7 +121,7 @@ ggRibo(
 ```
 ![image](https://github.com/user-attachments/assets/7cb5c658-e21f-416a-89c2-dc47286b25c0)
 
-## Deconvolution of Ribo-seq reads shows the translated frames of overlapping uORF and main ORF  
+### Deconvolution of Ribo-seq reads shows the translated frames of overlapping uORF and main ORF  
 **If we only assign frame colors to the annotated CDS**    
 ```
 ggRibo_decon(
