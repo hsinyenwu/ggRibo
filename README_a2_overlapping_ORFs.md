@@ -3,7 +3,8 @@
 Some uORFs could overlap with their main ORFs. Furthermore, ORFs inside the annotated ORFs (nested ORFs) could also be translated. Recently, studies has found downstream ORFs (dPRFs) and dORFs that overlap with the main ORFs (odORFs).       
 <img width="535" alt="image" src="https://github.com/user-attachments/assets/2b900fee-888a-40cc-803f-772898a3ed37">
 
-Here we show an example for a gene with uORF and overlapping uORF for AT3G57170 (N-acetylglucosaminyl transferase component family protein). The overlapping uORF on AT3G57170 is conserved in plants:  
+Here we show an example for a gene with uORF and overlapping uORF for AT3G57170 (N-acetylglucosaminyl transferase component family protein). The overlapping uORF on AT3G57170 is conserved in plants.
+
 Here is the gtf for the uORF and overlapping uORF, you can copy this file and save as AT3G57170_uORFs.gtf:  
 ```
 3	Araport11	gene	21159373	21163322	.	-	.	gene_id AT3G57170; gene_biotype protein_coding;
@@ -34,7 +35,7 @@ Here is the gtf for the uORF and overlapping uORF, you can copy this file and sa
 3	Araport11	exon	21163121	21163322	.	-	.	gene_id AT3G57170; transcript_id AT3G57170.2; gene_biotype protein_coding;
 3	Araport11	CDS	21163146	21163187	.	-	.	gene_id "AT3G57170"; transcript_id "AT3G57170.2"; gene_biotype "protein_coding";
 ```
-Code to load RNA-seq and Ribo-seq files, sample names:  
+**Code to load RNA-seq and Ribo-seq files, sample names:**  
 ```
 CTRL_RNA="~/path/to/RNA_CTRL_merged.bam"
 CTRL_ribo="~/path/to/CTRL_expressed_P_sites_sort_count"
@@ -58,7 +59,7 @@ ggRibo(
 ```
 ![image](https://github.com/user-attachments/assets/78087fd8-b588-446a-9514-c650d4b49c82)
 
-Plot 2 extra ORFs (one uORF and one ouORF):  
+**Plot 2 extra ORFs (one uORF and one ouORF):**  
 ```
 ggRibo(
   gene_id = "AT3G57170",
@@ -69,7 +70,7 @@ ggRibo(
 ```
 ![image](https://github.com/user-attachments/assets/7f07e921-b761-4900-92a3-5442fd700266)
 
-Focus on the first uORF:  
+**Focus on the first uORF:**  
 ```
 ggRibo(
   gene_id = "AT3G57170",
@@ -80,7 +81,7 @@ ggRibo(
 ```
 ![image](https://github.com/user-attachments/assets/88d6dcb3-0089-43f4-ab19-db18d1949b78)
 
-Focus on the first uORF and add sequence viewer:  
+**Focus on the first uORF and add sequence viewer:**  
 ```
 ggRibo(
   gene_id = "AT3G57170",
