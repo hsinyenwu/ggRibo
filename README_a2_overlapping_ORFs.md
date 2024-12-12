@@ -97,7 +97,7 @@ ggRibo(
 ```
 ![image](https://github.com/user-attachments/assets/959f8d9b-1824-4e98-b5fb-ee484263314b)
 
-**Show the uoORF frame relative to the main ORF**
+**Show the ouORF frame relative to the main ORF**  
 ```
 ggRibo(
   gene_id = "AT3G57170",
@@ -108,5 +108,17 @@ ggRibo(
   Extend=200)
 ```
 ![image](https://github.com/user-attachments/assets/455b64ab-e5ad-43dd-8060-b3ad96f76f05)
+**Show the ouORF frame alone**  
+```
+ggRibo(
+  gene_id = "AT3G57170",
+  tx_id = "AT3G57170.1",
+  eORF.tx_id = "AT3G57170.1",
+  NAME="Gpi1 family protein",
+  oORF_coloring = "oORF_colors",
+  Extend=200)
+```
+![image](https://github.com/user-attachments/assets/7cb5c658-e21f-416a-89c2-dc47286b25c0)
+
 
 
