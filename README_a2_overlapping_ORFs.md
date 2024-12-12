@@ -35,6 +35,8 @@ Here is the gtf for the uORF and overlapping uORF, you can copy this file and sa
 3	Araport11	exon	21163121	21163322	.	-	.	gene_id AT3G57170; transcript_id AT3G57170.2; gene_biotype protein_coding;
 3	Araport11	CDS	21163146	21163187	.	-	.	gene_id "AT3G57170"; transcript_id "AT3G57170.2"; gene_biotype "protein_coding";
 ```
+The reason that we need to use two transcript ID (AT3G57170.1 and AT3G57170.2) for the two extra ORFs is because gtf/gff files only allow one CDS per transcript.  
+
 **Code to load RNA-seq and Ribo-seq files, sample names:**  
 ```
 CTRL_RNA="~/path/to/RNA_CTRL_merged.bam"
