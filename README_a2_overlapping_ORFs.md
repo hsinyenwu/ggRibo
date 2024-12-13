@@ -122,6 +122,7 @@ ggRibo(
 ![image](https://github.com/user-attachments/assets/7cb5c658-e21f-416a-89c2-dc47286b25c0)
 
 ### Deconvolution of Ribo-seq reads shows the translated frames of overlapping uORF and main ORF  
+ggRibo_decon takes only one Ribo-seq and RNA-seq samples and plot the 3 frames separately.   
 **If we only assign frame colors to the annotated CDS**    
 ```
 ggRibo_decon(
@@ -133,7 +134,8 @@ ggRibo_decon(
 ```
 ![image](https://github.com/user-attachments/assets/da6cd9b3-868e-4a8e-a65f-5ee77be6fe98)
 
-**We extend frame colors to the extra ORF (i.e., ouORF)**   
+**We can also extend frame colors to the extra ORF (i.e., ouORF)**   
+It is more clear this way 
 ```
 ggRibo_decon(
   gene_id = "AT3G57170",
