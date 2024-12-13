@@ -32,7 +32,7 @@ ggRibo(gene_id="AT1G27950",
 ```
 ![image](https://github.com/user-attachments/assets/6eccf63b-4ef2-4794-b3a4-e3236a350e5f)
 
-We can futher zoom in the dORF and see it more clearly. We select plot_range = c(9741980,9742125) and input show_seq = TRUE, FASTA = FA  
+We can futher zoom in the dORF to see it more clearly. We select plot_range = c(9741980,9742125) and input show_seq = TRUE, FASTA = FA  
 ```
 ggRibo(gene_id="AT1G27950",
        tx_id = "AT1G27950.1",
