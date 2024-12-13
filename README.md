@@ -138,9 +138,9 @@ Download:
 Load data and import gtfs:
 ```
 library(ggRibo)
-CTRL_RNA="~/Desktop/CTRL_v1/RNA_CTRL_merged.bam"
-CTRL_ribo="~/Desktop/CTRL_v1/CTRL_expressed_P_sites_sort_count"
-FA <- FaFile("~/Desktop/Leaky_scanning/TAIR10_chr_all_2.fas")
+CTRL_RNA="/path/to/RNA_CTRL_merged.bam"
+CTRL_ribo="/path/to/CTRL_expressed_P_sites_sort_count"
+FA <- FaFile("/path/to/TAIR10_chr_all_2.fas")
 Samples = c("Seedlings")
 RiboseqData = Ribo_data(c(CTRL_ribo),SampleNames=Samples)
 RNAseqData = CTRL_RNA
