@@ -1,5 +1,4 @@
-## Advanced ggRibo part 3: visualizing dORFs and translation readthrough
-
+## Advanced ggRibo part 3: visualizing dORF translation
 Some ORFs are identified downstream of the main ORF. Here we visualize a case of dORF in Arabidopsis.  
 
 **gtf for dORF identified from PMID: 38000896**
