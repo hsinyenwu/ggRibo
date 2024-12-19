@@ -53,7 +53,7 @@ Range_info <- R6::R6Class("Range_info",
     cdsByTx = NULL,        # Coding sequences grouped by transcript
     fiveUTR = NULL,        # 5' UTR regions grouped by transcript
     threeUTR = NULL,       # 3' UTR regions grouped by transcript
-    
+
     # Initialization method for Range_info
     initialize = function(exonsByTx, txByGene, cdsByTx, fiveUTR, threeUTR) {
       # Assign provided genomic ranges to class fields
@@ -75,7 +75,7 @@ Range_info <- R6::R6Class("Range_info",
 eORF_Range_info <- R6::R6Class("eORF_Range_info",
   public = list(
     eORFByTx = NULL,      # eORFs grouped by transcript
-    
+
     # Initialization method for eORF_Range_info
     initialize = function(eORFByTx) {
       # Assign provided eORF ranges to class field
@@ -135,7 +135,7 @@ Gene_info <- R6::R6Class("Gene_info",
     Riboseq_list = NULL,          # List of Ribo-seq data
     cds_left = NULL,              # Left boundary of CDS
     cds_right = NULL,             # Right boundary of CDS
-    
+
     # Initialization method for Gene_info
     initialize = function(gene_id, tx_id, txByGene, cdsByYFGtx, chr, generanges, generangesplus,
                           range_left, range_right, num_isoforms, tx_names, isoforms.w.3UTR,
@@ -186,7 +186,7 @@ eORF_info <- R6::R6Class("eORF_info",
     xlim.eORF = NULL,            # eORF genomic range limits
     eORF_left = NULL,            # Left boundary of eORF
     eORF_right = NULL,           # Right boundary of eORF
-    
+
     # Initialization method for eORF_info
     initialize = function(eORF.tx_id, eORF_Riboseq_list, xlim.eORF, eORF_left, eORF_right) {
       # Assign provided eORF-specific data to class fields
