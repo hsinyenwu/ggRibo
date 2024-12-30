@@ -1,4 +1,3 @@
-
 # ---------------------------
 # Function Definitions
 # ---------------------------
@@ -299,6 +298,7 @@ assign_frames_with_extension <- function(Ribo_data, cds_ranges, exons, fExtend, 
 
   return(Ribo_data)
 }
+
 
 # Function to exclude Ribo-seq reads that overlap eORF regions
 # Helper function to exclude eORF reads from main Ribo-seq data
@@ -1119,7 +1119,7 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
       panel.grid = element_blank(),
       panel.border = element_blank()
     ) +
-    xlab("Genomic Position") +
+    xlab("") + #Genomic Position
     ylab("") +
     coord_cartesian(clip = "off")
 
@@ -1213,12 +1213,53 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
 #' @param Ribo_fix_height Numeric value to fix the maximum height of Ribo-seq counts in the plot.
 #' @param plot_ORF_ranges Logical indicating whether to plot ORF ranges in the gene model. Default is FALSE.
 #' @param oORF_coloring Character string specifying coloring method for overlapping ORFs ("oORF_colors" or "extend_mORF").
-#' @param frame_colors Named vector of colors for the reading frames. Default is c("0"="#FF0000", "1"="#3366FF", "2"="#009900").
+#' @param frame_colors Named vector of colors for the reading frames (0,1,2). Default is c("0"="#FF0000", "1"="#3366FF", "2"="#009900").
 #' @param plot_range Optional numeric vector specifying a custom genomic range to plot.
 #' @param sample_color Vector specifying colors for each sample or "color" to use default coloring.
 #' @param show_seq Logical indicating whether to display the DNA and amino acid sequence. Default is FALSE.
 #' @param FASTA A `BSgenome` object or path to FASTA with genomic sequences.
-#' @param plot_genomic_direction Logical whether to plot the genomic direction arrow. Default is FALSE.
+#' @param plot_genomic_direction Logical whether to plot the genomic direction arrow. Default is FALSE. Genomic direction indicates the direction you should see on genome browsers such as JBrowse or IGV.
+#' @param dna_aa_height_ratio Numeric value adjusting DNA/AA plot height. Default is 0.5.
+#' @param gene_model_height_ratio Numeric value adjusting gene model plot height or NULL to auto-adjust.
+#' @param transcript_label_font_size Numeric for transcript label font size.
+#' @param selected_isoforms Optional vector of transcript IDs to plot. If provided, only these isoforms plus `tx_id` are shown.
+#'
+#' @return A combined ggplot object displaying RNA-seq coverage, Ribo-seq data, gene models, and optional sequences.
+#' @export
+#' Plot RNA-seq and Ribo-seq coverage for a gene
+#'
+#' The `ggRibo` function creates a comprehensive plot displaying RNA-seq coverage and Ribo-seq read counts
+#' for a specified gene and transcript. It includes options for displaying extended ORFs (eORFs), genomic sequences,
+#' and gene models, and can scale data according to various parameters.
+#'
+#' @param gene_id Character string specifying the gene ID of interest.
+#' @param tx_id Character string specifying the transcript ID to be used as the main isoform.
+#' @param eORF.tx_id Optional. Vector of eORF transcript IDs to include in the plot.
+#' @param eORFRangeInfo Optional. eORF range information, e.g., an object like `eORF_Range`.
+#' @param Extend Numeric value specifying the number of base pairs to extend the plot beyond the gene range. Default is 100.
+#' @param NAME Optional. Character string for an additional name or title to display in the plot.
+#' @param RNAcoverline Color for the RNA-seq coverage line. Default is "grey".
+#' @param RNAbackground Color for the RNA-seq coverage background. Default is "#FEFEAE".
+#' @param left_margin Numeric value for the left margin extension in the plot. Default is 1.5.
+#' @param right_margin Numeric value for the right margin extension in the plot. Default is 1.5.
+#' @param fExtend Numeric value specifying the number of nucleotides to extend the frame assignment into the 5' UTR. Default is 0.
+#' @param tExtend Numeric value specifying the number of nucleotides to extend the frame assignment into the 3' UTR. Default is 0.
+#' @param RNAseq List of file paths to RNA-seq BAM files.
+#' @param Riboseq List of data frames containing Ribo-seq data.
+#' @param SampleNames Vector of sample names corresponding to the RNAseq and Riboseq data.
+#' @param data_types Vector of sample data type names for each sample (e.g., "Ribo-seq").
+#' @param GRangeInfo Genomic range information, typically an object like `Txome_Range`.
+#' @param RNAseqBamPaired Vector indicating whether each RNA-seq BAM file is paired-end ("paired") or single-end ("single").
+#' @param Y_scale Character string, either "all" or "each", specifying how to scale the Y-axis for RNA-seq coverage. Default is "all".
+#' @param Ribo_fix_height Numeric value to fix the maximum height of Ribo-seq counts in the plot.
+#' @param plot_ORF_ranges Logical indicating whether to plot ORF ranges in the gene model. Default is FALSE.
+#' @param oORF_coloring Character string specifying coloring method for overlapping ORFs ("oORF_colors" or "extend_mORF").
+#' @param frame_colors Named vector of colors for the reading frames (0,1,2). Default is c("0"="#FF0000", "1"="#3366FF", "2"="#009900").
+#' @param plot_range Optional numeric vector specifying a custom genomic range to plot.
+#' @param sample_color Vector specifying colors for each sample or "color" to use default coloring.
+#' @param show_seq Logical indicating whether to display the DNA and amino acid sequence. Default is FALSE.
+#' @param FASTA A `BSgenome` object or path to FASTA with genomic sequences.
+#' @param plot_genomic_direction Logical whether to plot the genomic direction arrow. Default is FALSE. Genomic direction indicates the direction you should see on genome browsers such as JBrowse or IGV.
 #' @param dna_aa_height_ratio Numeric value adjusting DNA/AA plot height. Default is 0.5.
 #' @param gene_model_height_ratio Numeric value adjusting gene model plot height or NULL to auto-adjust.
 #' @param transcript_label_font_size Numeric for transcript label font size.
@@ -1251,6 +1292,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
                    plot_genomic_direction = FALSE,
                    data_types = rep("Ribo-seq", length(SampleNames)),
                    selected_isoforms = NULL) {
+
   # Validate that data_types matches number of samples
   if (length(data_types) != length(SampleNames)) {
     stop("The length of data_types must match the number of samples.")
@@ -1799,16 +1841,21 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
           }
 
         } else {
-          # Coding transcript logic
+          # -----------------------------
+          # MINIMAL FIX: REORDERED so fExtend/tExtend comes before "extend_mORF"
+          # -----------------------------
           if (!is.null(oORF_coloring) && oORF_coloring == "oORF_colors") {
+
             Ribo_main <- RiboRslt
             Ribo_main <- assign_frames(Ribo_main, cds_ranges, GeneTxInfo$strand)
 
-            # Identify overlapping ORF regions
             if (!is.null(eORFTxInfo)) {
-              Ribo_gr <- GRanges(seqnames = Ribo_main$chr,
-                                 ranges = IRanges(Ribo_main$position, Ribo_main$position),
-                                 strand = Ribo_main$strand)
+              Ribo_gr <- GRanges(
+                seqnames = Ribo_main$chr,
+                ranges = IRanges(Ribo_main$position, Ribo_main$position),
+                strand = Ribo_main$strand
+              )
+
               overlapping_orfs <- GRangesList()
               for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
                 eORF_ranges <- eORFTxInfo$xlim.eORF[[j]]
@@ -1817,6 +1864,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
                   overlapping_orfs[[length(overlapping_orfs) + 1]] <- eORF_ranges
                 }
               }
+
               if (length(overlapping_orfs) > 0) {
                 overlapping_orfs_gr <- unlist(overlapping_orfs)
                 overlaps <- findOverlaps(Ribo_gr, overlapping_orfs_gr)
@@ -1830,16 +1878,16 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
             }
 
             if (!is.null(Ribo_fix_height)) {
-              Ribo_main$count <- pmin(Ribo_main$count,Ribo_fix_height)
+              Ribo_main$count <- pmin(Ribo_main$count, Ribo_fix_height)
             }
             Ribo_main$count_scaled <- Ribo_main$count * scale_factor_Ribo
 
-            # Plot overlapping vs non-overlapping regions differently if frame colors
             if (sample_color_i == "color") {
               p <- p + geom_segment(data=Ribo_main[Ribo_main$region_type=='non_overlapping',],
                                     aes(x=position, xend=position, y=0, yend=count_scaled), color='grey')
               p <- p + geom_segment(data=Ribo_main[Ribo_main$region_type=='overlapping',],
                                     aes(x=position, xend=position, y=0, yend=count_scaled, color=frame))
+
               if (!is.null(eORFTxInfo)) {
                 for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
                   eORF_Riboseq <- eORF_Riboseq_list[[i]][[j]]
@@ -1856,8 +1904,8 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
                 }
               }
               p <- p + scale_color_manual(values=frame_colors, na.value='grey')
+
             } else {
-              # If not using frame colors, just plot all reads one color
               p <- p + geom_segment(data=Ribo_main,
                                     aes(x=position,xend=position,y=0,yend=count_scaled),color=sample_color_i)
               if (!is.null(eORFTxInfo)) {
@@ -1875,84 +1923,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
               }
             }
 
-          } else if (!is.null(oORF_coloring) && oORF_coloring=="extend_mORF") {
-            # Extend main ORF by including overlapping eORFs
-            extended_cds_ranges <- cds_ranges
-            if (!is.null(eORFTxInfo) && has_overlapping_ORF) {
-              for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
-                eORF_ranges <- eORFTxInfo$xlim.eORF[[j]]
-                overlaps_CDS <- findOverlaps(eORF_ranges, cds_ranges)
-                if (length(overlaps_CDS)>0) {
-                  extended_cds_ranges <- reduce(c(extended_cds_ranges, eORF_ranges))
-                }
-              }
-            }
-
-            RiboRslt <- assign_frames_extended(RiboRslt, extended_cds_ranges, GeneTxInfo$strand, cds_ranges)
-
-            if (!is.null(Ribo_fix_height)) {
-              RiboRslt$count <- pmin(RiboRslt$count,Ribo_fix_height)
-              RiboRslt$count_scaled <- RiboRslt$count * scale_factor_Ribo
-            }
-
-            if (sample_color_i=="color") {
-              p <- p +
-                geom_segment(data=RiboRslt,
-                             aes(x=position,xend=position,y=0,yend=count_scaled,color=frame))
-              if (!is.null(eORFTxInfo)) {
-                for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
-                  eORF_ranges <- eORFTxInfo$xlim.eORF[[j]]
-                  eORF_Riboseq <- eORF_Riboseq_list[[i]][[j]]
-
-                  overlaps_CDS <- findOverlaps(eORF_ranges, cds_ranges)
-                  overlaps_fiveUTR <- FALSE
-                  fiveUTR_ranges <- GeneTxInfo$fiveUTRByYFGtx[[tx_id]]
-                  if (!is.null(fiveUTR_ranges) && length(fiveUTR_ranges)>0) {
-                    if (length(findOverlaps(eORF_ranges, fiveUTR_ranges))>0) {
-                      overlaps_fiveUTR <- TRUE
-                    }
-                  }
-
-                  # Only plot eORFs not overlapping CDS if they overlap 5'UTR
-                  if (length(overlaps_CDS)==0 && overlaps_fiveUTR) {
-                    if (nrow(eORF_Riboseq)>0) {
-                      if (!is.null(Ribo_fix_height)) {
-                        eORF_Riboseq$count <- pmin(eORF_Riboseq$count,Ribo_fix_height)
-                      }
-                      eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
-                      eORF_Riboseq <- assign_frames(eORF_Riboseq, eORF_ranges, GeneTxInfo$strand)
-                      p <- p +
-                        geom_segment(data=eORF_Riboseq,
-                                     aes(x=position,xend=position,y=0,yend=count_scaled,color=frame))
-                    }
-                  }
-                }
-              }
-
-              p <- p + scale_color_manual(values=frame_colors, na.value='grey')
-
-            } else {
-              p <- p +
-                geom_segment(data=RiboRslt,
-                             aes(x=position,xend=position,y=0,yend=count_scaled),color=sample_color_i)
-              if (!is.null(eORFTxInfo)) {
-                for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
-                  eORF_Riboseq <- eORF_Riboseq_list[[i]][[j]]
-                  if (nrow(eORF_Riboseq)>0) {
-                    if (!is.null(Ribo_fix_height)) {
-                      eORF_Riboseq$count <- pmin(eORF_Riboseq$count,Ribo_fix_height)
-                    }
-                    eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
-                    p <- p +
-                      geom_segment(data=eORF_Riboseq,
-                                   aes(x=position,xend=position,y=0,yend=count_scaled),color=sample_color_i)
-                  }
-                }
-              }
-            }
-
-          } else if (fExtend>0 || tExtend>0) {
-            # Assign frames with UTR extension, excluding eORF reads if present
+          } else if (fExtend>0 || tExtend>0) {   # <--- Moved up to come BEFORE "extend_mORF"
             Ribo_main <- RiboRslt
             if (!is.null(eORFTxInfo)) {
               Ribo_main <- exclude_eORF_reads(Ribo_main, eORFTxInfo, GeneTxInfo$strand)
@@ -1969,6 +1940,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
               p <- p +
                 geom_segment(data=Ribo_main,
                              aes(x=position,xend=position,y=0,yend=count_scaled,color=frame))
+
               if (!is.null(eORFTxInfo)) {
                 for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
                   eORF_Riboseq <- eORF_Riboseq_list[[i]][[j]]
@@ -1979,6 +1951,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
                     }
                     eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
                     eORF_Riboseq <- assign_frames(eORF_Riboseq, eORF_ranges, GeneTxInfo$strand)
+
                     p <- p +
                       geom_segment(data=eORF_Riboseq,
                                    aes(x=position,xend=position,y=0,yend=count_scaled,color=frame))
@@ -2008,8 +1981,85 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
               }
             }
 
+          } else if (!is.null(oORF_coloring) && oORF_coloring=="extend_mORF") {
+            extended_cds_ranges <- cds_ranges
+
+            if (!is.null(eORFTxInfo) && has_overlapping_ORF) {
+              for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
+                eORF_ranges <- eORFTxInfo$xlim.eORF[[j]]
+                overlaps_CDS <- findOverlaps(eORF_ranges, cds_ranges)
+                if (length(overlaps_CDS)>0) {
+                  extended_cds_ranges <- reduce(c(extended_cds_ranges, eORF_ranges))
+                }
+              }
+            }
+
+            RiboRslt <- assign_frames_extended(RiboRslt, extended_cds_ranges, GeneTxInfo$strand, cds_ranges)
+
+            if (!is.null(Ribo_fix_height)) {
+              RiboRslt$count <- pmin(RiboRslt$count,Ribo_fix_height)
+              RiboRslt$count_scaled <- RiboRslt$count * scale_factor_Ribo
+            }
+
+            if (sample_color_i=="color") {
+              p <- p +
+                geom_segment(data=RiboRslt,
+                             aes(x=position,xend=position,y=0,yend=count_scaled,color=frame))
+
+              if (!is.null(eORFTxInfo)) {
+                for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
+                  eORF_ranges <- eORFTxInfo$xlim.eORF[[j]]
+                  eORF_Riboseq <- eORFTxInfo$eORF_Riboseq_list[[i]][[j]]
+
+                  overlaps_CDS <- findOverlaps(eORF_ranges, cds_ranges)
+                  overlaps_fiveUTR <- FALSE
+                  fiveUTR_ranges <- GeneTxInfo$fiveUTRByYFGtx[[tx_id]]
+                  if (!is.null(fiveUTR_ranges) && length(fiveUTR_ranges)>0) {
+                    if (length(findOverlaps(eORF_ranges, fiveUTR_ranges))>0) {
+                      overlaps_fiveUTR <- TRUE
+                    }
+                  }
+
+                  if (length(overlaps_CDS)==0 && overlaps_fiveUTR) {
+                    if (nrow(eORF_Riboseq)>0) {
+                      if (!is.null(Ribo_fix_height)) {
+                        eORF_Riboseq$count <- pmin(eORF_Riboseq$count,Ribo_fix_height)
+                      }
+                      eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
+                      eORF_Riboseq <- assign_frames(eORF_Riboseq, eORF_ranges, GeneTxInfo$strand)
+
+                      p <- p +
+                        geom_segment(data=eORF_Riboseq,
+                                     aes(x=position,xend=position,y=0,yend=count_scaled,color=frame))
+                    }
+                  }
+                }
+              }
+
+              p <- p + scale_color_manual(values=frame_colors, na.value='grey')
+
+            } else {
+              p <- p +
+                geom_segment(data=RiboRslt,
+                             aes(x=position,xend=position,y=0,yend=count_scaled),color=sample_color_i)
+              if (!is.null(eORFTxInfo)) {
+                for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
+                  eORF_Riboseq <- eORFTxInfo$eORF_Riboseq_list[[i]][[j]]
+                  if (nrow(eORF_Riboseq)>0) {
+                    if (!is.null(Ribo_fix_height)) {
+                      eORF_Riboseq$count <- pmin(eORF_Riboseq$count,Ribo_fix_height)
+                    }
+                    eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
+                    p <- p +
+                      geom_segment(data=eORF_Riboseq,
+                                   aes(x=position,xend=position,y=0,yend=count_scaled),color=sample_color_i)
+                  }
+                }
+              }
+            }
+
           } else {
-            # Default coding frame assignment without special overlaps
+            # Default coding transcripts frame assignment
             Ribo_main <- RiboRslt
             if (!is.null(eORFTxInfo)) {
               eORF_positions <- unlist(lapply(seq_along(eORFTxInfo$xlim.eORF), function(j) {
@@ -2030,6 +2080,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
               p <- p +
                 geom_segment(data=Ribo_main,
                              aes(x=position,xend=position,y=0,yend=count_scaled,color=frame))
+
               if (!is.null(eORFTxInfo)) {
                 for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
                   eORF_Riboseq <- eORF_Riboseq_list[[i]][[j]]
@@ -2214,10 +2265,10 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
 }
 
 # -----------------------------------
-# ggRibo_decon function
+# ggRibo_decom function
 # -----------------------------------
 #'
-#' `ggRibo_decon` creates a combined visualization of RNA-Seq coverage and frame-specific Ribo-Seq counts for a specified gene and transcript.
+#' `ggRibo_decom` creates a combined visualization of RNA-Seq coverage and frame-specific Ribo-Seq counts for a specified gene and transcript.
 #' It generates three separate plots corresponding to the three reading frames (0, 1, and 2) of Ribo-Seq data, optionally including reads
 #' that do not fall within any annotated ORF regions. It can also display extended ORFs (eORFs), genomic sequences, and gene models.
 #'
@@ -2256,7 +2307,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
 #' @return A combined `ggplot` object with RNA-Seq coverage, three frame-specific Ribo-Seq plots, gene model, and optionally DNA/AA sequences.
 #'
 #' @export
-ggRibo_decon <- function(gene_id, tx_id, eORF.tx_id = NULL,
+ggRibo_decom <- function(gene_id, tx_id, eORF.tx_id = NULL,
                          eORFRangeInfo = NULL, Extend = 100, NAME = "",
                          RNAcoverline = "grey", RNAbackground = "#FEFEAE",
                          fExtend = 0,
@@ -2305,9 +2356,9 @@ ggRibo_decon <- function(gene_id, tx_id, eORF.tx_id = NULL,
     stop("GRangeInfo (e.g., Txome_Range) must be provided.")
   }
 
-  # ggRibo_decon only supports one sample at a time
+  # ggRibo_decom only supports one sample at a time
   if (length(SampleNames) > 1) {
-    stop("ggRibo_decon only supports one sample at a time.")
+    stop("ggRibo_decom only supports one sample at a time.")
   }
 
   has_overlapping_ORF <- FALSE
@@ -2812,7 +2863,7 @@ ggRibo_decon <- function(gene_id, tx_id, eORF.tx_id = NULL,
     } else {
       # Coding transcript logic (assign frames)
       # If extend_mORF or oORF_colors are set, or we want to exclude eORFs, this is handled similarly to ggRibo but simplified here
-      # For ggRibo_decon, we just do a standard assignment and then separate by frame
+      # For ggRibo_decom, we just do a standard assignment and then separate by frame
       # Below we do a similar approach: assign frames, then split by frame
       if (!is.null(oORF_coloring) && oORF_coloring=="extend_mORF") {
         extended_cds_ranges <- cds_ranges
@@ -2991,7 +3042,7 @@ ggRibo_decon <- function(gene_id, tx_id, eORF.tx_id = NULL,
 #'
 #' The `ggRNA` function creates a plot displaying RNA-seq coverage for a specified gene and transcript.
 #' It optionally includes genomic sequences (DNA and amino acids) and gene models (exons, UTRs, CDS).
-#' This function is simpler than `ggRibo` and `ggRibo_decon` as it focuses solely on RNA-seq coverage.
+#' This function is simpler than `ggRibo` and `ggRibo_decom` as it focuses solely on RNA-seq coverage.
 #'
 #' @param gene_id Character string specifying the gene ID of interest.
 #' @param tx_id Character string specifying the transcript ID to be used as the main isoform.
@@ -3489,4 +3540,6 @@ ggRNA <- function(gene_id, tx_id, Extend = 100, NAME = "",
 
   return(combined_plot)
 }
+
+
 
