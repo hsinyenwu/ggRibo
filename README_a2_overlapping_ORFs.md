@@ -125,7 +125,7 @@ ggRibo(
 ggRibo_decon takes only one Ribo-seq and RNA-seq samples and plot the 3 frames separately.   
 **If we only assign frame colors to the annotated CDS**    
 ```
-ggRibo_decon(
+ggRibo_decom(
   gene_id = "AT3G57170",
   tx_id = "AT3G57170.1",
   NAME="Gpi1 family protein",
@@ -137,7 +137,7 @@ ggRibo_decon(
 **We can also extend frame colors to the extra ORF (i.e., ouORF)**   
 It is more clear this way 
 ```
-ggRibo_decon(
+ggRibo_decom(
   gene_id = "AT3G57170",
   tx_id = "AT3G57170.1",
   eORF.tx_id = "AT3G57170.1",
