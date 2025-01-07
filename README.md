@@ -180,5 +180,9 @@ ggRibo(
 (1) Extend (integer or a two integer vector): extend the plot range for both side of the plot. You can either use one number, which means same extension for both side, or use a vector with two values to extend left and right sides differently.  
 (2) Y_scale (Boolean): the y-axis scale for each sample for the gene of interest. It could be "each", means each sample scale by itself to its max. The alternative is "all", means all samples are scaled together (same max Y-axis scale).  
 (3) fExtend (integer): entend the 5' side of annotated CDS and also extend the frame of the annotated CDS. This is designed for visualizing non-AUG start.  
-(4) tExtend (integer): entend the 3' side of annotated CDS and also extend the frame of the annotated CDS.  This is designed for visualizing stop codon readthrough. 
+(4) tExtend (integer): entend the 3' side of annotated CDS and also extend the frame of the annotated CDS.  This is designed for visualizing stop codon readthrough.   
+(5) eORF.tx_id (text): input the transcript id for extra ORFs. Remember the eORF gtf should be input with the eORF_import function and the transcript id for extra ORFs is included in the eORF gtf.   
+(6) plot_genomic_direction (Boolean): plot the direction of the gene on the genome browser on top right side of the top plot.  
+(7) sample_color (text vector): the color of the reads in each sample (from top to bottom). If you want the reads in the plot are color according to the 3 frames, use "color". Otherwise just give a single color. For example, if we provide: sample_color=c("color","purple"), reads in the first plot will be colored according to their frames, but all reads in the second plot will be colored purple. The default for all plots are "color".   
+(8) frame_colors (text vector): colors for the 3 frames, default is c("0"="#FF0000", "1"="#3366FF", "2"="#009900"), you can choose the color you like.  
 
