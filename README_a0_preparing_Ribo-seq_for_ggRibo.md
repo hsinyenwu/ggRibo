@@ -1,5 +1,15 @@
 ## Two ways to generate P-site file (psf) format for ggRibo
 
+**Note: the Ribo-seq P-site coordinate file should look like this:**
+The first to forth columns are the "total counts", "chromosome number", "P-site chromsome coordinates" and "strand" (+ or -), respectively.
+```
+1   1  1000000      +
+3   1 10000007      +
+3   1 10000010      +
+3   1 10000016      +
+1   1 10000018      +
+4   1 10000019      +
+```
 
 ### 1. Using RiboTaper output
 In RiboTaper output files, there is one called *P_sites_all*. You can further process it to the psf format.  
