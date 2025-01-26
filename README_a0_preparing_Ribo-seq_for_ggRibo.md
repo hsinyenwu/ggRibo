@@ -33,7 +33,7 @@ Ribo-seQC is an R package that performs comprehensive quality analysis of Ribo-s
 
 Among the outputs of Ribo-seQC is two BedGraph files of the plus and minus strand P-sites. The files for the plus and minus strand P-sites match the name of the inputted BAM appended with "_P_sites_plus.bedgraph" and "_P_sites_minus.bedgraph". The BedGraph format contains all the data necessary for ggRibo, but needs to be reformatted.
 
-**Reformatting Ribo-seQC P-site output**
+**Reformatting Ribo-seQC P-site output**  
 The two P-site files can be converted into the format compatible with ggRibo using the following code in R:
 ```
 ### Define file paths and load the plus and minus strand BedGraph files
