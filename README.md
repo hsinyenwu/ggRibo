@@ -11,7 +11,7 @@ Gene-context Ribo-seq plot provides a bird’s-eye view of the translation for a
   
 <img width="715" alt="image" src="https://github.com/user-attachments/assets/7cbcacb4-a42d-45ab-bbcb-cd45bc1923a6" />
 
-In ggRibo plots, Ribo-seq reads are color-coded: red for the first (expected) reading frame, blue for the second, and green for the third (Figures 2C). Reads outside the ORF range are displayed in gray. RNA-seq coverage is represented with a light yellow background (Figures 2C).  
+The gene-context plot shown in Figure 2C is a ggRibo plot, Ribo-seq reads are color-coded: red for the first (expected) reading frame, blue for the second, and green for the third (Figures 2C). Reads outside the ORF range are displayed in gray. RNA-seq coverage is represented with a light yellow background (Figures 2C).  
 
 ### Install ggRibo and its required packages:
 (1) Install required packages.
