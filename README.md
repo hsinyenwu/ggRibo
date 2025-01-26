@@ -64,7 +64,7 @@ install_github("hsinyenwu/ggRibo")
 
 <img width="675" alt="image" src="https://github.com/user-attachments/assets/efc31d7d-7d9f-4b01-a95e-f541183ddde6" />
 
-**Example files in the ggRibo package.**
+**Load example files in the ggRibo package.**
 ```
 #Path for example data from ggRibo package
 #You can create paths for your own data files
