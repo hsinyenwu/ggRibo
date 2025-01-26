@@ -8,13 +8,14 @@ Each Ribo-seq read is represented with its first nucleotide aligned to the P-sit
 <img width="738" alt="image" src="https://github.com/user-attachments/assets/b1b16e9a-2a0d-45bd-b55e-77a4c5c68aad" />
 
 #### Gene-context plot vs single transcript plot
-Gene-context Ribo-seq plot provides a bird’s-eye view of the translation for all isoforms. Here we show one example gene with 3 isoforms (Figure 2A). Using the single transcript style plot, it is impossible to check which transcript(s) is translated (Figure 2B). The isoform 3 is not transcribed in the sample and leads to a confusing plot (bottom panel of Figure 2B). In gene-context plot, we can clear see the first and second isoforms are transcribed and translated (Figure 2C) even though only one isoform is colored for periodicity.  
+Gene-context Ribo-seq plot provides a bird’s-eye view of the translation for all isoforms. Here we show one example gene with 3 isoforms (Figure 2A). Using the single transcript style plot, it is impossible to check which transcript(s) is translated (Figure 2B). The isoform 3 is not transcribed in the sample and leads to a confusing plot (bottom panel of Figure 2B). In gene-context plot, we can clear see the first and second isoforms are transcribed and translated (Figure 2C) even though only isoform 1 is colored for periodicity.  
   
 <img width="715" alt="image" src="https://github.com/user-attachments/assets/7cbcacb4-a42d-45ab-bbcb-cd45bc1923a6" />
 
-The gene-context plot shown in Figure 2C is a ggRibo plot, where Ribo-seq reads are color-coded to demonstrate the 3-nucleotide periodicity: red for the first (expected) reading frame, blue for the second, and green for the third (Figures 2C). Reads outside the ORF range are displayed in gray. RNA-seq coverage is represented with a light yellow background (Figures 2C).  
+### How to read ggRibo plots  
+The gene-context plot shown in Figure 2C is a ggRibo plot, where Ribo-seq reads are color-coded to demonstrate the 3-nucleotide periodicity: red for the first (expected/annotated) reading frame, blue for the second, and green for the third (Figures 2C). Reads outside the ORF range are displayed in gray. RNA-seq coverage is represented with a light yellow background (Figures 2C).   
 
-### Install ggRibo and its required packages:
+### Install ggRibo and its required packages:  
 (1) Install required packages.
 ```
 # Install BiocManager if not already installed
