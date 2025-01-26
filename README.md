@@ -5,12 +5,12 @@ Ribo-seq (ribosome profiling) is a powerful technique for studying mRNA translat
 ### Plotting Ribo-seq reads
 Each Ribo-seq read is represented with its first nucleotide aligned to the P-site (Figure 1A). The offset indicates the distance from the first nucleotide of the Ribo-seq read to the P-site of the ribosome. The offset can be obtained from metagene analysis of Ribo-seq reads using RiboTaper, Ribo-seQC, or other Ribo-seq analysis software. The cumulative P-site counts from all reads within the selected gene range were plotted (e.g., Figure 1B). Note the P-site offsets could vary in different organisms and organelles (see panels D-E).   
   
-<img width="738" alt="image" src="https://github.com/user-attachments/assets/b1b16e9a-2a0d-45bd-b55e-77a4c5c68aad" />
+<img width="675" alt="image" src="https://github.com/user-attachments/assets/b1b16e9a-2a0d-45bd-b55e-77a4c5c68aad" />
 
 ### Gene-context plot vs single transcript plot for presenting Ribo-seq plots
 Here we show one example gene with 3 isoforms (Figure 2A). Using the single transcript style plot, it is impossible to check which transcript(s) is translated (Figure 2B). The isoform 3 is not transcribed in the sample and leads to a confusing plot (bottom panel of Figure 2B). In gene-context plot, we can clear see the first and second isoforms are transcribed and translated (Figure 2C) even though only isoform 1 is colored for periodicity. Therefore, ***gene-context Ribo-seq plot provides a bird’s-eye view of the translation for all isoforms.*** 
   
-<img width="715" alt="image" src="https://github.com/user-attachments/assets/7cbcacb4-a42d-45ab-bbcb-cd45bc1923a6" />
+<img width="675" alt="image" src="https://github.com/user-attachments/assets/7cbcacb4-a42d-45ab-bbcb-cd45bc1923a6" />
 
 ### How to read ggRibo plots  
 The gene-context plot shown in Figure 2C is a ggRibo plot, where Ribo-seq reads are color-coded to demonstrate the 3-nucleotide periodicity: red for the first (expected/annotated) reading frame, blue for the second, and green for the third (Figures 2C). Reads outside the ORF range are displayed in gray. RNA-seq coverage is represented with a light yellow background (Figures 2C).   
@@ -61,7 +61,8 @@ install_github("hsinyenwu/ggRibo")
 4. Other Single Nucleotide Resolution data such as PARE-seq or TSS-seq (both 1st nt position and counts for each reads) could also be loaded for ggRibo plotting.
 
 **Here are the files for ggRibo plotting (Figure 3):**
-<img width="844" alt="image" src="https://github.com/user-attachments/assets/efc31d7d-7d9f-4b01-a95e-f541183ddde6" />
+
+<img width="675" alt="image" src="https://github.com/user-attachments/assets/efc31d7d-7d9f-4b01-a95e-f541183ddde6" />
 
 **Example files in the ggRibo package.**
 ```
