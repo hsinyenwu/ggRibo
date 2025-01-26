@@ -52,7 +52,7 @@ install.packages(setdiff(cran_packages, rownames(installed.packages())))
 library(devtools)
 install_github("hsinyenwu/ggRibo")
 ```
-### Basic usage of ggRibo  
+### Examples for basic usage of ggRibo  
 #### Load RNA-seq, Ribo-seq and annotation files  
 
 <img width="844" alt="image" src="https://github.com/user-attachments/assets/943cd6ff-f3bc-4dc5-888e-73e1f5fb59ab" />
