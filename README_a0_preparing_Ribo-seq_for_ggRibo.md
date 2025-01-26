@@ -29,7 +29,7 @@ cut -f 1,3,6 ${taper_out}/P_sites_all | sort | uniq -c | sed -r 's/^( *[^ ]+) +/
 ```
 
 ### 2. Using Ribo-seQC output for ggRibo
-[Ribo-seQC](https://github.com/lcalviell/Ribo-seQC) is an R package that performs comprehensive quality analysis of Ribo-seq data. For R version >4.0, please download a updated version of Ribo-seQC [Here](https://github.com/hsinyenwu/RiboseQC_R4.2.1).
+Ribo-seQC is an R package that performs comprehensive quality analysis of Ribo-seq data. For R version >4.0, please download a updated version of Ribo-seQC [Here](https://github.com/hsinyenwu/RiboseQC_R4.2.1). For older version of R, download Ribo-seQC [here](https://github.com/lcalviell/Ribo-seQC).
 
 Among the outputs of Ribo-seQC is two BedGraph files of the plus and minus strand P-sites. The files for the plus and minus strand P-sites match the name of the inputted BAM appended with "_P_sites_plus.bedgraph" and "_P_sites_minus.bedgraph". The BedGraph format contains all the data necessary for ggRibo, but needs to be reformatted.
 
