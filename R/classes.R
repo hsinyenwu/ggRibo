@@ -1,38 +1,4 @@
 # ---------------------------
-# Load Necessary Packages
-# ---------------------------
-
-# Suppress warnings and package startup messages when loading libraries
-suppressWarnings({
-  suppressPackageStartupMessages({
-    # GenomicRanges: Representation and manipulation of genomic intervals
-    library(GenomicRanges)
-    # GenomicFeatures: Tools for working with genomic annotation data
-    library(GenomicFeatures)
-    # GenomicAlignments: Efficient manipulation of large-scale sequencing data
-    library(GenomicAlignments)
-    # Rsamtools: Interface to the SAM/BAM sequence alignment format
-    library(Rsamtools)
-    # ggplot2: Data visualization package
-    library(ggplot2)
-    # cowplot: For assembling multiple ggplot2 plots into one
-    library(cowplot)
-    # grid: Low-level graphics functions
-    library(grid)
-    # IRanges: Representation and manipulation of integer ranges
-    library(IRanges)
-    # dplyr: Data manipulation package
-    library(dplyr)
-    # txdbmaker: Tools for creating transcript databases
-    library(txdbmaker)
-    # R6: Implementation of classes with reference semantics
-    library(R6)
-    # BiocParallel: Support for parallel computation in Bioconductor packages
-    library(BiocParallel)
-  })
-})
-
-# ---------------------------
 # Class Definitions (R6 Classes)
 # ---------------------------
 
@@ -198,4 +164,3 @@ eORF_info <- R6::R6Class("eORF_info",
                            }
                          )
 )
-
