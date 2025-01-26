@@ -54,7 +54,8 @@ install_github("hsinyenwu/ggRibo")
 ```
 ### Basic usage of ggRibo  
 #### Load RNA-seq, Ribo-seq and annotation files  
-<img width="1233" alt="image" src="https://github.com/user-attachments/assets/7b265639-ea69-4b31-88f5-edc6e5092248">
+
+<img width="844" alt="image" src="https://github.com/user-attachments/assets/943cd6ff-f3bc-4dc5-888e-73e1f5fb59ab" />
 
 ```
 #Path for example data from ggRibo package
