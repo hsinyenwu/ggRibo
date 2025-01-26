@@ -58,9 +58,9 @@ install_github("hsinyenwu/ggRibo")
 1. For preparing your Ribo-seq reads for ggRibo, see [Here](https://github.com/hsinyenwu/ggRibo/blob/v2025.1.25/README_a0_preparing_Ribo-seq_for_ggRibo.md).  
 2. RNA-seq files are just the bam files.  
 3. The FASTA and gtf/gff files are just the files you used to map the RNA-seq and Ribo-seq reads.  
-4. Other Single Nucleotide Resolution data such as PARE-seq or TSS-seq (both 1st nt position and counts for each reads) could also be loaded for ggRibo plotting.  
-**Here are the files for ggRibo plotting (Figure 3):**
+4. Other Single Nucleotide Resolution data such as PARE-seq or TSS-seq (both 1st nt position and counts for each reads) could also be loaded for ggRibo plotting.
 
+**Here are the files for ggRibo plotting (Figure 3):**
 <img width="844" alt="image" src="https://github.com/user-attachments/assets/efc31d7d-7d9f-4b01-a95e-f541183ddde6" />
 
 **Example files in the ggRibo package.**
