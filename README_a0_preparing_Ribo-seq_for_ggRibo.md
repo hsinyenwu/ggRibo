@@ -6,7 +6,7 @@ The first to forth columns are:
 (2) chromosome number   
 (3) P-site chromsome coordinates  
 (4) strand (+ or -)  
-**No header in the P-site file please.**
+**No header (i.e.,column names) in the P-site file please.**
 ```
 1   1  1000000      +
 3   1 10000007      +
