@@ -7,7 +7,8 @@ Each Ribo-seq read is represented with its first nucleotide aligned to the P-sit
 
 #### Genomic-context plot vs single transcript plot
 Genomic-context Ribo-seq plot provides a bird’s-eye view of the translation for all isoforms. With the single transcript style plot, it is impossible to check which transcript(s) is translated. The isoform 3 is not transcribed in the sample and leads to a confusing plot.  
-<img width="843" alt="image" src="https://github.com/user-attachments/assets/bd54ae89-5236-4a86-b435-785667c16807">
+<img width="815" alt="image" src="https://github.com/user-attachments/assets/7cbcacb4-a42d-45ab-bbcb-cd45bc1923a6" />
+
 
 In ggRibo plots, Ribo-seq reads are color-coded (Figures 1B and 1C): red for the first (expected) reading frame, blue for the second, and green for the third. Reads outside the ORF range are displayed in gray. RNA-seq coverage is represented with a light yellow background.  
 
