@@ -167,7 +167,6 @@ RNAseqData = CTRL_RNA
 RNAseqBamPairorSingle="paired"
 gtf_import(annotation="/path/to/Araport11+CTRL_20181206.gtf",format="gtf",dataSource="Araport",organism="Arabidopsis thaliana")
 CiPS_TuORFs_gff3 <- system.file("extdata", "CiPS_TuORFs_Sep5d_2024.gff3", package = "ggRibo", mustWork = TRUE) #Load uORFs
-eORF_import(annotation=CiPS_TuORFs_gff3, format="gff3",dataSource="Araport",organism="Arabidopsis thaliana")
 ```
 Make the simple plot.
 ```
@@ -183,14 +182,16 @@ There is a strong peak in the 5'UTR suggesting the presence of a translated uORF
 Show DNA sequence and focus on the uORF.  
 **Need plot_range, show_seq = TRUE, FASTA**
 ```
+#Input minimum uORF gtf
+eORF_import(annotation=CiPS_TuORFs_gff3, format="gff3",dataSource="Araport",organism="Arabidopsis thaliana")
 # show minimum uORF
 ggRibo(
   gene_id = "AT3G50500",
   tx_id = "AT3G50500.1",
   eORF.tx_id = "AT3G50500.1_227_232",
   NAME="SnRK2.2",
-  plot_range = c(18743960,18743920),
-  show_seq = TRUE,FASTA = FA,
+  plot_range = c(18743960,18743920), #select plotting range
+  show_seq = TRUE,FASTA = FA, #'show_seq = TRUE' means you want to see the sequence, than you need to input FASTA using 'FASTA=FA'
   Extend=50)
 ```
 ![image](https://github.com/user-attachments/assets/3363a6b5-1447-470a-b9ce-d484782ca9ff)
