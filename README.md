@@ -16,7 +16,9 @@ Here we show one example gene with 3 isoforms (Figure 2A). Using the single tran
 The gene-context plot shown in Figure 2C is a ggRibo plot, where Ribo-seq reads are color-coded to demonstrate the 3-nucleotide periodicity: red for the first (expected/annotated) reading frame, blue for the second, and green for the third (Figures 2C). Reads outside the ORF range are displayed in gray. RNA-seq coverage is represented with a light yellow background (Figures 2C).   
 
 ### Steps and examples for the basic usage of ggRibo  
+
 #### Install ggRibo and its required packages:  
+
 (1) Install required packages.
 ```
 # Install BiocManager if not already installed
@@ -54,6 +56,7 @@ install.packages(setdiff(cran_packages, rownames(installed.packages())))
 library(devtools)
 install_github("hsinyenwu/ggRibo")
 ```
+
 #### Load RNA-seq, Ribo-seq and annotation files  
 1. For preparing your Ribo-seq reads for ggRibo, see [Here](https://github.com/hsinyenwu/ggRibo/blob/v2025.1.25/README_a0_preparing_Ribo-seq_for_ggRibo.md).  
 2. RNA-seq files are just the bam files.  
