@@ -1173,7 +1173,7 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
           overlaps_CDS <- TRUE
         }
       }
-      line_color <- if (overlaps_CDS) "orange" else "green"
+      line_color <- if (overlaps_CDS) "orange" else "green" #pink was green
 
       # Add vertical lines for ORF boundaries
       p_gene <- p_gene +
@@ -1752,7 +1752,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
                 overlaps_CDS <- TRUE
               }
             }
-            line_color <- if (overlaps_CDS) "orange" else "green"
+            line_color <- if (overlaps_CDS) "orange" else "orange" #pink was green
             start_pos <- if (GeneTxInfo$strand=="+") eORF_left_pos else eORF_right_pos
             end_pos <- if (GeneTxInfo$strand=="+") eORF_right_pos else eORF_left_pos
             if (!is.null(start_pos) && !is.na(start_pos) && start_pos>=x_min && start_pos<=x_max) {
@@ -2127,7 +2127,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
       p <- p + scale_y_continuous(
         limits=y_limits,
         name="RNA-seq \ncoverage",
-        sec.axis=sec_axis(~ . / scale_factor_Ribo, name = paste0(data_types[i], "\n counts"))
+        sec.axis=sec_axis(~ . / scale_factor_Ribo, name = paste0(data_types[i], "\n count"))
       )
 
       p <- p + xlab("")
@@ -2828,7 +2828,7 @@ ggRibo_decom <- function(gene_id, tx_id, eORF.tx_id = NULL,
       p <- p + scale_y_continuous(
         limits=y_limits,
         name="RNA-seq \ncoverage",
-        sec.axis=sec_axis(~ . / scale_factor_Ribo, name = paste0(data_types[1], "\n counts"))
+        sec.axis=sec_axis(~ . / scale_factor_Ribo, name = paste0(data_types[1], "\n count"))
       )
 
       return(p)
@@ -3540,6 +3540,3 @@ ggRNA <- function(gene_id, tx_id, Extend = 100, NAME = "",
 
   return(combined_plot)
 }
-
-
-
