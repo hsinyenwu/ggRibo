@@ -19,7 +19,7 @@ ggRibo(
 ```
 ![image](https://github.com/user-attachments/assets/d452f80e-7703-4295-85e4-b64860ca1e0c)
 
-Check the reads in 3 frames.
+Check the reads in 3 frames with ggRibo_decom (decom for decomposition).
 ```
 ggRibo_decom(gene_id = "AT3G17185",
              tx_id = "AT3G17185.1",
