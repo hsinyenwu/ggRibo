@@ -27,20 +27,29 @@ gtf_import(annotation=agtf,format="gtf",dataSource="Araport",organism="Arabidops
 #Plot AT4G21910
 ggRNA(gene_id="AT4G21910",tx_id="AT4G21910.1",Y_scale = "each",NAME="MATE efflux family protein",Extend=c(700,0))
 ```
-![image](https://github.com/user-attachments/assets/5f933434-9973-4e54-9d6e-1406cff5f3c3)
+![image](https://github.com/user-attachments/assets/52bf25d7-19e0-4ad0-ad5b-0ddb96e3cb68)
 
 **Plot with the max y-axis from all samples.**
 ```
 #Plot AT4G21910
 ggRNA(gene_id="AT4G21910",tx_id="AT4G21910.1",Y_scale = "all",NAME="MATE efflux family protein",Extend=c(700,0))
 ```
-![image](https://github.com/user-attachments/assets/200450a8-6aab-4f2c-8d1d-00c159c02b25)
+![image](https://github.com/user-attachments/assets/da3b38d4-3c5a-4db9-b80d-c2d2e9f04060)
 
 **Plot with different backfround**
 ```
 #Plot AT4G21910
 ggRNA(gene_id="AT4G21910",tx_id="AT4G21910.1",Y_scale = "all",NAME="MATE efflux family protein",Extend=c(700,0),RNAbackground = c("lightblue","lightgreen","yellow","red"))
 ```
-![image](https://github.com/user-attachments/assets/cfc45a0b-8f6b-4b26-8651-4a011e1ba27b)
+![image](https://github.com/user-attachments/assets/2830915b-8195-4bba-b7a6-4defec36257f)
+
+**Plot with no border line grey color**
+```
+#Plot AT4G21910
+ggRNA(gene_id="AT4G21910",tx_id="AT4G21910.1",Y_scale = "all",NAME="MATE efflux family protein",Extend=c(800,0),RNAbackground = c("lightblue","lightgreen","yellow","red"),RNAcoverline = NA)
+```
+![image](https://github.com/user-attachments/assets/dbf7634b-040e-4b53-946b-dbd7f8cf4652)
+
+
 
 
