@@ -152,7 +152,7 @@ ggRibo(gene_id="AT3G02470",tx_id="AT3G02470.1",
        Y_scale="each",Extend=50,
        NAME = "SAMDC, CPuORF")
 ```
-![image](https://github.com/user-attachments/assets/7dba3356-8459-493e-afcb-6dfd5cc69c0a)
+![image](https://github.com/user-attachments/assets/52b62a05-2d93-4f34-8b63-b2485a6555b5)
 
 #### Check sequences for the uORF
 Download annotation and data files:  
