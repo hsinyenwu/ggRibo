@@ -21,7 +21,7 @@ RNAseqBamPairorSingle=c("paired","single","paired","single")
 #Load example transcriptome annotation file
 gtf_import(annotation=agtf,format="gtf",dataSource="Araport",organism="Arabidopsis thaliana")
 ```
-
+#### Examples:
 **Plot with the y-axis from each sample.**
 ```
 #Plot AT4G21910
