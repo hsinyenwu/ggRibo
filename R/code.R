@@ -622,7 +622,6 @@ plotDNAandAA <- function(GeneTxInfo, plot_range = NULL, FASTA = NULL) {
 
 # The code below is the definition of the `plotGeneTxModel` function, which the user asked to exclude from this round of commentary.
 #' Plot Gene Transcript Model
-#'
 #' This function creates a gene model plot showing exons, UTRs, CDS, and optional eORFs for a given gene and its isoforms.
 #'
 #' @param GeneTxInfo A `Gene_info` object containing gene and transcript information.
@@ -634,7 +633,6 @@ plotDNAandAA <- function(GeneTxInfo, plot_range = NULL, FASTA = NULL) {
 #'
 #' @return A `ggplot` object representing the gene model.
 #' @export
-
 plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = NULL, plot_ORF_ranges = FALSE, plot_range = NULL, transcript_label_font_size = 10) {
   # Load necessary libraries
   library(ggplot2)
@@ -835,6 +833,15 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
     if (!is.null(eORFTxInfo)) {
       for (eORF_idx in seq_along(eORFTxInfo$eORF.tx_id)) {
         eORF_ranges <- eORFTxInfo$xlim.eORF[[eORF_idx]]
+
+        ### NEW CODE START: Skip if the eORF doesn't overlap this isoform's exons
+        overlap_exons <- findOverlaps(eORF_ranges, exons_gr_original)
+        if (length(overlap_exons) == 0) {
+          # If no overlap with any exon of this isoform, skip plotting eORF for this isoform
+          next
+        }
+        ### NEW CODE END
+
         if (length(eORF_ranges) > 0) {
           original_eORF_ranges <- eORF_ranges
 
@@ -1173,7 +1180,7 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
           overlaps_CDS <- TRUE
         }
       }
-      line_color <- if (overlaps_CDS) "orange" else "green" #pink was green
+      line_color <- if (overlaps_CDS) "hotpink" else "orange"
 
       # Add vertical lines for ORF boundaries
       p_gene <- p_gene +
