@@ -1,4 +1,5 @@
 ### Plot RNA-seq reads with ggRNA
+Here we use the example files included in the ggRibo package:
 ```
 #Path for example data from ggRibo package
 #path to annotated gtf
