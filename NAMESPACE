@@ -3,6 +3,8 @@ export(gtf_import)
 export(eORF_import)
 export(Ribo_data)
 export(ggRibo)
+export(ggRibo_decom)
+export(ggRNA)
 
 # Optionally exported plotting functions
 export(plotDNAandAA)
