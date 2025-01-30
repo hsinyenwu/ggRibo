@@ -829,6 +829,28 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
       }
     }
 
+    # If we have no features, treat as ncRNA (moved to before eORF features)
+    if (length(isoform_data_list) == 0) {
+      exons_raw <- truncate_feature(exons_gr_original, exons_gr_original)
+      if (!is.null(exons_raw)) {
+        ncRNA_df <- data.frame(
+          start=exons_raw$start,
+          end=exons_raw$end,
+          y=y_value,
+          feature="ncRNA",
+          isoform=isoform,
+          height_factor=1,
+          orf_id=NA,
+          orig_start = exons_raw$orig_start,
+          orig_end = exons_raw$orig_end,
+          stringsAsFactors=FALSE,
+          row.names = NULL
+        )
+        isoform_data_list[[isoform_idx]] <- ncRNA_df
+        isoform_idx <- isoform_idx+1
+      }
+    }
+    
     # If eORF info is provided and plot_ORF_ranges is TRUE, include eORF features
     if (!is.null(eORFTxInfo)) {
       for (eORF_idx in seq_along(eORFTxInfo$eORF.tx_id)) {
@@ -910,28 +932,6 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
             isoform_idx <- isoform_idx + 1
           }
         }
-      }
-    }
-
-    # If we still have no features, treat as ncRNA
-    if (length(isoform_data_list) == 0) {
-      exons_raw <- truncate_feature(exons_gr_original, exons_gr_original)
-      if (!is.null(exons_raw)) {
-        ncRNA_df <- data.frame(
-          start=exons_raw$start,
-          end=exons_raw$end,
-          y=y_value,
-          feature="ncRNA",
-          isoform=isoform,
-          height_factor=1,
-          orf_id=NA,
-          orig_start = exons_raw$orig_start,
-          orig_end = exons_raw$orig_end,
-          stringsAsFactors=FALSE,
-          row.names = NULL
-        )
-        isoform_data_list[[isoform_idx]] <- ncRNA_df
-        isoform_idx <- isoform_idx+1
       }
     }
 
@@ -1746,38 +1746,39 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
 
       p <- p + xlab("")
 
+      # Add vertical lines for eORF boundaries
+      if (!is.null(eORFTxInfo)) {
+        x_min <- min(x_limits)
+        x_max <- max(x_limits)
+        # Add vertical lines for eORF boundaries
+        for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
+          eORF_ranges <- eORFTxInfo$xlim.eORF[[j]]
+          eORF_left_pos <- if (length(eORF_ranges)>0) min(start(eORF_ranges)) else NA
+          eORF_right_pos <- if (length(eORF_ranges)>0) max(end(eORF_ranges)) else NA
+
+          overlaps_CDS <- FALSE
+          if (length(GeneTxInfo$xlimCds[[tx_id]])>0) {
+            cds_ranges <- GeneTxInfo$xlimCds[[tx_id]]
+            overlap_cds <- findOverlaps(eORF_ranges, cds_ranges)
+            if (length(overlap_cds)>0) {
+              overlaps_CDS <- TRUE
+            }
+          }
+          line_color <- if (overlaps_CDS) "orange" else "orange" #pink was green
+          start_pos <- if (GeneTxInfo$strand=="+") eORF_left_pos else eORF_right_pos
+          end_pos <- if (GeneTxInfo$strand=="+") eORF_right_pos else eORF_left_pos
+          if (!is.null(start_pos) && !is.na(start_pos) && start_pos>=x_min && start_pos<=x_max) {
+            p <- p + geom_vline(xintercept=start_pos, linetype="solid", color=line_color, alpha=0.5)
+          }
+          if (!is.null(end_pos) && !is.na(end_pos) && end_pos>=x_min && end_pos<=x_max) {
+            p <- p + geom_vline(xintercept=end_pos, linetype="dashed", color=line_color, alpha=0.5)
+          }
+        }
+      }
+      
       # Check if main ORF is annotated and add vertical lines for ORF start/stop and extensions
       main_has_cds <- length(GeneTxInfo$xlimCds[[tx_id]])>0
       if (main_has_cds) {
-        if (!is.null(eORFTxInfo)) {
-          x_min <- min(x_limits)
-          x_max <- max(x_limits)
-          # Add vertical lines for eORF boundaries
-          for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
-            eORF_ranges <- eORFTxInfo$xlim.eORF[[j]]
-            eORF_left_pos <- if (length(eORF_ranges)>0) min(start(eORF_ranges)) else NA
-            eORF_right_pos <- if (length(eORF_ranges)>0) max(end(eORF_ranges)) else NA
-
-            overlaps_CDS <- FALSE
-            if (length(GeneTxInfo$xlimCds[[tx_id]])>0) {
-              cds_ranges <- GeneTxInfo$xlimCds[[tx_id]]
-              overlap_cds <- findOverlaps(eORF_ranges, cds_ranges)
-              if (length(overlap_cds)>0) {
-                overlaps_CDS <- TRUE
-              }
-            }
-            line_color <- if (overlaps_CDS) "orange" else "orange" #pink was green
-            start_pos <- if (GeneTxInfo$strand=="+") eORF_left_pos else eORF_right_pos
-            end_pos <- if (GeneTxInfo$strand=="+") eORF_right_pos else eORF_left_pos
-            if (!is.null(start_pos) && !is.na(start_pos) && start_pos>=x_min && start_pos<=x_max) {
-              p <- p + geom_vline(xintercept=start_pos, linetype="solid", color=line_color, alpha=0.5)
-            }
-            if (!is.null(end_pos) && !is.na(end_pos) && end_pos>=x_min && end_pos<=x_max) {
-              p <- p + geom_vline(xintercept=end_pos, linetype="dashed", color=line_color, alpha=0.5)
-            }
-          }
-        }
-
         # Add vertical lines for main ORF start/stop
         main_orf_start <- if (GeneTxInfo$strand=="+") GeneTxInfo$cds_left else GeneTxInfo$cds_right
         main_orf_stop <- if (GeneTxInfo$strand=="+") GeneTxInfo$cds_right else GeneTxInfo$cds_left
@@ -2825,7 +2826,7 @@ ggRibo_decom <- function(gene_id, tx_id, eORF.tx_id = NULL,
           if (length(cds_ranges) > 0 && length(findOverlaps(eORF_ranges, cds_ranges)) > 0) {
             overlaps_CDS <- TRUE
           }
-          line_color <- if (overlaps_CDS) "orange" else "green"
+          line_color <- if (overlaps_CDS) "orange" else "orange"
 
           if (GeneTxInfo$strand=="+") {
             start_pos <- eORF_left_pos
