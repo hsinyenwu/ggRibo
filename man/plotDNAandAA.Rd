@@ -17,5 +17,5 @@ plotDNAandAA(GeneTxInfo, plot_range = NULL, FASTA = NULL)
 A \code{ggplot2} object representing the DNA and amino acid sequences.
 }
 \description{
-Generates a plot showing DNA nucleotides and their corresponding amino acids.
+Generates a plot showing DNA nucleotides and their corresponding amino acids for the genomic region of interest.
 }

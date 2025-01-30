@@ -30,5 +30,6 @@ assign_frames_with_extension(
 Data frame with an added \code{frame} column indicating the reading frame.
 }
 \description{
-Assigns reading frames to Ribo-seq reads with extension into UTRs.
+Assigns reading frames to Ribo-seq reads with extension into UTRs. This is useful for analyzing
+alternative ORFs (including those in UTRs) by extending the coding region.
 }

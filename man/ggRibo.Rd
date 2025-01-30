@@ -23,7 +23,7 @@ ggRibo(
   Y_scale = "all",
   Ribo_fix_height = NULL,
   plot_ORF_ranges = FALSE,
-  oORF_coloring = NULL,
+  oORF_coloring = "extend_mORF",
   frame_colors = c(`0` = "#FF0000", `1` = "#3366FF", `2` = "#009900"),
   plot_range = NULL,
   sample_color = rep("color", length(Riboseq)),
@@ -32,7 +32,9 @@ ggRibo(
   dna_aa_height_ratio = 0.5,
   gene_model_height_ratio = NULL,
   transcript_label_font_size = 10,
-  data_types = rep("Ribo-seq", length(SampleNames))
+  plot_genomic_direction = FALSE,
+  data_types = rep("Ribo-seq", length(SampleNames)),
+  selected_isoforms = NULL
 )
 }
 \arguments{
@@ -42,7 +44,7 @@ ggRibo(
 
 \item{eORF.tx_id}{Optional. Vector of eORF transcript IDs to include in the plot.}
 
-\item{eORFRangeInfo}{Optional. eORF range information, e.g., an object like `eORF_Range`.}
+\item{eORFRangeInfo}{Optional. eORF range information, e.g., an object like \code{eORF_Range}.}
 
 \item{Extend}{Numeric value specifying the number of base pairs to extend the plot beyond the gene range. Default is 100.}
 
@@ -62,9 +64,9 @@ ggRibo(
 
 \item{SampleNames}{Vector of sample names corresponding to the RNAseq and Riboseq data.}
 
-\item{GRangeInfo}{Genomic range information, typically an object like `Txome_Range`.}
+\item{GRangeInfo}{Genomic range information, typically an object like \code{Txome_Range}.}
 
-\item{RNAseqBamPaired}{Vector indicating whether each RNA-seq BAM file is 'paired' or 'single'-end.}
+\item{RNAseqBamPaired}{Vector indicating whether each RNA-seq BAM file is paired-end ("paired") or single-end ("single").}
 
 \item{Y_scale}{Character string, either "all" or "each", specifying how to scale the Y-axis for RNA-seq coverage. Default is "all".}
 
@@ -72,38 +74,41 @@ ggRibo(
 
 \item{plot_ORF_ranges}{Logical indicating whether to plot ORF ranges in the gene model. Default is FALSE.}
 
-\item{oORF_coloring}{Character string specifying the method for coloring overlapping ORFs. Options are "oORF_colors" or "extend_mORF".}
+\item{oORF_coloring}{Character string specifying coloring method for overlapping ORFs ("oORF_colors" or "extend_mORF").}
 
-\item{frame_colors}{Named vector of colors for the reading frames. Default is c("0"="#FF0000", "1"="#3366FF", "2"="#009900").}
+\item{frame_colors}{Named vector of colors for the reading frames (0,1,2). Default is c("0"="#FF0000", "1"="#3366FF", "2"="#009900").}
 
-\item{plot_range}{Optional. Numeric vector of length two specifying a custom genomic range to plot.}
+\item{plot_range}{Optional numeric vector specifying a custom genomic range to plot.}
 
 \item{sample_color}{Vector specifying colors for each sample or "color" to use default coloring.}
 
 \item{show_seq}{Logical indicating whether to display the DNA and amino acid sequence. Default is FALSE.}
 
-\item{FASTA}{FASTA file containing genomic sequences.}
+\item{FASTA}{A \code{BSgenome} object or path to FASTA with genomic sequences.}
 
-\item{dna_aa_height_ratio}{Numeric value to adjust the height of the DNA and amino acid sequence plot. Default is 0.5.}
+\item{dna_aa_height_ratio}{Numeric value adjusting DNA/AA plot height. Default is 0.5.}
 
-\item{gene_model_height_ratio}{Numeric value to adjust the height of the gene model plot. If NULL, it adjusts automatically based on the number of transcripts.}
+\item{gene_model_height_ratio}{Numeric value adjusting gene model plot height or NULL to auto-adjust.}
 
-\item{transcript_label_font_size}{Optional numeric value to control the font size of the transcript ID labels in the gene model plot.}
+\item{transcript_label_font_size}{Numeric for transcript label font size.}
 
-\item{data_types}{Vector of sample names corresponding to data types for different SNR data (e.g., Ribo-seq (default). PARE-seq, CAGE-seq)}
+\item{plot_genomic_direction}{Logical whether to plot the genomic direction arrow. Default is FALSE. Genomic direction indicates the direction you should see on genome browsers such as JBrowse or IGV.}
+
+\item{data_types}{Vector of sample data type names for each sample (e.g., "Ribo-seq").}
+
+\item{selected_isoforms}{Optional vector of transcript IDs to plot. If provided, only these isoforms plus \code{tx_id} are shown.}
 
 \item{left_margin}{Numeric value for the left margin extension in the plot. Default is 1.5.}
 
 \item{right_margin}{Numeric value for the right margin extension in the plot. Default is 1.5.}
 }
 \value{
-A combined ggplot object displaying RNA-seq coverage, Ribo-seq counts, gene models, and optionally genomic sequences.
+A combined ggplot object displaying RNA-seq coverage, Ribo-seq data, gene models, and optional sequences.
+
+A combined ggplot object displaying RNA-seq coverage, Ribo-seq data, gene models, and optional sequences.
 }
 \description{
-The `ggRibo` function creates a comprehensive plot that displays RNA-seq coverage and Ribo-seq read counts for a specified gene and transcript. It also includes options to display extended ORFs (eORFs), genomic sequences, and gene models.
-}
-\examples{
-# Example usage:
-# plot <- ggRibo(gene_id = "GENE1", tx_id = "TRANSCRIPT1", RNAseq = list("RNAseq.bam"), ...)
-# print(plot)
+The \code{ggRibo} function creates a comprehensive plot displaying RNA-seq coverage and Ribo-seq read counts
+for a specified gene and transcript. It includes options for displaying extended ORFs (eORFs), genomic sequences,
+and gene models, and can scale data according to various parameters.
 }

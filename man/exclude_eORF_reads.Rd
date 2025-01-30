@@ -14,8 +14,8 @@ exclude_eORF_reads(Ribo_data, eORFTxInfo, strand)
 \item{strand}{Strand information ("+" or "-").}
 }
 \value{
-Filtered Ribo-seq data frame.
+Filtered Ribo-seq data frame without eORF-overlapping reads.
 }
 \description{
-Excludes Ribo-seq reads that overlap with eORF regions from the main Ribo-seq data.
+Excludes Ribo-seq reads overlapping eORF regions from the main Ribo-seq data, ensuring the main ORF analysis is not confounded by eORF reads.
 }

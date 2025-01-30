@@ -2,7 +2,7 @@
 % Please edit documentation in R/code.R
 \name{ggRNA}
 \alias{ggRNA}
-\title{Generate RNA-seq coverage plots for a given gene and transcript}
+\title{Plot RNA-seq coverage for a gene}
 \usage{
 ggRNA(
   gene_id,
@@ -17,77 +17,62 @@ ggRNA(
   RNAseqBamPaired = RNAseqBamPairorSingle,
   Y_scale = "all",
   plot_ORF_ranges = FALSE,
-  frame_colors = c(`0` = "#FF0000", `1` = "#3366FF", `2` = "#009900"),
   plot_range = NULL,
-  sample_color = rep("color", length(RNAseq)),
   show_seq = FALSE,
   FASTA = NULL,
   dna_aa_height_ratio = 0.5,
   gene_model_height_ratio = NULL,
-  transcript_label_font_size = 10
+  transcript_label_font_size = 10,
+  plot_genomic_direction = FALSE,
+  selected_isoforms = NULL
 )
 }
 \arguments{
-\item{gene_id}{Character. The gene ID.}
+\item{gene_id}{Character string specifying the gene ID of interest.}
 
-\item{tx_id}{Character. The transcript ID.}
+\item{tx_id}{Character string specifying the transcript ID to be used as the main isoform.}
 
-\item{Extend}{Numeric or numeric vector of length 2. Number of bases to extend beyond the gene region.
-If a single number is provided, it is used for both left and right extensions.
-If a vector of two numbers is provided, the first is used for the left extension and the second for the right.}
+\item{Extend}{Numeric value specifying how many base pairs to extend the plot beyond the gene range. Default is 100.}
 
-\item{NAME}{Character. An optional name for the gene.}
+\item{NAME}{Optional. A character string for an additional name/title to display in the plot.}
 
-\item{RNAcoverline}{Character. Color for the RNA-seq coverage line. Default is "grey".}
+\item{RNAcoverline}{Color for the RNA-seq coverage line. Default is "grey".}
 
-\item{RNAbackground}{Character. Color for the RNA-seq coverage background. Default is "#FEFEAE".}
+\item{RNAbackground}{Color for the RNA-seq coverage background bars. Default is "#FEFEAE".}
 
-\item{RNAseq}{Character vector. Paths to RNA-seq BAM files.}
+\item{RNAseq}{A list of file paths to RNA-seq BAM files.}
 
-\item{SampleNames}{Character vector. Names of the samples corresponding to the RNA-seq data.}
+\item{SampleNames}{Vector of sample names corresponding to the RNAseq data.}
 
-\item{GRangeInfo}{List. Genomic ranges information, typically containing annotations such as `cdsByTx`, `txByGene`, etc.}
+\item{GRangeInfo}{A genomic range information object (e.g., \code{Txome_Range}) containing annotations.}
 
-\item{RNAseqBamPaired}{Character vector. Specifies whether each RNA-seq BAM file is "paired" or "single" end.}
+\item{RNAseqBamPaired}{A vector indicating whether each RNA-seq BAM file is paired-end ("paired") or single-end ("single").}
 
-\item{Y_scale}{Character. Scaling method for the y-axis. Either "all" to use the same scale across all samples,
-or "each" to scale each sample individually. Default is "all".}
+\item{Y_scale}{Character string, either "all" or "each", specifying how to scale the Y-axis for RNA-seq coverage. Default is "all".}
 
-\item{plot_ORF_ranges}{Logical. Whether to plot the ORF ranges. Default is FALSE.}
+\item{plot_ORF_ranges}{Logical indicating whether to plot ORF ranges in the gene model. Default is FALSE.}
 
-\item{frame_colors}{Named character vector. Colors for different reading frames.}
+\item{plot_range}{Optional numeric vector of length two specifying a custom genomic range to plot.}
 
-\item{plot_range}{Numeric vector of length 2. Specifies a custom range to plot instead of the gene's range plus extensions.}
+\item{show_seq}{Logical indicating whether to display the DNA and amino acid sequences. Default is FALSE.}
 
-\item{sample_color}{Character vector. Colors for the samples. Default is "color" for all samples.}
+\item{FASTA}{A \code{BSgenome} object or path to a FASTA file containing genomic sequences (required if show_seq=TRUE).}
 
-\item{show_seq}{Logical. Whether to show the DNA and amino acid sequence. Default is FALSE.}
+\item{dna_aa_height_ratio}{Numeric value to adjust the height of the DNA and amino acid sequence plot. Default is 0.5.}
 
-\item{FASTA}{Character. Path to the FASTA file containing genomic sequences.}
+\item{gene_model_height_ratio}{Numeric value to adjust the height of the gene model plot. If NULL, it is auto-calculated.}
 
-\item{dna_aa_height_ratio}{Numeric. Height ratio for the DNA and amino acid sequence plot. Default is 0.5.}
+\item{transcript_label_font_size}{Numeric controlling the font size of the transcript ID labels in the gene model plot.}
 
-\item{gene_model_height_ratio}{Numeric. Height ratio for the gene model plot. If NULL, it is calculated based on the number of transcripts.}
+\item{plot_genomic_direction}{Logical indicating whether to plot an arrow showing genomic direction. Default is FALSE.}
 
-\item{transcript_label_font_size}{Numeric. Font size for the transcript labels. Default is 10.}
+\item{selected_isoforms}{Optional vector of transcript IDs to plot. If provided, only these isoforms (and \code{tx_id}) will be shown.}
 }
 \value{
-A ggplot object combining RNA-seq coverage plots and gene model.
+A combined ggplot object displaying RNA-seq coverage, gene models, and optionally genomic sequences.
 }
 \description{
-Generate RNA-seq coverage plots for a given gene and transcript
-}
-\examples{
-# Example usage:
-plot <- ggRNA(
-  gene_id = "GENE1",
-  tx_id = "TRANSCRIPT1",
-  RNAseq = c("sample1.bam", "sample2.bam"),
-  SampleNames = c("Sample1", "Sample2"),
-  RNAseqBamPaired = c("paired", "single"),
-  GRangeInfo = Txome_Range,
-  Y_scale = "all",
-  plot_ORF_ranges = FALSE
-)
-print(plot)
+The \code{ggRNA} function creates a plot displaying RNA-seq coverage for a specified gene and transcript.
+It optionally includes genomic sequences (DNA and amino acids) and gene models (exons, UTRs, CDS).
+This function is simpler than \code{ggRibo} and \code{ggRibo_decom} as it focuses solely on RNA-seq coverage.
 }
