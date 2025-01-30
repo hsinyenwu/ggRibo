@@ -620,8 +620,8 @@ plotDNAandAA <- function(GeneTxInfo, plot_range = NULL, FASTA = NULL) {
   return(p_dna_aa)
 }
 
-# The code below is the definition of the `plotGeneTxModel` function, which the user asked to exclude from this round of commentary.
 #' Plot Gene Transcript Model
+#'
 #' This function creates a gene model plot showing exons, UTRs, CDS, and optional eORFs for a given gene and its isoforms.
 #'
 #' @param GeneTxInfo A `Gene_info` object containing gene and transcript information.
@@ -1422,6 +1422,13 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
   isoforms_w_5UTR <- tx_names[tx_names %in% names(GRangeInfo$fiveUTR)]
   fiveUTRByYFGtx <- GRangeInfo$fiveUTR[isoforms_w_5UTR]
 
+  # --- NEW CODE: Restrict range to selected isoforms ---
+  # Make a subset of the gene transcripts corresponding to the final tx_names
+  txByYFG_subset <- txByYFG[[1]][ txByYFG[[1]]$tx_name %in% tx_names ]
+  if (length(txByYFG_subset) == 0) {
+    stop("No transcripts left after applying selected_isoforms in ggRibo().")
+  }
+
   # Define plotting range (with extensions or a custom plot_range if given)
   if (!is.null(plot_range)) {
     plot_range <- sort(plot_range)
@@ -1431,7 +1438,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
                            ranges=IRanges(range_left, range_right),
                            strand=strand_info)
   } else {
-    gene_ranges <- reduce(unlist(txByYFG))
+    gene_ranges <- reduce(txByYFG_subset)
     if (length(Extend) == 1) {
       Extend_left <- Extend
       Extend_right <- Extend
@@ -2463,6 +2470,11 @@ ggRibo_decom <- function(gene_id, tx_id, eORF.tx_id = NULL,
 
   isoforms_w_5UTR <- tx_names[tx_names %in% names(GRangeInfo$fiveUTR)]
   fiveUTRByYFGtx <- GRangeInfo$fiveUTR[isoforms_w_5UTR]
+  # Make a subset of the gene transcripts corresponding to the final tx_names
+  txByYFG_subset <- txByYFG[[1]][ txByYFG[[1]]$tx_name %in% tx_names ]
+  if (length(txByYFG_subset) == 0) {
+    stop("No transcripts left after applying selected_isoforms in ggRibo().")
+  }
 
   # Determine plotting region
   if (!is.null(plot_range)) {
@@ -2471,7 +2483,7 @@ ggRibo_decom <- function(gene_id, tx_id, eORF.tx_id = NULL,
     range_right <- plot_range[2]
     gene_ranges <- GRanges(seqnames=chr, ranges=IRanges(range_left, range_right), strand=strand_info)
   } else {
-    gene_ranges <- reduce(unlist(txByYFG))
+    gene_ranges <- reduce(txByYFG_subset)
     if (length(Extend) == 1) {
       Extend_left <- Extend
       Extend_right <- Extend
@@ -3192,6 +3204,13 @@ ggRNA <- function(gene_id, tx_id, Extend = 100, NAME = "",
 
   isoforms_w_5UTR <- tx_names[tx_names %in% names(GRangeInfo$fiveUTR)]
   fiveUTRByYFGtx <- GRangeInfo$fiveUTR[isoforms_w_5UTR]
+  
+  # --- NEW CODE: Restrict range to selected isoforms ---
+  # Make a subset of the gene transcripts corresponding to the final tx_names
+  txByYFG_subset <- txByYFG[[1]][ txByYFG[[1]]$tx_name %in% tx_names ]
+  if (length(txByYFG_subset) == 0) {
+    stop("No transcripts left after applying selected_isoforms in ggRibo().")
+  }
 
   # Determine genomic plotting range
   if (!is.null(plot_range)) {
@@ -3202,7 +3221,7 @@ ggRNA <- function(gene_id, tx_id, Extend = 100, NAME = "",
     gene_ranges <- GRanges(seqnames=chr, ranges=IRanges(range_left, range_right), strand=strand_info)
   } else {
     # Extend beyond gene boundaries by Extend if not provided
-    gene_ranges <- reduce(unlist(txByYFG))
+    gene_ranges <- reduce(txByYFG_subset)
     if (length(Extend) == 1) {
       Extend_left <- Extend
       Extend_right <- Extend
