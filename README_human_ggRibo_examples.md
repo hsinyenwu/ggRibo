@@ -27,7 +27,7 @@ eORF_import(annotation = uorf_path, format = "gtf", organism = "Homo sapiens")
 ggRibo(gene_id = "ENSG00000174547", tx_id = "ENST00000310999", eORF.tx_id = "ENST00000310999",
        NAME = "MRPL11")
 ```
-![uORF1_MRPL11_Human_ESC_full_gene](https://github.com/user-attachments/assets/56a3143b-871b-4742-8e04-059b8e88b543)
+![uORF1_MRPL11_Human_ESC_full_gene](https://github.com/user-attachments/assets/b1c7c941-ba05-40b7-b734-88721ddd21a1)
 
 ## Add genome/peptide sequence
 ```
@@ -36,7 +36,7 @@ fasta <- FaFile("Homo_sapiens.GRCh38.dna.primary_assembly.fa")
 ggRibo(gene_id = "ENSG00000174547", tx_id = "ENST00000310999", eORF.tx_id = "ENST00000310999",
        NAME = "MRPL11", FASTA = fasta, show_seq = T)
 ```
-![uORF2_MRPL11_Human_ESC_full_with_seq](https://github.com/user-attachments/assets/b43673d1-25e2-477c-8518-914922a9ec69)
+![uORF2_MRPL11_Human_ESC_full_with_seq](https://github.com/user-attachments/assets/55688691-b0cf-4988-bc9a-14ba22781771)
 
 ## Closer look at uORF (adjusting plot range)
 ```
@@ -45,7 +45,7 @@ ggRibo(gene_id = "ENSG00000174547", tx_id = "ENST00000310999", eORF.tx_id = "ENS
        NAME = "MRPL11", FASTA = fasta, show_seq = T,
        plot_range = range, Extend = 0)
 ```
-![uORF3_MRPL11_Human_ESC_zoom_with_seq](https://github.com/user-attachments/assets/6305f0c6-4564-4e9a-89b9-8b4cdd125530)
+![uORF3_MRPL11_Human_ESC_zoom_with_seq](https://github.com/user-attachments/assets/5f10f2ae-864e-4cfc-8b56-28d6caf8aaae)
 
 ## Multiple samples
 ```
@@ -92,23 +92,18 @@ RNAseqBamPairorSingle <- rna_type
 gtf_path <- "Homo_sapiens.GRCh38.112.chr.gff3"
 gtf_import(annotation = gtf_path, format = "gff3", organism = "Homo sapiens")
 
-gene <- "ENSG00000142089"
-tx <- "ENST00000399808"
-name <- "IFITM3"
-
 ### Plot all 27 isoforms of IFITM3
-ggRibo(gene_id = gene, tx_id = tx, NAME = name)
+ggRibo(gene_id = "ENSG00000142089", tx_id = "ENST00000399808", NAME = "IFITM3")
 
 ### Plot subset of isoforms
-sub_Txome <- Txome_Range$clone()  # make copy of Txome_Range
 tx_subset <- c("ENST00000399808", "ENST00000680209", "ENST00000681198",
-               "ENST00000681304", "ENST00000681840")  # define list of desired isoforms
-sub_Txome$txByGene[[gene]] <- sub_Txome$txByGene[[gene]][sub_Txome$txByGene[[gene]]$tx_name %in% tx_subset]
+               "ENST00000681304", "ENST00000681840")  # list of desired isoforms
 
-ggRibo(gene_id = gene, tx_id = tx, NAME = name, GRangeInfo = sub_Txome)  # use subsetted Txome object
+ggRibo(gene_id = "ENSG00000142089", tx_id = "ENST00000399808", NAME = "IFITM3",
+       selected_isoforms = tx_subset)  # use subset of isoforms
 
 ```
 <ins>All 27 isoforms:</ins>
-![IsoSubset_IFITM3_human_allIsoforms](https://github.com/user-attachments/assets/5d67e9fc-e7d2-4e4d-b5a4-479347eaef78)
+![IsoSubset_IFITM3_human_allIsoforms](https://github.com/user-attachments/assets/eb5d290a-f92d-4bb8-a6de-fb226b4699d6)
 <ins>Subset of 5 isoforms:</ins>
-![IsoSubset_IFITM3_human_subset](https://github.com/user-attachments/assets/b76272dd-cf67-4bae-9610-e2d1665568d6)
+![IsoSubset_IFITM3_human_subset](https://github.com/user-attachments/assets/7dbcaf44-d36f-4276-be1f-18b5613b16da)
