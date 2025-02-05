@@ -213,3 +213,6 @@ ggRibo(
 (7) sample_color (text vector): the color of the reads in each sample (from top to bottom). If you want the reads in the plot are color according to the 3 frames, use "color". Otherwise just give a single color. For example, if we provide: sample_color=c("color","purple"), reads in the first plot will be colored according to their frames, but all reads in the second plot will be colored purple. The default for all plots are "color".   
 (8) frame_colors (text vector): colors for the 3 frames, default is c("0"="#FF0000", "1"="#3366FF", "2"="#009900"), you can choose the color you like.  
 
+### Citation: [https://www.biorxiv.org/content/10.1101/2025.01.30.635743v1](https://www.biorxiv.org/content/10.1101/2025.01.30.635743v1)
+
+
