@@ -2035,7 +2035,15 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
                     }
                   }
 
-                  if (length(overlaps_CDS)==0 && overlaps_fiveUTR) {
+                  overlaps_threeUTR <- FALSE
+                  threeUTR_ranges <- GeneTxInfo$threeUTRByYFGtx[[tx_id]]
+                  if (!is.null(threeUTR_ranges) && length(threeUTR_ranges)>0) {
+                    if (length(findOverlaps(eORF_ranges, threeUTR_ranges))>0) {
+                      overlaps_threeUTR <- TRUE
+                    }
+                  }
+                  
+                  if ((length(overlaps_CDS)==0 && overlaps_fiveUTR) | (length(overlaps_CDS)==0 && overlaps_threeUTR)) {
                     if (nrow(eORF_Riboseq)>0) {
                       if (!is.null(Ribo_fix_height)) {
                         eORF_Riboseq$count <- pmin(eORF_Riboseq$count,Ribo_fix_height)
