@@ -5,6 +5,7 @@ export(Ribo_data)
 export(ggRibo)
 export(ggRibo_decom)
 export(ggRNA)
+export(create_seq_input)
 
 # Optionally exported plotting functions
 export(plotDNAandAA)
