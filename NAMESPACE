@@ -32,4 +32,4 @@ importFrom(grid, unit)
 importFrom(stats, na.omit)
 importFrom(utils, read.delim, globalVariables)
 importFrom(methods, is)
-
+importFrom(rtracklayer, import)
