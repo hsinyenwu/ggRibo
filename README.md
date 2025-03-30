@@ -104,20 +104,49 @@ Shoot_Ribo <- system.file("extdata", "riboShoot.bed", package = "ggRibo", mustWo
 
 **Setup variables for the ggRibo function:**  
 ```
-#Define sample names  
 Samples=c("Root","Shoot")
-#Load Ribo-seq data
-RiboseqData=Ribo_data(c(Root_Ribo,Shoot_Ribo),SampleNames=Samples)
-#Make list for paths of RNA-seq datasets 
-RNAseqData=c(Root_RNA,Shoot_RNA)
-#RNA-seq is paired-end or single-end?
-RNAseqBamPairorSingle=c("paired","paired")
+inputs_full <- create_seq_input(
+  rna_files = c(Root_RNAse,Shoot_RNAse),
+  ribo_files = c(Root_Ribo,Root_Ribo),
+  sample_names = Samples,
+  rna_types = rep("bam", 2),
+  ribo_types = rep("tabular", 2),
+  rna_paired = c("paired","paired"),
+  include_rna = TRUE
+)
 
-# Please do not change the names of the following variables "Samples", "RiboseqData", "RNAseqData", "RNAseqBamPairorSingle" or you have to change the input variable names for the ggRibo function.
+# Plot with ggRibo
+ggRibo(
+  gene_id = "AT4G21910",
+  tx_id = "AT4G21910.1",
+  RNAseq = inputs_full$RNAseq,
+  Riboseq = inputs_full$Riboseq,
+  SampleNames = Samples,
+  GRangeInfo = Txome_Range
+)
+
+# Please do not change the names of the following variables "Samples", "Txome_Range" or you have to change the input variable names for the ggRibo function.
 
 # check single-end data
-# RNAseqData=c(Root_RNAse,Shoot_RNAse)
-# RNAseqBamPairorSingle=c("single","single")
+inputs_full <- create_seq_input(
+  rna_files = c(Root_RNA,Shoot_RNA),
+  ribo_files = c(Root_Ribo,Root_Ribo),
+  sample_names = Samples,
+  rna_types = rep("bam", 2),
+  ribo_types = rep("tabular", 2),
+  rna_paired = c("single","single"),
+  include_rna = TRUE
+)
+
+# Plot with ggRibo
+ggRibo(
+  gene_id = "AT4G21910",
+  tx_id = "AT4G21910.1",
+  RNAseq = inputs_full$RNAseq,
+  Riboseq = inputs_full$Riboseq,
+  SampleNames = Samples,
+  GRangeInfo = Txome_Range
+)
 ```
 **Load transcriptome annotation:**  
 ```
@@ -131,12 +160,14 @@ It is clear that the root an shoot in Arabidopsis express different transcripts.
 ```
 ggRibo(gene_id="AT4G21910",tx_id="AT4G21910.1",
        Y_scale="each",Extend=c(400,50),
+       RNAseq = inputs_full$RNAseq,Riboseq = inputs_full$Riboseq,
        NAME = "MATE efflux family protein")
 ```
 ![image](https://github.com/user-attachments/assets/3aa258cb-718e-4a99-96da-359998f43c03)
 ```
 ggRibo(gene_id="AT4G21910",tx_id="AT4G21910.2",
        Y_scale="each",Extend=c(400,50),
+       RNAseq = inputs_full$RNAseq,Riboseq = inputs_full$Riboseq,
        NAME = "MATE efflux family protein")
 ```
 ![image](https://github.com/user-attachments/assets/c217a5ef-d2ff-4069-bdf7-a54c29ab7f22)
