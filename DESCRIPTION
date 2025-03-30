@@ -20,6 +20,7 @@ Depends: R (>= 4.0.0),
     dplyr,
     txdbmaker,
     R6,
+    rtracklayer,
     BiocParallel
 
 RoxygenNote: 7.3.2
