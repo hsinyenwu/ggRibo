@@ -339,13 +339,21 @@ exclude_eORF_reads <- function(Ribo_data, eORFTxInfo, strand) {
 
 #' Get RNA-seq coverage for a sample
 #'
-#' Processes RNA-seq input to return a coverage vector over a genomic range.
+#' Processes RNA-seq input to return a coverage vector over a genomic range,
+#' safely handling cases where the requested region extends beyond the data.
 #'
-#' @param RNAseq_sample List specifying type ("bam", "bigwig", "bedgraph") and data (file paths, paired info).
+#' @param RNAseq_sample List specifying type ("bam", "bigwig", "bedgraph") and data.
 #' @param gene_range GRanges object specifying the region of interest.
 #' @param strand_info Character, "+" or "-", indicating the gene's strand.
-#' @return Numeric vector of coverage values.
+#' @return Numeric vector of coverage values (zeros outside the available range).
 get_RNAseq_coverage <- function(RNAseq_sample, gene_range, strand_info) {
+  # Determine desired genomic window
+  global_start <- start(gene_range)
+  global_end   <- end(gene_range)
+  chr          <- as.character(seqnames(gene_range))
+  window_len   <- global_end - global_start + 1
+  coverage_vec <- numeric(window_len)  # initialize all zeros
+
   if (RNAseq_sample$type == "bam") {
     # Compute coverage from BAM
     param <- ScanBamParam(which=gene_range, what=c("rname","strand","pos","qwidth"))
@@ -358,38 +366,47 @@ get_RNAseq_coverage <- function(RNAseq_sample, gene_range, strand_info) {
       alignments <- alignments[strand(alignments)==strand_info]
       cvg <- coverage(alignments)
     }
-    global_start <- start(gene_range)
-    global_end <- end(gene_range)
-    chr <- as.character(seqnames(gene_range))
-    if (is.null(cvg[[chr]])) {
-      coverage_vec <- numeric(global_end - global_start + 1)
-    } else {
-      coverage_vec <- as.numeric(cvg[[chr]][global_start:global_end])
+
+    # Safe extraction: only fill positions that actually exist
+    if (!is.null(cvg[[chr]])) {
+      chr_cvg <- as.numeric(cvg[[chr]])
+      chr_len <- length(chr_cvg)
+      # compute overlap of requested window with [1, chr_len]
+      start_idx <- max(global_start, 1)
+      end_idx   <- min(global_end,   chr_len)
+      if (start_idx <= end_idx) {
+        out_idx   <- (start_idx: end_idx) - global_start + 1
+        coverage_vec[out_idx] <- chr_cvg[start_idx: end_idx]
+      }
     }
     return(coverage_vec)
+
   } else if (RNAseq_sample$type %in% c("bigwig", "bedgraph")) {
     # Import coverage from bigwig or bedgraph
     strand_file <- if (strand_info == "+") RNAseq_sample$plus else RNAseq_sample$minus
     cvg_gr <- rtracklayer::import(strand_file, which=gene_range, format=RNAseq_sample$type)
-    # Filter for strand consistency
     cvg_gr <- cvg_gr[strand(cvg_gr) == strand_info | strand(cvg_gr) == "*"]
-    # Convert to coverage vector using IRanges::coverage
-    global_start <- start(gene_range)
-    global_end <- end(gene_range)
-    coverage_vec <- numeric(global_end - global_start + 1)
     if (length(cvg_gr) > 0) {
-      # Compute coverage directly with IRanges::coverage
-      cvg <- coverage(cvg_gr, weight=score(cvg_gr))
-      chr <- as.character(seqnames(gene_range))
-      if (!is.null(cvg[[chr]])) {
-        coverage_vec <- as.numeric(cvg[[chr]][global_start:global_end])
+      # Compute coverage
+      cvg_full <- coverage(cvg_gr, weight=score(cvg_gr))
+      if (!is.null(cvg_full[[chr]])) {
+        chr_cvg <- as.numeric(cvg_full[[chr]])
+        chr_len <- length(chr_cvg)
+        start_idx <- max(global_start, 1)
+        end_idx   <- min(global_end,   chr_len)
+        if (start_idx <= end_idx) {
+          out_idx   <- (start_idx: end_idx) - global_start + 1
+          coverage_vec[out_idx] <- chr_cvg[start_idx: end_idx]
+        }
       }
     }
     return(coverage_vec)
+
   } else {
     stop("Invalid type for RNAseq_sample: must be 'bam', 'bigwig', or 'bedgraph'")
   }
 }
+
 
 
 #' Get Ribo-seq data for a sample
@@ -516,6 +533,7 @@ create_seq_input <- function(rna_files = NULL, ribo_files = NULL, sample_names,
   }
   RNAseqBamPairorSingle= rna_paired
   assign("RNAseqBamPairorSingle", RNAseqBamPairorSingle, envir = .GlobalEnv)
+  assign("Samples", sample_names, envir = .GlobalEnv)
 
   return(list(RNAseq = if (include_rna) RNAseq else NULL, Riboseq = Riboseq))
 }
@@ -1162,9 +1180,9 @@ plotDNAandAA <- function(GeneTxInfo, plot_range = NULL, FASTA = NULL, nucleotide
   # Adjust font size based on range
   num_nucleotides <- length(dna_chars)
   plot_width <- abs(diff(range(genelim_adj)))
-  font_size <- (plot_width / num_nucleotides) * 1.2
+  font_size <- (plot_width / num_nucleotides) * 1.1
   font_size <- max(min(font_size, 5), 2)
-  font_size <- font_size * 1.5
+  font_size <- font_size * 1.1
   
   # Generate three-frame translations
   frames <- c(0, 1, 2)
@@ -1399,7 +1417,7 @@ plotDNAandAA <- function(GeneTxInfo, plot_range = NULL, FASTA = NULL, nucleotide
 #' @export
 ggRNA <- function(gene_id, tx_id, Extend = 100, NAME = "",
                   RNAcoverline = "grey", RNAbackground = "#FEFEAE",
-                  RNAseq = inputs_full$RNAseq$RNAseq,
+                  RNAseq = inputs_full$RNAseq,
                   SampleNames = Samples,
                   GRangeInfo = Txome_Range,
                   RNAseqBamPaired = RNAseqBamPairorSingle,
@@ -4284,8 +4302,8 @@ plotDNAandAA_tx <- function(GeneTxInfo, plot_range = NULL, FASTA = NULL, nucleot
   }
   dna_df$fill_value <- dna_df$nucleotide
 
-  font_size  <- max(min((region_length/length(dna_chars))*1.2,5),2)*1.5
-  aa_font_sz <- font_size*1.25
+  font_size  <- max(min((region_length/length(dna_chars))*1.2,5),2)*1.3
+  aa_font_sz <- font_size *1.1
 
   # Figure out main CDS
   cds_gr <- GeneTxInfo$cdsByYFGtx[[tx_id]]
