@@ -38,10 +38,10 @@ bioc_pkgs <- c(
     "Rsamtools",
     "IRanges",
     "txdbmaker",
-    "rtracklayer",      # ← newly added
-    "Biostrings",       # ← newly added
-    "GenomeInfoDb",     # ← newly added
-    "BSgenome"          # ← newly added
+    "rtracklayer",     
+    "Biostrings",      
+    "GenomeInfoDb",   
+    "BSgenome"       
 )
 
 BiocManager::install(setdiff(bioc_pkgs, rownames(installed.packages())))
