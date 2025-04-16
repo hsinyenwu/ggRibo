@@ -1,4 +1,4 @@
-## Two ways to generate P-site file (psf) format for ggRibo
+## Two ways to generate P-site tabular file for ggRibo
 
 **Note: the Ribo-seq P-site coordinate file should look like this:**
 The first to forth columns are:  
@@ -6,6 +6,7 @@ The first to forth columns are:
 (2) chromosome number   
 (3) P-site chromsome coordinates  
 (4) strand (+ or -)  
+
 **No header (i.e.,column names) in the P-site file please.**
 ```
 1   1  1000000      +
