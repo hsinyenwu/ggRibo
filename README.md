@@ -25,34 +25,31 @@ The gene-context plot shown in Figure 2C is a ggRibo plot, where Ribo-seq reads 
 
 (1) Install required packages.
 ```
-# Install BiocManager if not already installed
+## 1. Make sure BiocManager is available
 if (!requireNamespace("BiocManager", quietly = TRUE)) {
     install.packages("BiocManager")
 }
 
-# Install Bioconductor packages
-bioconductor_packages <- c(
-    "GenomicRanges", 
-    "GenomicFeatures", 
-    "GenomicAlignments", 
-    "Rsamtools", 
-    "IRanges", 
-    "BiocParallel", 
-    "txdbmaker"
+## 2. Bioconductor packages
+bioc_pkgs <- c(
+    "GenomicRanges",
+    "GenomicFeatures",
+    "GenomicAlignments",
+    "Rsamtools",
+    "IRanges",
+    "txdbmaker",
+    "rtracklayer",      # ← newly added
+    "Biostrings",       # ← newly added
+    "GenomeInfoDb",     # ← newly added
+    "BSgenome"          # ← newly added
 )
 
-BiocManager::install(bioconductor_packages)
+BiocManager::install(setdiff(bioc_pkgs, rownames(installed.packages())))
 
-# Install CRAN packages
-cran_packages <- c(
-    "ggplot2", 
-    "cowplot", 
-    "grid", 
-    "dplyr", 
-    "R6"
-)
+## 3. CRAN packages
+cran_pkgs <- c("ggplot2", "cowplot", "dplyr", "R6")
 
-install.packages(setdiff(cran_packages, rownames(installed.packages())))
+install.packages(setdiff(cran_pkgs, rownames(installed.packages())))
 ```
 (2) Install ggRibo.
 ```
