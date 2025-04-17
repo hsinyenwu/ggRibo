@@ -11,12 +11,12 @@ ggRNA(
   NAME = "",
   RNAcoverline = "grey",
   RNAbackground = "#FEFEAE",
-  RNAseq = RNAseqData,
+  RNAseq = inputs_full$RNAseq,
   SampleNames = Samples,
   GRangeInfo = Txome_Range,
   RNAseqBamPaired = RNAseqBamPairorSingle,
   Y_scale = "all",
-  plot_ORF_ranges = FALSE,
+  plot_ORF_ranges = TRUE,
   plot_range = NULL,
   show_seq = FALSE,
   FASTA = NULL,
@@ -24,7 +24,8 @@ ggRNA(
   gene_model_height_ratio = NULL,
   transcript_label_font_size = 10,
   plot_genomic_direction = FALSE,
-  selected_isoforms = NULL
+  selected_isoforms = NULL,
+  nucleotide_color_scheme = "default"
 )
 }
 \arguments{
@@ -40,13 +41,13 @@ ggRNA(
 
 \item{RNAbackground}{Color for the RNA-seq coverage background bars. Default is "#FEFEAE".}
 
-\item{RNAseq}{A list of file paths to RNA-seq BAM files.}
+\item{RNAseq}{A list where each element is either a character string (BAM file path) or a list with type ("bam", "bigwig", "bedgraph") and data (file for BAM, plus/minus for bigwig/bedgraph).}
 
 \item{SampleNames}{Vector of sample names corresponding to the RNAseq data.}
 
-\item{GRangeInfo}{A genomic range information object (e.g., \code{Txome_Range}) containing annotations.}
+\item{GRangeInfo}{A genomic range information object (e.g., `Txome_Range`) containing annotations.}
 
-\item{RNAseqBamPaired}{A vector indicating whether each RNA-seq BAM file is paired-end ("paired") or single-end ("single").}
+\item{RNAseqBamPaired}{A vector indicating whether each RNA-seq BAM file is paired-end ("paired") or single-end ("single"), used only if RNAseq contains BAM paths.}
 
 \item{Y_scale}{Character string, either "all" or "each", specifying how to scale the Y-axis for RNA-seq coverage. Default is "all".}
 
@@ -56,7 +57,7 @@ ggRNA(
 
 \item{show_seq}{Logical indicating whether to display the DNA and amino acid sequences. Default is FALSE.}
 
-\item{FASTA}{A \code{BSgenome} object or path to a FASTA file containing genomic sequences (required if show_seq=TRUE).}
+\item{FASTA}{A `BSgenome` object containing genomic sequences (required if show_seq=TRUE).}
 
 \item{dna_aa_height_ratio}{Numeric value to adjust the height of the DNA and amino acid sequence plot. Default is 0.5.}
 
@@ -66,13 +67,15 @@ ggRNA(
 
 \item{plot_genomic_direction}{Logical indicating whether to plot an arrow showing genomic direction. Default is FALSE.}
 
-\item{selected_isoforms}{Optional vector of transcript IDs to plot. If provided, only these isoforms (and \code{tx_id}) will be shown.}
+\item{selected_isoforms}{Optional vector of transcript IDs to plot. If provided, only these isoforms (and `tx_id`) will be shown.}
+
+\item{nucleotide_color_scheme}{If "default", uses bright colors for the nucleotides in plotDNAandAA. If "colorblind", uses a color‐blind friendly palette.}
 }
 \value{
 A combined ggplot object displaying RNA-seq coverage, gene models, and optionally genomic sequences.
 }
 \description{
-The \code{ggRNA} function creates a plot displaying RNA-seq coverage for a specified gene and transcript.
+The `ggRNA` function creates a plot displaying RNA-seq coverage for a specified gene and transcript.
 It optionally includes genomic sequences (DNA and amino acids) and gene models (exons, UTRs, CDS).
-This function is simpler than \code{ggRibo} and \code{ggRibo_decom} as it focuses solely on RNA-seq coverage.
+This function is simpler than `ggRibo` and `ggRibo_decom` as it focuses solely on RNA-seq coverage.
 }

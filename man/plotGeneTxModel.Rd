@@ -8,15 +8,15 @@ plotGeneTxModel(
   GeneTxInfo = GeneTxInfo,
   eORFTxInfo = NULL,
   XLIM = NULL,
-  plot_ORF_ranges = FALSE,
+  plot_ORF_ranges = TRUE,
   plot_range = NULL,
   transcript_label_font_size = 10
 )
 }
 \arguments{
-\item{GeneTxInfo}{A \code{Gene_info} object containing gene and transcript information.}
+\item{GeneTxInfo}{A `Gene_info` object containing gene and transcript information.}
 
-\item{eORFTxInfo}{An optional \code{eORF_info} object containing eORF information.}
+\item{eORFTxInfo}{An optional `eORF_info` object containing eORF information.}
 
 \item{XLIM}{Not used in the current function (legacy parameter).}
 
@@ -27,7 +27,7 @@ plotGeneTxModel(
 \item{transcript_label_font_size}{Optional numeric value to control the font size of the transcript ID labels.}
 }
 \value{
-A \code{ggplot} object representing the gene model.
+A `ggplot` object representing the gene model.
 }
 \description{
 This function creates a gene model plot showing exons, UTRs, CDS, and optional eORFs for a given gene and its isoforms.

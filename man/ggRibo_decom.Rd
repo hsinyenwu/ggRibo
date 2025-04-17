@@ -2,30 +2,28 @@
 % Please edit documentation in R/code.R
 \name{ggRibo_decom}
 \alias{ggRibo_decom}
-\title{\code{ggRibo_decom} creates a combined visualization of RNA-Seq coverage and frame-specific Ribo-Seq counts for a specified gene and transcript.
-It generates three separate plots corresponding to the three reading frames (0, 1, and 2) of Ribo-Seq data, optionally including reads
-that do not fall within any annotated ORF regions. It can also display extended ORFs (eORFs), genomic sequences, and gene models.}
+\title{`ggRibo_decom` creates a combined visualization of RNA-Seq coverage and frame-specific Ribo-Seq
+counts for a specified gene and transcript, with one sample at a time. It generates three separate
+plots for frames 0, 1, and 2, optionally showing reads that are not assigned to any ORF, and can
+either use the annotated main ORF or the transcript start to assign frames.}
 \usage{
 ggRibo_decom(
   gene_id,
   tx_id,
-  eORF.tx_id = NULL,
-  eORFRangeInfo = NULL,
   Extend = 100,
   NAME = "",
   RNAcoverline = "grey",
   RNAbackground = "#FEFEAE",
   fExtend = 0,
   tExtend = 0,
-  RNAseq = RNAseqData,
-  Riboseq = RiboseqData,
-  SampleNames = Samples,
+  RNAseq = inputs_full$RNAseq[1],
+  Riboseq = inputs_full$Riboseq[1],
+  SampleNames = Samples[1],
   GRangeInfo = Txome_Range,
-  RNAseqBamPaired = RNAseqBamPairorSingle,
+  RNAseqBamPaired = RNAseqBamPairorSingle[1],
   Y_scale = "all",
   Ribo_fix_height = NULL,
   plot_ORF_ranges = FALSE,
-  oORF_coloring = NULL,
   frame_colors = c(`0` = "#FF0000", `1` = "#3366FF", `2` = "#009900"),
   plot_range = NULL,
   sample_color = "color",
@@ -37,77 +35,78 @@ ggRibo_decom(
   plot_genomic_direction = FALSE,
   data_types = "Ribo-seq",
   plot_unassigned_reads = TRUE,
-  selected_isoforms = NULL
+  selected_isoforms = NULL,
+  plot_frame = c("annotated_ORF", "tx_start")
 )
 }
 \arguments{
-\item{gene_id}{Character. The identifier for the gene of interest.}
+\item{gene_id}{Character. Gene identifier.}
 
-\item{tx_id}{Character. The transcript identifier within the gene for which the main ORF is annotated.}
+\item{tx_id}{Character. Transcript identifier of the main ORF.}
 
-\item{eORF.tx_id}{Character vector, optional. Transcript identifiers for extended ORFs (eORFs) associated with the gene.}
+\item{Extend}{Numeric or numeric vector of length 2. Extends the plotting range upstream/downstream.
+Defaults to 100.}
 
-\item{eORFRangeInfo}{List, optional. Contains eORF range information. Required if \code{eORF.tx_id} is specified.}
+\item{NAME}{Character. An optional label/title.}
 
-\item{Extend}{Numeric or numeric vector of length 2. Extends the plotting range upstream and downstream of the gene. Defaults to 100.}
+\item{RNAcoverline}{Character. Color for the RNA-Seq coverage line (default "grey").}
 
-\item{NAME}{Character. An optional label or title.}
+\item{RNAbackground}{Character or vector of length = # of samples. Fill color for RNA-Seq coverage
+bars (default "#FEFEAE").}
 
-\item{RNAcoverline}{Character. Color for the RNA-Seq coverage line. Defaults to "grey".}
+\item{fExtend}{Numeric. Extends the ORF upstream by this many bases (default 0).}
 
-\item{RNAbackground}{Character or vector of length equal to number of samples. Fill color for RNA-Seq coverage bars. Defaults to "#FEFEAE".}
+\item{tExtend}{Numeric. Extends the ORF downstream by this many bases (default 0).}
 
-\item{fExtend}{Numeric. Extends the ORF upstream by this many bases. Defaults to 0.}
+\item{RNAseq}{List describing the RNA-seq input (bam/bedGraph/bigwig). Only one sample is supported.}
 
-\item{tExtend}{Numeric. Extends the ORF downstream by this many bases. Defaults to 0.}
+\item{Riboseq}{List describing the Ribo-seq input (tabular/bedGraph/bigwig). Only one sample is supported.}
 
-\item{RNAseq}{Character vector. Paths to RNA-Seq BAM files.}
+\item{SampleNames}{Character vector naming the single sample (length must be 1).}
 
-\item{Riboseq}{Character vector. Paths to Ribo-Seq data files (as data frames).}
+\item{GRangeInfo}{List of genomic annotation (e.g. transcripts, exons, CDS, etc.).}
 
-\item{SampleNames}{Character vector. Names corresponding to the samples.}
+\item{RNAseqBamPaired}{For BAM input, "paired" or "single". Ignored for bigwig/bedGraph.}
 
-\item{GRangeInfo}{List. Genomic range information such as transcripts, exons, CDS, etc.}
+\item{Y_scale}{Either "all" or "each", controlling RNA-seq Y-axis scaling (default "all").}
 
-\item{RNAseqBamPaired}{Character vector. Indicates if each RNA-Seq BAM is paired-end ("paired") or single-end ("single").}
+\item{Ribo_fix_height}{Numeric. If set, caps Ribo-Seq plot height at this value.}
 
-\item{Y_scale}{Character. Either "all" or "each", controlling the Y-axis scaling for RNA-seq coverage. Defaults to "all".}
+\item{plot_ORF_ranges}{Logical. If TRUE, highlights annotated ORF ranges in the gene model (default FALSE).}
 
-\item{Ribo_fix_height}{Numeric, optional. Caps Ribo-Seq counts at a fixed height, ignoring Y_scale.}
+\item{frame_colors}{Named character vector of colors for frames 0,1,2 (defaults provided).}
 
-\item{plot_ORF_ranges}{Logical. If TRUE, highlights annotated ORF ranges on the gene model. Defaults to FALSE.}
+\item{plot_range}{Optional numeric(2) specifying custom genomic start/end for plotting.}
 
-\item{oORF_coloring}{Character, optional. Method for coloring overlapping ORFs. "oORF_colors" or "extend_mORF".}
+\item{sample_color}{Character. If "color", use different colors by frame. Otherwise a single color.}
 
-\item{frame_colors}{Named character vector. Colors for frames 0, 1, and 2. Defaults provided.}
+\item{show_seq}{Logical. If TRUE, plots DNA/AA sequences below coverage (default FALSE).}
 
-\item{plot_range}{Numeric vector of length 2, optional. Custom genomic range to plot.}
+\item{FASTA}{A BSgenome or FASTA path for sequence extraction (required if show_seq=TRUE).}
 
-\item{sample_color}{Character. If "color", uses frame-specific colors. Otherwise, uses a single color for Ribo reads.}
+\item{dna_aa_height_ratio}{Numeric adjusting DNA/AA plot height (default 0.5).}
 
-\item{show_seq}{Logical. If TRUE, displays DNA and AA sequences below the coverage plots. Defaults to FALSE.}
+\item{gene_model_height_ratio}{Numeric adjusting gene model height. If NULL, auto-scale.}
 
-\item{FASTA}{Optional. Path to a FASTA file or \code{BSgenome} object with genomic sequences.}
+\item{transcript_label_font_size}{Numeric font size for transcript labels (default 10).}
 
-\item{dna_aa_height_ratio}{Numeric. Adjusts DNA/AA plot height relative to gene model height. Defaults to 0.5.}
+\item{plot_genomic_direction}{Logical. If TRUE, draws an arrow for the genomic direction.}
 
-\item{gene_model_height_ratio}{Numeric, optional. Adjusts gene model plot height. If NULL, auto-scales.}
+\item{data_types}{Character vector describing data type(s). Must match length(SampleNames). Default "Ribo-seq".}
 
-\item{transcript_label_font_size}{Numeric. Font size for transcript ID labels in gene model. Defaults to 10.}
+\item{plot_unassigned_reads}{Logical. If TRUE, draws segments for Ribo reads not assigned to any ORF (default TRUE).}
 
-\item{plot_genomic_direction}{Logical. If TRUE, draws an arrow indicating genomic direction on the top plot. Defaults to FALSE.}
+\item{selected_isoforms}{Optional. Vector of transcript IDs to include in addition to tx_id.}
 
-\item{data_types}{Character vector. Describes data type(s) for samples (e.g., "Ribo-seq"). Must match SampleNames length.}
-
-\item{plot_unassigned_reads}{Logical. If TRUE, plots Ribo-Seq reads not assigned to any ORF as grey segments.}
-
-\item{selected_isoforms}{Optional. Vector of transcript IDs to plot. If specified, only these isoforms and tx_id are shown.}
+\item{plot_frame}{Character. Either "annotated_ORF" (default) or "tx_start".
+If "tx_start", frames are computed from the beginning of the transcript.}
 }
 \value{
-A combined \code{ggplot} object with RNA-Seq coverage, three frame-specific Ribo-Seq plots, gene model, and optionally DNA/AA sequences.
+A combined ggplot object showing RNA-seq coverage, three frames of Ribo-seq, gene model, and optional DNA/AA.
 }
 \description{
-\code{ggRibo_decom} creates a combined visualization of RNA-Seq coverage and frame-specific Ribo-Seq counts for a specified gene and transcript.
-It generates three separate plots corresponding to the three reading frames (0, 1, and 2) of Ribo-Seq data, optionally including reads
-that do not fall within any annotated ORF regions. It can also display extended ORFs (eORFs), genomic sequences, and gene models.
+`ggRibo_decom` creates a combined visualization of RNA-Seq coverage and frame-specific Ribo-Seq
+counts for a specified gene and transcript, with one sample at a time. It generates three separate
+plots for frames 0, 1, and 2, optionally showing reads that are not assigned to any ORF, and can
+either use the annotated main ORF or the transcript start to assign frames.
 }

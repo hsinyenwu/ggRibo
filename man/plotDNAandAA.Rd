@@ -4,18 +4,32 @@
 \alias{plotDNAandAA}
 \title{Plot DNA and Amino Acid Sequences}
 \usage{
-plotDNAandAA(GeneTxInfo, plot_range = NULL, FASTA = NULL)
+plotDNAandAA(
+  GeneTxInfo,
+  plot_range = NULL,
+  FASTA = NULL,
+  nucleotide_color_scheme = "default"
+)
 }
 \arguments{
-\item{GeneTxInfo}{A \code{Gene_info} object containing gene-specific information.}
+\item{GeneTxInfo}{A \code{Gene_info} object containing gene-specific information, including exons.}
 
-\item{plot_range}{Optional vector specifying the genomic range to plot.}
+\item{plot_range}{Optional numeric vector of length 2 specifying the transcript range (in transcript coordinates).
+If provided, we show only that region (exon-based). Otherwise, we show the full transcript sequence.}
 
 \item{FASTA}{A \code{BSgenome} object containing the reference genome sequences.}
+
+\item{nucleotide_color_scheme}{A character string specifying which color scheme
+to use for the nucleotides. Defaults to \code{"default"}. If set to
+\code{"colorblind"}, a color‐blind friendly palette is used (A=green, T=vermillion,
+C=blue, G=yellow). Non‐canonical bases (N) remain grey.}
 }
 \value{
-A \code{ggplot2} object representing the DNA and amino acid sequences.
+A \code{ggplot2} object representing the DNA (tiles + letters if \(\le\)201nt) and amino acids (colored tiles always, letters if \(\le\)201nt).
 }
 \description{
-Generates a plot showing DNA nucleotides and their corresponding amino acids for the genomic region of interest.
+Generates a plot showing DNA nucleotides (if the region is \(\le\)201 bases)
+and amino acids (always as colored tiles). The AA letters themselves are only shown if
+\(\le\)201 bases. If over 201 bases, we still color the AA tiles (e.g., start/stop codons),
+but omit the text labels to avoid overprinting.
 }

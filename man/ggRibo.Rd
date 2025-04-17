@@ -15,14 +15,14 @@ ggRibo(
   RNAbackground = "#FEFEAE",
   fExtend = 0,
   tExtend = 0,
-  RNAseq = RNAseqData,
-  Riboseq = RiboseqData,
+  RNAseq = inputs_full$RNAseq,
+  Riboseq = inputs_full$Riboseq,
   SampleNames = Samples,
   GRangeInfo = Txome_Range,
   RNAseqBamPaired = RNAseqBamPairorSingle,
   Y_scale = "all",
   Ribo_fix_height = NULL,
-  plot_ORF_ranges = FALSE,
+  plot_ORF_ranges = TRUE,
   oORF_coloring = "extend_mORF",
   frame_colors = c(`0` = "#FF0000", `1` = "#3366FF", `2` = "#009900"),
   plot_range = NULL,
@@ -34,7 +34,8 @@ ggRibo(
   transcript_label_font_size = 10,
   plot_genomic_direction = FALSE,
   data_types = rep("Ribo-seq", length(SampleNames)),
-  selected_isoforms = NULL
+  selected_isoforms = NULL,
+  nucleotide_color_scheme = "default"
 )
 }
 \arguments{
@@ -44,7 +45,7 @@ ggRibo(
 
 \item{eORF.tx_id}{Optional. Vector of eORF transcript IDs to include in the plot.}
 
-\item{eORFRangeInfo}{Optional. eORF range information, e.g., an object like \code{eORF_Range}.}
+\item{eORFRangeInfo}{Optional. eORF range information, e.g., an object like `eORF_Range`.}
 
 \item{Extend}{Numeric value specifying the number of base pairs to extend the plot beyond the gene range. Default is 100.}
 
@@ -58,15 +59,15 @@ ggRibo(
 
 \item{tExtend}{Numeric value specifying the number of nucleotides to extend the frame assignment into the 3' UTR. Default is 0.}
 
-\item{RNAseq}{List of file paths to RNA-seq BAM files.}
+\item{RNAseq}{List where each element is either a character string (BAM file path) or a list with type ("bam", "bigwig", "bedgraph") and data (file for BAM, plus/minus for bigwig/bedgraph).}
 
-\item{Riboseq}{List of data frames containing Ribo-seq data.}
+\item{Riboseq}{List where each element is either a data frame (tabular data) or a list with type ("tabular", "bigwig", "bedgraph") and data.}
 
 \item{SampleNames}{Vector of sample names corresponding to the RNAseq and Riboseq data.}
 
-\item{GRangeInfo}{Genomic range information, typically an object like \code{Txome_Range}.}
+\item{GRangeInfo}{Genomic range information, typically an object like `Txome_Range`.}
 
-\item{RNAseqBamPaired}{Vector indicating whether each RNA-seq BAM file is paired-end ("paired") or single-end ("single").}
+\item{RNAseqBamPaired}{Vector indicating whether each RNA-seq BAM file is paired-end ("paired") or single-end ("single"), used only if RNAseq contains BAM paths.}
 
 \item{Y_scale}{Character string, either "all" or "each", specifying how to scale the Y-axis for RNA-seq coverage. Default is "all".}
 
@@ -84,7 +85,7 @@ ggRibo(
 
 \item{show_seq}{Logical indicating whether to display the DNA and amino acid sequence. Default is FALSE.}
 
-\item{FASTA}{A \code{BSgenome} object or path to FASTA with genomic sequences.}
+\item{FASTA}{A `BSgenome` object with genomic sequences.}
 
 \item{dna_aa_height_ratio}{Numeric value adjusting DNA/AA plot height. Default is 0.5.}
 
@@ -92,23 +93,19 @@ ggRibo(
 
 \item{transcript_label_font_size}{Numeric for transcript label font size.}
 
-\item{plot_genomic_direction}{Logical whether to plot the genomic direction arrow. Default is FALSE. Genomic direction indicates the direction you should see on genome browsers such as JBrowse or IGV.}
+\item{plot_genomic_direction}{Logical whether to plot the genomic direction arrow. Default is FALSE.}
 
 \item{data_types}{Vector of sample data type names for each sample (e.g., "Ribo-seq").}
 
-\item{selected_isoforms}{Optional vector of transcript IDs to plot. If provided, only these isoforms plus \code{tx_id} are shown.}
+\item{selected_isoforms}{Optional vector of transcript IDs to plot. If provided, only these isoforms plus `tx_id` are shown.}
 
-\item{left_margin}{Numeric value for the left margin extension in the plot. Default is 1.5.}
-
-\item{right_margin}{Numeric value for the right margin extension in the plot. Default is 1.5.}
+\item{nucleotide_color_scheme}{If "default", uses bright colors for the nucleotides in plotDNAandAA. If "colorblind", uses a color‐blind friendly palette.}
 }
 \value{
 A combined ggplot object displaying RNA-seq coverage, Ribo-seq data, gene models, and optional sequences.
-
-A combined ggplot object displaying RNA-seq coverage, Ribo-seq data, gene models, and optional sequences.
 }
 \description{
-The \code{ggRibo} function creates a comprehensive plot displaying RNA-seq coverage and Ribo-seq read counts
+The `ggRibo` function creates a comprehensive plot displaying RNA-seq coverage and Ribo-seq read counts
 for a specified gene and transcript. It includes options for displaying extended ORFs (eORFs), genomic sequences,
 and gene models, and can scale data according to various parameters.
 }
