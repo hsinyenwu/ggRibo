@@ -122,7 +122,7 @@ do
 done
 ```
 
-
+#### Run the test code for example files
 ```
 #path to annotated gtf
 agtf <- system.file("extdata", "TAIR10.29_part.gtf", package = "ggRibo", mustWork = TRUE)
