@@ -168,10 +168,15 @@ library(ggRibo)
 CTRL_RNA="/path/to/RNA_CTRL_merged.bam"
 CTRL_ribo="/path/to/CTRL_expressed_P_sites_sort_count"
 FA <- FaFile("/path/to/TAIR10_chr_all_2.fas")
-Samples = c("Seedlings")
-RiboseqData = Ribo_data(c(CTRL_ribo),SampleNames=Samples)
-RNAseqData = CTRL_RNA
-RNAseqBamPairorSingle="paired"
+RNA_files <- list(CTRL_RNA)
+Ribo_files <- list(CTRL_ribo)
+
+# Prepare coverage descriptors
+inputs_full <- create_seq_input(
+  rna_files = RNA_files,
+  ribo_files = Ribo_files,
+  sample_names="CTRL")
+
 gtf_import(annotation="/path/to/Araport11+CTRL_20181206.gtf",format="gtf",dataSource="Araport",organism="Arabidopsis thaliana")
 CiPS_TuORFs_gff3 <- system.file("extdata", "CiPS_TuORFs_Sep5d_2024.gff3", package = "ggRibo", mustWork = TRUE) #Load uORFs
 ```
@@ -187,6 +192,7 @@ ggRibo(
 ![image](https://github.com/user-attachments/assets/3b69990f-8e8e-4ef2-9324-689fde936fc4)
 There is a strong peak in the 5'UTR suggesting the presence of a translated uORF.  
 Show DNA sequence and focus on the uORF.  
+
 **Need plot_range, show_seq = TRUE, FASTA**
 ```
 #Input minimum uORF gtf
@@ -200,9 +206,22 @@ ggRibo(
   plot_range = c(18743960,18743920), #select plotting range
   show_seq = TRUE,FASTA = FA, #'show_seq = TRUE' means you want to see the sequence, than you need to input FASTA using 'FASTA=FA'
   Extend=50)
+#You could also use a BSGenome object for FASTA input, For example, FASTA=BSGenome.Athaliana 
 ```
-![image](https://github.com/user-attachments/assets/3363a6b5-1447-470a-b9ce-d484782ca9ff)
+![image](https://github.com/user-attachments/assets/0bc4ee83-633c-4082-97af-e97cfa5f4a5c)
 
+**Use nucleotide_color_scheme="colorblind" for an alternative coloring scheme**
+```
+ggRibo(
+    gene_id = "AT3G50500",
+    tx_id = "AT3G50500.1",
+    eORF.tx_id = "AT3G50500.1_227_232",
+    NAME="SnRK2.2",
+    plot_range = c(18743960,18743920), #select plotting range
+    show_seq = TRUE,FASTA = FA, #'show_seq = TRUE' means you want to see the sequence, than you need to input FASTA using 'FASTA=FA'
+    Extend=50, nucleotide_color_scheme="colorblind")
+```
+![image](https://github.com/user-attachments/assets/1fe171f2-4036-4a9e-8fee-2f8a466ce8e5)
 
 #### Key parameters for ggRibo
 (1) Extend (integer or a two integer vector): extend the plot range for both side of the plot. You can either use one number, which means same extension for both side, or use a vector with two values to extend left and right sides differently.  
