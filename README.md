@@ -232,7 +232,15 @@ ggRibo(
 (6) plot_genomic_direction (Boolean): plot the direction of the gene on the genome browser on top right side of the top plot.  
 (7) sample_color (text vector): the color of the reads in each sample (from top to bottom). If you want the reads in the plot are color according to the 3 frames, use "color". Otherwise just give a single color. For example, if we provide: sample_color=c("color","purple"), reads in the first plot will be colored according to their frames, but all reads in the second plot will be colored purple. The default for all plots are "color".   
 (8) frame_colors (text vector): colors for the 3 frames, default is c("0"="#FF0000", "1"="#3366FF", "2"="#009900"), you can choose the color you like.  
+(9) selected_isoforms (text vector): you can select certain isoforms to plot. 
+(10) data_types (text vector): This parameter is for the right Y-axis labels. Default for all data is Ribo-seq.
+(11) dna_aa_height_ratio (numeric): change is height of DNA/AA plot.
+(12) gene_model_height_ratio (numeric): change is height of transcript model plot.
+(13) show_seq (Boolean): show DNA (when plot range <=201 nucleotides) and AA sequences 
+(14) FASTA (a genome FASTA file or a BSGenome object): contain genomic sequences, required when show_seq=T
+(15) plot_range (2 inegter numeric vector): defined the range for the plot.
+(16) oORF_coloring:	Character string specifying coloring method for overlapping ORFs ("oORF_colors" or "extend_mORF"). "oORF_colors" means only show the 3-nt periodicity for the oORF. "extend_mORF" means extend the mORF frames to cover the extra ORFs.
 
-### Citation: [ggRibo: a ggplot-based single-gene viewer for visualizing Ribo-seq and related omics datasets](https://www.biorxiv.org/content/10.1101/2025.01.30.635743v1)
+## Citation: [ggRibo: a ggplot-based single-gene viewer for visualizing Ribo-seq and related omics datasets](https://www.biorxiv.org/content/10.1101/2025.01.30.635743v1)
 
 
