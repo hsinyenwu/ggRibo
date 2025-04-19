@@ -59,7 +59,7 @@ for sample in "${SAMPLES[@]}"; do
 done
 ```
 
-### 2. Ribo-seq P-sites from RiboTaper to bedGraph and BigWig
+### 2. Ribo-seq P-sites from RiboTaper (P_sites_all) to bedGraph and BigWig
 Here is just an example with RiboTaper, you can also convert the P-site files from other software to bedGraph and BigWig formats.
 ```
 #Load bedtools bedGraphToBigWig first
