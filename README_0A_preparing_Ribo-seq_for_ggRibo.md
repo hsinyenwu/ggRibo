@@ -55,3 +55,8 @@ comb <- comb[,c(4, 1, 3, 5)]  # reorder columns to match ggRibo format
 write.table(comb, file=out_file, col.names = FALSE, row.names = FALSE,
             quote = FALSE, sep="\t")
 ```
+
+## Ribo-seq P-sites from RiboTaper to bedGraph and BigWig
+See section 2 [here](https://github.com/hsinyenwu/ggRibo/blob/v2025.3.30/README_0B_bedGraph_bigwig.md)
+You can also obtain the P-site bedGraph or BigWig files from other tools.
+
