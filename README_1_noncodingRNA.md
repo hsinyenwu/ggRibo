@@ -30,7 +30,7 @@ ggRibo_decom(gene_id = "AT3G17185",
 ![image](https://github.com/user-attachments/assets/b5be24a2-4289-4d32-992f-704c9d5a5752)
 
 ### Plot another annotated noncoding gene sORF1 (from Hsu et al., PNAS 2016)
-As mentioned above, for non-coding RNAs, ggRibo assigns the reading frame from the first nucleotide of the annotated RNA sequence, rather than from the start of a CDS/ORF, as it does for coding RNAs. As a result, a translated ORF in a non-coding RNA may enrich one of the reading frames in red, blue, or green. For sORF1 (below), the main translated ORF is colored green.
+As mentioned above, for non-coding RNAs, ggRibo assigns the reading frame from the first nucleotide of the annotated RNA sequence, rather than from the start of a CDS/ORF, as it does for coding RNAs. As a result, a translated ORF in a non-coding RNA may enrich one of the reading frames in red, blue, or green. For sORF1 (below), the main translated ORF is colored green. However, you can still provide a gtf with annotated ORF ranges for visualizing this sORF. 
 
 ```
 ggRibo(gene_id = "AT1G10682",
@@ -40,7 +40,7 @@ ggRibo(gene_id = "AT1G10682",
 ```
 ![image](https://github.com/user-attachments/assets/a17af73c-0b76-4454-8255-7ac0e0cfc8e8)
 
-Ribo-seq reads decomposition:
+Ribo-seq reads decomposition for frame enrichment:
 ```
 ggRibo_decom(gene_id = "AT1G10682",
              tx_id = "AT1G10682.1",
@@ -54,22 +54,25 @@ The situation: **a gene with both coding and noncoding isoforms** occurs a lot i
 To make an example: I artifically removed the CDSs for both *AT1G01060.5* and *AT1G01060.7* transcripts for the *AT1G01060 (LHY)* gene.  
 Plot the noncoding isoform *AT1G01060.7*  
 ```
-ggRibo(
-  gene_id = "AT1G01060",
-  tx_id = "AT1G01060.5",
-  NAME="",
-  Extend=200)
-```
-![image](https://github.com/user-attachments/assets/d62096ae-79bf-421f-a15f-42dc6de4667f)
-Plot the noncoding isoform *AT1G01060.5*  
-```
+tgtf <- system.file("extdata", "AT1G01060_test.gtf", package = "ggRibo", mustWork = TRUE)
+gtf_import(annotation=tgtf, format="gtf",dataSource="Araport",organism="Arabidopsis thaliana")
 ggRibo(
   gene_id = "AT1G01060",
   tx_id = "AT1G01060.7",
   NAME="",
   Extend=200)
 ```
-![image](https://github.com/user-attachments/assets/fc99ea78-e5f9-4b64-9cd4-cd4f60b81ef4)  
+![image](https://github.com/user-attachments/assets/082cc0f1-4ffc-48ab-aa14-e291e59e1ee4)
+
+Plot the noncoding isoform *AT1G01060.7* with ggRibo_decom for frames enriched. 
+```
+ggRibo_decom(
+  gene_id = "AT1G01060",
+  tx_id = "AT1G01060.7",
+  NAME="",
+  Extend=200)
+```
+![image](https://github.com/user-attachments/assets/7b837b75-bbcc-4861-90b0-85490b7b5670)
 
 Plot a coding isoform for LHY.
 ```
