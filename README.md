@@ -87,61 +87,44 @@ Shoot_Ribo <- system.file("extdata", "riboShoot.bed", package = "ggRibo", mustWo
 #You need to create paths for your own data files
 ```
 
-**Setup variables for the ggRibo function:**  
-```
-Samples=c("Root","Shoot")
-inputs_full <- create_seq_input(
-  rna_files = c(Root_RNAse,Shoot_RNAse),
-  ribo_files = c(Root_Ribo,Root_Ribo),
-  sample_names = Samples,
-  rna_types = rep("bam", 2),
-  ribo_types = rep("tabular", 2),
-  rna_paired = c("paired","paired"),
-  include_rna = TRUE
-)
-
-# Plot with ggRibo
-ggRibo(
-  gene_id = "AT4G21910",
-  tx_id = "AT4G21910.1",
-  RNAseq = inputs_full$RNAseq,
-  Riboseq = inputs_full$Riboseq,
-  SampleNames = Samples,
-  GRangeInfo = Txome_Range
-)
-
-# Please do not change the names of the following variables "Samples", "Txome_Range" or you have to change the input variable names for the ggRibo function.
-
-# check single-end data
-inputs_full <- create_seq_input(
-  rna_files = c(Root_RNA,Shoot_RNA),
-  ribo_files = c(Root_Ribo,Root_Ribo),
-  sample_names = Samples,
-  rna_types = rep("bam", 2),
-  ribo_types = rep("tabular", 2),
-  rna_paired = c("single","single"),
-  include_rna = TRUE
-)
-
-# Plot with ggRibo
-ggRibo(
-  gene_id = "AT4G21910",
-  tx_id = "AT4G21910.1",
-  RNAseq = inputs_full$RNAseq,
-  Riboseq = inputs_full$Riboseq,
-  SampleNames = Samples,
-  GRangeInfo = Txome_Range
-)
-```
 **Load transcriptome annotation:**  
 ```
 #Load example transcriptome annotation file
 gtf_import(annotation=agtf,format="gtf",dataSource="Araport",organism="Arabidopsis thaliana")
 ```
-**Please do not change the names of the following variables "Samples", "RiboseqData", "RNAseqData", "RNAseqBamPairorSingle" or you have to change the corresponding input parameters for the ggRibo function.**
+
+**Setup variables for the ggRibo function:**  
+```
+Samples=c("Root","Shoot")
+# input single-end data
+inputs_full <- create_seq_input(
+  rna_files = c(Root_RNAse,Shoot_RNAse),
+  ribo_files = c(Root_Ribo,Shoot_Ribo),
+  sample_names = Samples,
+  rna_paired = c("single","single") # The default for "rna_paired" is "paired" for all samples.
+)
+
+# Plot with ggRibo (Example)
+ggRibo(
+  gene_id = "AT4G21910",
+  tx_id = "AT4G21910.1"
+)
+#Input paired-end data
+inputs_full <- create_seq_input(
+  rna_files = c(Root_RNA,Shoot_RNA),
+  ribo_files = c(Root_Ribo,Shoot_Ribo),
+  sample_names = Samples
+) # The default for "rna_paired" is "paired" for all samples so we do not need to change it here.
+
+# Plot with ggRibo (Example)
+ggRibo(
+  gene_id = "AT4G21910",
+  tx_id = "AT4G21910.1"
+)
+```
 
 #### Plot different isoforms 
-It is clear that the root an shoot in Arabidopsis express different transcripts. And the 4th isoforms is likely not transcribed and translated.
+The result below shows that the root an shoot in Arabidopsis express different transcripts. And the 4th isoforms is likely not transcribed and translated.
 ```
 ggRibo(gene_id="AT4G21910",tx_id="AT4G21910.1",
        Y_scale="each",Extend=c(400,50),
@@ -161,7 +144,6 @@ ggRibo(gene_id="AT4G21910",tx_id="AT4G21910.2",
 ```
 #Load CPuORF gtf
 # eORF means extra ORF. the eORF_import could be used to import gtf/gff3 for uORF, overlapping uORF, nested ORF, overlapping dORF and dORF.  
-
 eORF_import(annotation=ugtf, format="gtf",dataSource="Araport",organism="Arabidopsis thaliana")
 ggRibo(gene_id="AT3G02470",tx_id="AT3G02470.1",
        eORF.tx_id = "AT3G02468.1",
@@ -171,11 +153,14 @@ ggRibo(gene_id="AT3G02470",tx_id="AT3G02470.1",
 ![image](https://github.com/user-attachments/assets/52b62a05-2d93-4f34-8b63-b2485a6555b5)
 
 #### Check sequences for the uORF
-Download annotation and data files:  
+Download annotation and data files from [here](https://data.mendeley.com/datasets/89j7snbm2r/2):  
 (1) GTF (Araport11+CTRL_20181206.gtf)  
-(2) FASTA (TAIR10_chr_all_2.fas)  
+(2) FASTA (TAIR10_chr_all_2.fas) #you can also use a BSGenome object 
 (3) RNA bam file (RNA_CTRL_merged.bam)   
-(4) Ribo file (CTRL_expressed_P_sites_sort_count) from [here](https://data.mendeley.com/datasets/89j7snbm2r/2)   
+(4) Ribo file (CTRL_expressed_P_sites_sort_count)
+
+
+
 
 Load data and import gtfs:  
 ```
