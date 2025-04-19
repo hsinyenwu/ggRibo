@@ -17,11 +17,11 @@ ggRibo_decom(
   RNAbackground = "#FEFEAE",
   fExtend = 0,
   tExtend = 0,
-  RNAseq = inputs_full$RNAseq[1],
-  Riboseq = inputs_full$Riboseq[1],
-  SampleNames = Samples[1],
+  RNAseq = inputs_full$RNAseq,
+  Riboseq = inputs_full$Riboseq,
+  SampleNames = Samples,
   GRangeInfo = Txome_Range,
-  RNAseqBamPaired = RNAseqBamPairorSingle[1],
+  RNAseqBamPaired = RNAseqBamPairorSingle,
   Y_scale = "all",
   Ribo_fix_height = NULL,
   plot_ORF_ranges = FALSE,
@@ -38,7 +38,8 @@ ggRibo_decom(
   data_types = "Ribo-seq",
   plot_unassigned_reads = TRUE,
   selected_isoforms = NULL,
-  frame_logic = NULL
+  frame_logic = NULL,
+  nth_sample = 1
 )
 }
 \arguments{
