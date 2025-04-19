@@ -12,7 +12,7 @@ Each Ribo-seq read is represented with its first nucleotide aligned to the P-sit
 <img width="675" alt="image" src="https://github.com/user-attachments/assets/b1b16e9a-2a0d-45bd-b55e-77a4c5c68aad" />
 
 ### Gene-context plot vs single transcript plot for presenting Ribo-seq plots
-Here we show one example gene with 3 isoforms (Figure 2A). Using the single transcript style plot, it is impossible to check which transcript(s) is translated (Figure 2B). The isoform 3 is not transcribed in the sample and leads to a confusing plot (bottom panel of Figure 2B). In gene-context plot, we can clear see the first and second isoforms are transcribed and translated (Figure 2C) even though only isoform 1 is colored for periodicity. Therefore, ***gene-context Ribo-seq plot provides a bird’s-eye view of the translation for all isoforms.*** 
+Here we show one example gene with 3 isoforms (Figure 2A). Using the single transcript style plot, it is impossible to check which transcript(s) is translated (Figure 2B). The isoform 3 is not transcribed in the sample and leads to a confusing plot (bottom panel of Figure 2B). In gene-context plot, we can clear see the first and second isoforms are transcribed and translated (Figure 2C) even though only isoform 1 is colored for periodicity. Therefore, ***gene-context Ribo-seq plot provides a bird’s-eye view of the translation for all isoforms.*** *However, single transcript plot could still be helpful for genes have long introns. In that case, you can check the Gene-context plot first then use single transcript plot.*
   
 <img width="675" alt="image" src="https://github.com/user-attachments/assets/7cbcacb4-a42d-45ab-bbcb-cd45bc1923a6" />
 
@@ -59,10 +59,10 @@ install_github("hsinyenwu/ggRibo")
 ```
 
 #### Load RNA-seq, Ribo-seq and annotation files  
-1. For preparing your Ribo-seq reads for ggRibo, see [Here](https://github.com/hsinyenwu/ggRibo/blob/v2025.1.25/README_a0_preparing_Ribo-seq_for_ggRibo.md).  
-2. RNA-seq files are just the bam files after Ribo-seq reads aligned with STAR or HISAT2.  
-3. The FASTA and gtf/gff files are just the files you used to map the RNA-seq and Ribo-seq reads.  
-4. Other Single Nucleotide Resolution data such as PARE-seq or TSS-seq (both 1st nt position and counts for each reads) could also be loaded for ggRibo plotting.  
+1. Ribo-seq input could be a tabular format with 4 columns for (1) read counts, (2) chromosome, (3) position of the 1st nucleotide of P-site and (4) strand. Alternatively, you can also input bedGraph or bigWig format files. For preparing files for ggRibo, see [Here](https://github.com/hsinyenwu/ggRibo/blob/v2025.1.25/README_a0_preparing_Ribo-seq_for_ggRibo.md).  
+2. RNA-seq files could be the bam files from RNA-seq reads aligned with STAR or HISAT2. You can also convert your data to bedGraph or bigWig formats. 
+3. The FASTA (or a BSGenome object) and gtf/gff files for visualizing DNA and amino acid sequences.  
+4. Other Single Nucleotide Resolution data such as PARE-seq or TSS-seq could also be loaded for ggRibo plotting. Similar to Ribo-seq, the SNR data could be the tabular format, bedGraph or bigWig.  
 
 **Here are the files for ggRibo plotting (Figure 3):**
 
@@ -85,18 +85,6 @@ Shoot_RNAse <- system.file("extdata", "Shoot_test_SE.bam", package = "ggRibo", m
 Root_Ribo <- system.file("extdata", "riboRoot.bed", package = "ggRibo", mustWork = TRUE) #Root Ribo-seq data
 Shoot_Ribo <- system.file("extdata", "riboShoot.bed", package = "ggRibo", mustWork = TRUE) #Shoot Ribo-seq data
 #You need to create paths for your own data files
-```
-**Note the riboseq files is a table with the following  organization:**   
-(1) No column names.  
-(2) Four columns for "counts", "chromosome number", "chromosome position", "strand" from left to right.  
-*The riboseq file contain the number and distribution of the 1st position of the P-site of ribosome footprint. Alternatively, you could create files from other sequencing data with single-nucleotide resolution (SNR). SNR data include, but not limit to, PARE-seq, CAGE-seq, or TI-seq, which defines the 5' nucleotide of mRNA degredation intermediates, the 5' CAP positions or the transcription start sites, or transation initiation sites, respectively.*
-```
-1   1  1000000      +
-3   1 10000007      +
-3   1 10000010      +
-3   1 10000016      +
-1   1 10000018      +
-4   1 10000019      +
 ```
 
 **Setup variables for the ggRibo function:**  
