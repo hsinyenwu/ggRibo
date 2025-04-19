@@ -26,7 +26,7 @@ for sample in "${SAMPLES[@]}"; do
     MINUS_BAM="$PATH1/RNA_${sample}_minus_strand_reads.bam"      # Temporary BAM for minus strand reads
     PLUS_BIGWIG="$PATH1/RNA_${sample}_plus_strand.bw"            # Output BigWig for plus strand
     MINUS_BIGWIG="$PATH1/RNA_${sample}_minus_strand.bw"          # Output BigWig for minus strand
-    CHROM_SIZES=/path/to/TAIR10.fas.fai #CHROM_SIZES, just a fai (FASTA index) file
+    CHROM_SIZES=/path/to/TAIR10.fas.fai                          # CHROM_SIZES, just a fai (FASTA index) file
 
     # Step 1: Filter reads by strand
     # Filter for pairs where Read 1 is on the plus strand (corresponds to minus-strand transcripts due to reverse strand library)
@@ -69,7 +69,7 @@ SAMPLE1=/path/to/P_sites_all_sample1
 SAMPLE2=/path/to/P_sites_all_sample2
 
 # Path to your chromosome size file
-CHROM_SIZES="/path/to/TAIR10.fas.fai"
+CHROM_SIZES="/path/to/TAIR10.fas.fai" # CHROM_SIZES, just a fai (FASTA index) file
 
 cd /path/to/data
 
