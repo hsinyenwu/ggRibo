@@ -60,7 +60,7 @@ install_github("hsinyenwu/ggRibo")
 
 #### Load RNA-seq, Ribo-seq and annotation files  
 1. Ribo-seq input could be a tabular format with 4 columns for (1) read counts, (2) chromosome, (3) position of the 1st nucleotide of P-site and (4) strand. Alternatively, you can also input bedGraph or bigWig format files. For preparing files for ggRibo, see [Here](https://github.com/hsinyenwu/ggRibo/blob/v2025.1.25/README_a0_preparing_Ribo-seq_for_ggRibo.md).  
-2. RNA-seq files could be the bam files from RNA-seq reads aligned with STAR or HISAT2. You can also convert your data to bedGraph or bigWig formats. 
+2. RNA-seq files could be the bam files from RNA-seq reads aligned with STAR or HISAT2. You can also convert your data to bedGraph or bigWig formats, see [Here](https://github.com/hsinyenwu/ggRibo/blob/v2025.3.30/README_0B_bedGraph_bigwig.md). 
 3. The FASTA (or a BSGenome object) and gtf/gff files for visualizing DNA and amino acid sequences.  
 4. Other Single Nucleotide Resolution data such as PARE-seq or TSS-seq could also be loaded for ggRibo plotting. Similar to Ribo-seq, the SNR data could be the tabular format, bedGraph or bigWig.  
 
