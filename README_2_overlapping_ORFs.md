@@ -112,6 +112,7 @@ ggRibo(
   NAME="Gpi1 family protein",
   oORF_coloring = "extend_mORF",
   Extend=200)
+#oORF_coloring = "extend_mORF" does not do anything if the eORF is not overlapping with the main ORF.
 ```
 ![image](https://github.com/user-attachments/assets/455b64ab-e5ad-43dd-8060-b3ad96f76f05)
 **Show the ouORF frame alone**  
@@ -122,11 +123,12 @@ ggRibo(
   eORF.tx_id = "AT3G57170.1",
   NAME="Gpi1 family protein",
   oORF_coloring = "oORF_colors",
+  gene_model_height_ratio = 0.3,
   Extend=200)
 ```
-![image](https://github.com/user-attachments/assets/7cb5c658-e21f-416a-89c2-dc47286b25c0)
+![image](https://github.com/user-attachments/assets/5f90a8c1-47ab-45e8-bc88-497f0a3e5d11)
 
-### Deconvolution of Ribo-seq reads shows the translated frames of overlapping uORF and main ORF  
+### Decomposition of Ribo-seq reads shows the translated frames of overlapping uORF and main ORF  
 ggRibo_decon takes only one Ribo-seq and RNA-seq samples and plot the 3 frames separately.   
 **If we only assign frame colors to the annotated CDS**    
 ```
@@ -135,22 +137,29 @@ ggRibo_decom(
   tx_id = "AT3G57170.1",
   NAME="Gpi1 family protein",
   oORF_coloring = "extend_mORF",
+  frame_logic ="CDS_start",
+  gene_model_height_ratio = 0.7,
   Extend=200)
 ```
-![image](https://github.com/user-attachments/assets/da6cd9b3-868e-4a8e-a65f-5ee77be6fe98)
+![image](https://github.com/user-attachments/assets/7d8abbfb-b1d3-4e1b-b400-cb5ceb0dbcd8)
 
-**We can also extend frame colors to the extra ORF (i.e., ouORF)**   
-It is more clear this way 
+**The above "frame_logic" parameter has 3 options:**
+1. frame_logic="tx_start", the frame 0 starts from the beginning of the transcript. This is the default for ncRNA.  
+2. frame_logic="CDS_start",  the frame 0 starts from the beginning of the annotated CDS. This is the default for coding transcript.   
+3. frame_logic="CDS_extend", the frame 0 starts from the beginning of the annotated CDS and extend to the two ends of the transcript.  
+
+**We can try frame_logic = "CDS_extend")**   
+Not the eORF ranges are shown, but do not guide the coloring of eORF ribo-seq reads.
 ```
 ggRibo_decom(
-  gene_id = "AT3G57170",
-  tx_id = "AT3G57170.1",
-  eORF.tx_id = "AT3G57170.1",
-  NAME="Gpi1 family protein",
-  oORF_coloring = "extend_mORF",
-  Extend=200)
+    gene_id = "AT3G57170",
+    tx_id = "AT3G57170.1",
+    eORF.tx_id = c("AT3G57170.1","AT3G57170.2"),
+    NAME="Gpi1 family protein",gene_model_height_ratio = 0.7,
+    Extend=200,frame_logic = "CDS_extend")
 ```
-![image](https://github.com/user-attachments/assets/bd25a85e-9354-45be-8363-003328c9d9bd)
+![image](https://github.com/user-attachments/assets/99895619-e136-4847-8b46-0231aea45504)
+
 
 
 
