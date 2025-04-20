@@ -188,12 +188,14 @@ To see ouORF (its frame coloring extend from the main ORF):
 ggRibo_tx(
     gene_id = "AT3G57170",
     tx_id = "AT3G57170.1",
-    eORF.tx_id = "AT3G57170.1",
+    eORF.tx_id = c("AT3G57170.1","AT3G57170.2"),
     NAME="Gpi1 family protein",
     gene_model_height_ratio =1.8,
     oORF_coloring = "extend_mORF")
 ```
-![image](https://github.com/user-attachments/assets/a0b644de-5533-4c3f-acfd-ba442e4d37e5)
+![image](https://github.com/user-attachments/assets/1a69f318-bb31-4d78-a34e-b08d28458bd9)
+
+
 
 
 
