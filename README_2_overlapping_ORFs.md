@@ -160,6 +160,40 @@ ggRibo_decom(
 ```
 ![image](https://github.com/user-attachments/assets/99895619-e136-4847-8b46-0231aea45504)
 
+### Single transcript view of oORF
+From the above data, we can see isoform 1 is expressed for the above gene, so we can use ggRibo_tx to see the uORF and ouORFs.
+```
+ggRibo_tx(
+    gene_id = "AT3G57170",
+    tx_id = "AT3G57170.1",
+    eORF.tx_id = "AT3G57170.1",
+    NAME="Gpi1 family protein",
+    oORF_coloring = "extend_mORF", #default
+    gene_model_height_ratio =1.8)
+```
+![image](https://github.com/user-attachments/assets/13ff7de6-0412-4c8d-9317-2bd2e66a2c0e)
+To see only uORF and ouORF (their frame coloring is based on their own frames):
+```
+ggRibo_tx(
+    gene_id = "AT3G57170",
+    tx_id = "AT3G57170.1",
+    eORF.tx_id = c("AT3G57170.1","AT3G57170.2"),
+    NAME="Gpi1 family protein",
+    gene_model_height_ratio =1.8,
+    oORF_coloring = "oORF_colors")
+```
+![image](https://github.com/user-attachments/assets/8ffc7082-01b2-4abc-bbdf-2abcbf8ed7b9)
+To see ouORF (its frame coloring extend from the main ORF):
+```
+ggRibo_tx(
+    gene_id = "AT3G57170",
+    tx_id = "AT3G57170.1",
+    eORF.tx_id = "AT3G57170.1",
+    NAME="Gpi1 family protein",
+    gene_model_height_ratio =1.8,
+    oORF_coloring = "extend_mORF")
+```
+![image](https://github.com/user-attachments/assets/a0b644de-5533-4c3f-acfd-ba442e4d37e5)
 
 
 
