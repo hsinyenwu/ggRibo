@@ -3641,7 +3641,7 @@ ggRibo_decom <- function(gene_id, tx_id, eORF.tx_id = NULL,
 #' @param RNAseqBamPaired Vector indicating pairing for BAM (e.g. \code{"paired"} or \code{"single"}). Not used for bigWig.
 #' @param Y_scale Either \code{"all"} or \code{"each"}, controlling y-scaling across samples. Default is \code{"all"}.
 #' @param Ribo_fix_height Numeric to fix the max Ribo-seq coverage height. Default is \code{NULL}.
-#' @param plot_ORF_ranges Logical; if \code{TRUE}, attempt to plot eORFs in the gene model. Default is \code{FALSE}.
+#' @param plot_ORF_ranges Logical; if \code{TRUE}, attempt to plot eORFs in the gene model. Default is \code{TRUE}.
 #' @param frame_colors Named vector of colors for reading frames 0,1,2.
 #' @param sample_color Either \code{"color"} or a vector of colors for each sample, controlling how Ribo-seq reads are drawn.
 #' @param show_seq Logical; if \code{TRUE}, also plot the transcript DNA/AA via \code{plotDNAandAA_tx}. Default is \code{FALSE}.
@@ -3653,6 +3653,7 @@ ggRibo_decom <- function(gene_id, tx_id, eORF.tx_id = NULL,
 #' @param data_types Vector describing the type of each sample (e.g. \code{"Ribo-seq"} or \code{"RNA-seq"}). Must match \code{SampleNames} length.
 #' @param plot_range Optional numeric \code{c(start,end)} specifying the transcript coordinate range to plot.
 #' @param nucleotide_color_scheme If \code{"colorblind"}, uses a color-blind-friendly palette for nucleotides in DNA/AA. Otherwise uses \code{"default"}.
+#' @param oORF_coloring Coloring scheme for overlapping ORFs: \code{"extend_mORF"} (use main CDS frame for overlapping eORFs) or \code{"oORF_colors"} (use eORF-specific frames). Default is \code{"extend_mORF"}.
 #'
 #' @return A combined \code{ggplot} object displaying RNA-seq coverage, Ribo-seq coverage, optional eORFs, a transcript model,
 #'   and (if requested) the spliced DNA/AA sequences, all in transcript coordinates.
@@ -3680,7 +3681,8 @@ ggRibo_tx <- function(gene_id, tx_id, eORF.tx_id = NULL,
                       plot_genomic_direction = FALSE,
                       data_types = rep("Ribo-seq", length(SampleNames)),
                       plot_range = NULL,
-                      nucleotide_color_scheme = "default")
+                      nucleotide_color_scheme = "default",
+                      oORF_coloring = "extend_mORF")
 {
   # Basic checks
   if (!is.null(eORF.tx_id) && is.null(eORFRangeInfo) && exists("eORF_Range", envir = .GlobalEnv)) {
@@ -3879,9 +3881,7 @@ ggRibo_tx <- function(gene_id, tx_id, eORF.tx_id = NULL,
                  fill=RNAbackground[i], color=RNAbackground[i], na.rm=TRUE) +
         geom_step(data=RNAseq_df, aes(x=position-0.5, y=count),
                   color=RNAcoverline, na.rm=TRUE) +
-       
-
- theme_bw() +
+        theme_bw() +
         theme(
           axis.text.x=element_blank(),
           axis.ticks.x=element_blank(),
@@ -3920,85 +3920,141 @@ ggRibo_tx <- function(gene_id, tx_id, eORF.tx_id = NULL,
             cds_tx_positions <- c(cds_tx_positions, tpos)
           }
         }
-        # assign frames for main CDS
-        Ribo_main <- assign_frames_tx(RiboRslt, cds_tx_positions)
+
+        # Assign frames for main CDS
+        RiboRslt$main_frame <- assign_frames_tx(RiboRslt, cds_tx_positions)$frame
+
+        # Identify main ORF positions
+        main_orf_positions <- if (length(cds_tx_positions) > 0) cds_tx_positions else integer(0)
+
+        # Identify eORF positions and determine overlaps
+        if (!is.null(eORFTxInfo)) {
+          eORF_list <- eORFTxInfo$eORF_Riboseq_list[[i]]
+          # Determine which eORFs overlap with main ORF
+          eORF_overlaps <- logical(length(eORF_list))
+          if (length(main_orf_positions) > 0) {
+            main_orf_start <- min(main_orf_positions)
+            main_orf_end <- max(main_orf_positions)
+            for (j in seq_along(eORF_list)) {
+              eORF_data <- eORF_list[[j]]
+              if (nrow(eORF_data) > 0) {
+                eORF_start <- min(eORF_data$position)
+                eORF_end <- max(eORF_data$position)
+                if (eORF_start <= main_orf_end && eORF_end >= main_orf_start) {
+                  eORF_overlaps[j] <- TRUE
+                }
+              }
+            }
+          }
+          overlapping_eORF_positions <- unique(unlist(lapply(eORF_list[eORF_overlaps], function(df) df$position)))
+          non_overlapping_eORF_positions <- unique(unlist(lapply(eORF_list[!eORF_overlaps], function(df) df$position)))
+        } else {
+          overlapping_eORF_positions <- integer(0)
+          non_overlapping_eORF_positions <- integer(0)
+        }
+
+        # Frame assignment based on oORF_coloring
+        RiboRslt$plot_frame <- factor(NA, levels = c(0,1,2))  # Default to NA (grey)
+
+        if (oORF_coloring == "extend_mORF") {
+          if (length(cds_tx_positions) > 0) {
+            cds_start_tx <- min(cds_tx_positions)
+            all_positions <- seq(min(RiboRslt$position), max(RiboRslt$position))
+            extended_frame <- (all_positions - cds_start_tx) %% 3
+            frame_df <- data.frame(position = all_positions, extended_frame = factor(extended_frame, levels = c(0,1,2)))
+            RiboRslt <- merge(RiboRslt, frame_df, by = "position", all.x = TRUE)
+          } else {
+            RiboRslt$extended_frame <- factor(NA, levels = c(0,1,2))
+          }
+
+          # Assign plot_frame for main ORF positions
+          idx_main <- RiboRslt$position %in% main_orf_positions
+          RiboRslt$plot_frame[idx_main] <- RiboRslt$main_frame[idx_main]
+
+          # Assign plot_frame for overlapping eORF positions (excluding main ORF)
+          idx_overlap <- RiboRslt$position %in% overlapping_eORF_positions & !idx_main
+          RiboRslt$plot_frame[idx_overlap] <- RiboRslt$extended_frame[idx_overlap]
+
+          # Assign plot_frame for non-overlapping eORF positions (e.g., uORFs)
+          if (!is.null(eORFTxInfo) && length(non_overlapping_eORF_positions) > 0) {
+            for (j in which(!eORF_overlaps)) {
+              eORF_data <- eORF_list[[j]]
+              if (nrow(eORF_data) > 0) {
+                eORF_start <- min(eORF_data$position)
+                eORF_positions <- eORF_data$position
+                eORF_frame <- (eORF_positions - eORF_start) %% 3
+                eORF_frame_df <- data.frame(position = eORF_positions, eORF_frame = factor(eORF_frame, levels = c(0,1,2)))
+                # Assign to RiboRslt where plot_frame is still NA to avoid overwriting
+                idx_eORF <- RiboRslt$position %in% eORF_positions & is.na(RiboRslt$plot_frame)
+                if (any(idx_eORF)) {
+                  temp_df <- merge(RiboRslt[idx_eORF, ], eORF_frame_df, by = "position", all.x = TRUE)
+                  RiboRslt$plot_frame[idx_eORF] <- temp_df$eORF_frame
+                }
+              }
+            }
+          }
+        } else if (oORF_coloring == "oORF_colors") {
+          if (!is.null(eORFTxInfo)) {
+            for (j in seq_along(eORF_list)) {
+              eORF_data <- eORF_list[[j]]
+              if (nrow(eORF_data) > 0) {
+                ref <- min(eORF_data$position)
+                eORF_frame <- (eORF_data$position - ref) %% 3
+                RiboRslt$plot_frame[RiboRslt$position %in% eORF_data$position] <- factor(eORF_frame, levels = c(0,1,2))
+              }
+            }
+          }
+        } else {
+          stop("Invalid oORF_coloring option.")
+        }
+
         if (!is.null(Ribo_fix_height)) {
-          Ribo_main$count <- pmin(Ribo_main$count, Ribo_fix_height)
+          RiboRslt$count <- pmin(RiboRslt$count, Ribo_fix_height)
         }
-        Ribo_main$count_scaled <- Ribo_main$count * scale_factor
+        RiboRslt$count_scaled <- RiboRslt$count * scale_factor
 
-        # Possibly add dashed lines for the main CDS if wide enough
-        if ((x_max - x_min)>=50 && length(cds_tx_positions)>0) {
-          cds_start_tx <- min(cds_tx_positions)
-          cds_stop_tx  <- max(cds_tx_positions)
-          if (cds_start_tx>=x_min && cds_start_tx<=x_max) {
-            p <- p + geom_vline(xintercept=cds_start_tx, linetype="dashed", color="black", alpha=0.5)
-          }
-          if (cds_stop_tx>=x_min && cds_stop_tx<=x_max) {
-            p <- p + geom_vline(xintercept=cds_stop_tx, linetype="dashed", color="darkgrey", alpha=0.5)
-          }
-        }
-
-        # main Ribo plotting
-        if (sample_color[i]=="color") {
+        # Plot all reads with appropriate coloring
+        if (sample_color[i] == "color") {
           p <- p + geom_segment(
-            data=Ribo_main,
-            aes(x=position, xend=position, y=0, yend=count_scaled, color=frame),
+            data=RiboRslt,
+            aes(x=position, xend=position, y=0, yend=count_scaled, color=plot_frame),
             na.rm=TRUE
           ) +
             scale_color_manual(values=frame_colors, na.value="grey", drop=FALSE)
         } else {
           p <- p + geom_segment(
-            data=Ribo_main,
+            data=RiboRslt,
             aes(x=position, xend=position, y=0, yend=count_scaled),
             color=sample_color[i], na.rm=TRUE
           )
         }
 
-        # eORFs
+        # Possibly add dashed lines for the main CDS if wide enough
+        if ((x_max - x_min) >= 50 && length(cds_tx_positions) > 0) {
+          cds_start_tx <- min(cds_tx_positions)
+          cds_stop_tx  <- max(cds_tx_positions)
+          if (cds_start_tx >= x_min && cds_start_tx <= x_max) {
+            p <- p + geom_vline(xintercept=cds_start_tx, linetype="dashed", color="black", alpha=0.5)
+          }
+          if (cds_stop_tx >= x_min && cds_stop_tx <= x_max) {
+            p <- p + geom_vline(xintercept=cds_stop_tx, linetype="dashed", color="darkgrey", alpha=0.5)
+          }
+        }
+
+        # Add vertical lines for eORF boundaries
         if (!is.null(eORFTxInfo)) {
-          eORF_list <- eORFTxInfo$eORF_Riboseq_list[[i]]
-          for (j in seq_along(eORF_list)) {
-            eORF_data <- eORF_list[[j]]
-            if (nrow(eORF_data)>0) {
-              # eORF might or might not overlap main CDS. We'll just do some frame logic
-              # or we can define a separate function. Minimal fix: same approach as main
-              # or we define eORF as "no guaranteed frame"? Let's do the same
-              ref <- min(eORF_data$position)
-              eORF_data$frame <- factor((eORF_data$position - ref) %% 3, levels=c(0,1,2))
-
-              if (!is.null(Ribo_fix_height)) {
-                eORF_data$count <- pmin(eORF_data$count, Ribo_fix_height)
+          for (j in seq_along(eORF.tx_id)) {
+            if (length(eORFRangeInfo$eORFByTx[[ eORF.tx_id[j] ]]) > 0) {
+              eorf_gr <- eORFRangeInfo$eORFByTx[[ eORF.tx_id[j] ]]
+              eorf_gen_start <- min(start(eorf_gr))
+              eorf_gen_stop  <- max(end(eorf_gr))
+              eorf_tx_start  <- position_map$tx_pos[match(eorf_gen_start, position_map$genomic_pos)]
+              eorf_tx_stop   <- position_map$tx_pos[match(eorf_gen_stop,  position_map$genomic_pos)]
+              if (!is.na(eorf_tx_start) && eorf_tx_start >= x_min && eorf_tx_start <= x_max) {
+                p <- p + geom_vline(xintercept=eorf_tx_start, linetype="solid", color="orange", alpha=0.5)
               }
-              eORF_data$count_scaled <- eORF_data$count * scale_factor
-
-              if (sample_color[i]=="color") {
-                p <- p + geom_segment(
-                  data=eORF_data,
-                  aes(x=position, xend=position, y=0, yend=count_scaled, color=frame),
-                  na.rm=TRUE
-                )
-              } else {
-                p <- p + geom_segment(
-                  data=eORF_data,
-                  aes(x=position, xend=position, y=0, yend=count_scaled),
-                  color=sample_color[i], na.rm=TRUE
-                )
-              }
-
-              # Add vertical lines for eORF boundaries
-              if (length(eORFRangeInfo$eORFByTx[[ eORF.tx_id[j] ]])>0) {
-                eorf_gr <- eORFRangeInfo$eORFByTx[[ eORF.tx_id[j] ]]
-                eorf_gen_start <- min(start(eorf_gr))
-                eorf_gen_stop  <- max(end(eorf_gr))
-                eorf_tx_start  <- position_map$tx_pos[match(eorf_gen_start, position_map$genomic_pos)]
-                eorf_tx_stop   <- position_map$tx_pos[match(eorf_gen_stop,  position_map$genomic_pos)]
-                if (!is.na(eorf_tx_start) && eorf_tx_start>=x_min && eorf_tx_start<=x_max) {
-                  p <- p + geom_vline(xintercept=eorf_tx_start, linetype="solid", color="orange", alpha=0.5)
-                }
-                if (!is.na(eorf_tx_stop) && eorf_tx_stop>=x_min && eorf_tx_stop<=x_max) {
-                  p <- p + geom_vline(xintercept=eorf_tx_stop,  linetype="dashed", color="orange", alpha=0.5)
-                }
+              if (!is.na(eorf_tx_stop) && eorf_tx_stop >= x_min && eorf_tx_stop <= x_max) {
+                p <- p + geom_vline(xintercept=eorf_tx_stop,  linetype="dashed", color="orange", alpha=0.5)
               }
             }
           }
@@ -4031,14 +4087,13 @@ ggRibo_tx <- function(gene_id, tx_id, eORF.tx_id = NULL,
   # Combine
   title_height      <- 0.2
   rna_ribo_height   <- 0.8
-  # Adjust gene_model_height to be larger, especially with multiple samples or DNA/AA
   num_samples <- length(RNAseq)
   gene_model_height <- gene_model_height_ratio * (0.1 + 0.1 * num_samples)
   if (show_seq && !is.null(FASTA)) {
-    gene_model_height <- gene_model_height * 1.1  # Further increase if DNA/AA is plotted
+    gene_model_height <- gene_model_height * 1.1
   }
   dna_aa_height     <- if(!is.null(dna_aa_plot)) dna_aa_height_ratio else 0
-  spacer_height     <- if(!is.null(dna_aa_plot)) 0.02 else 0  # Add small spacer for DNA/AA
+  spacer_height     <- if(!is.null(dna_aa_plot)) 0.02 else 0
 
   total_height <- title_height + (num_samples * rna_ribo_height) + spacer_height + dna_aa_height + gene_model_height
   rel_heights  <- c(title_height,
@@ -4060,7 +4115,6 @@ ggRibo_tx <- function(gene_id, tx_id, eORF.tx_id = NULL,
   )
   return(combined_plot)
 }
-
 
 #' Assign Frames in Transcript Coordinates for Main CDS
 #'
