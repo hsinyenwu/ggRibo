@@ -183,7 +183,7 @@ ggRibo_tx(
     oORF_coloring = "oORF_colors")
 ```
 ![image](https://github.com/user-attachments/assets/8ffc7082-01b2-4abc-bbdf-2abcbf8ed7b9)
-To see ouORF (its frame coloring extend from the main ORF):
+To see ouORF (its frame coloring scheme is extended from the main ORF):
 ```
 ggRibo_tx(
     gene_id = "AT3G57170",
