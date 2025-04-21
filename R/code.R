@@ -837,7 +837,7 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
               feature = feature_label,
               isoform = isoform,
               orf_id = feature_label,
-              height_factor = ifelse(overlaps_CDS, 8/15, 1),
+              height_factor = ifelse(overlaps_CDS, 2/3, 1),
               orig_start = eORF_df_raw$orig_start,
               orig_end = eORF_df_raw$orig_end,
               stringsAsFactors = FALSE,
@@ -2747,7 +2747,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
       p <- p + annotate("text",
                         x=x_label,y=y_label,
                         label=SampleNames[i],
-                        hjust=0,vjust=0,
+                        hjust=0.15,vjust=0,
                         size=3,fontface="bold")
 
       p <- p + theme(
