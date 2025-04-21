@@ -33,7 +33,8 @@ ggRibo_tx(
   plot_genomic_direction = FALSE,
   data_types = rep("Ribo-seq", length(SampleNames)),
   plot_range = NULL,
-  nucleotide_color_scheme = "default"
+  nucleotide_color_scheme = "default",
+  oORF_coloring = "extend_mORF"
 )
 }
 \arguments{
@@ -71,7 +72,7 @@ ggRibo_tx(
 
 \item{Ribo_fix_height}{Numeric to fix the max Ribo-seq coverage height. Default is \code{NULL}.}
 
-\item{plot_ORF_ranges}{Logical; if \code{TRUE}, attempt to plot eORFs in the gene model. Default is \code{FALSE}.}
+\item{plot_ORF_ranges}{Logical; if \code{TRUE}, attempt to plot eORFs in the gene model. Default is \code{TRUE}.}
 
 \item{frame_colors}{Named vector of colors for reading frames 0,1,2.}
 
@@ -94,6 +95,8 @@ ggRibo_tx(
 \item{plot_range}{Optional numeric \code{c(start,end)} specifying the transcript coordinate range to plot.}
 
 \item{nucleotide_color_scheme}{If \code{"colorblind"}, uses a color-blind-friendly palette for nucleotides in DNA/AA. Otherwise uses \code{"default"}.}
+
+\item{oORF_coloring}{Coloring scheme for overlapping ORFs: \code{"extend_mORF"} (use main CDS frame for overlapping eORFs) or \code{"oORF_colors"} (use eORF-specific frames). Default is \code{"extend_mORF"}.}
 }
 \value{
 A combined \code{ggplot} object displaying RNA-seq coverage, Ribo-seq coverage, optional eORFs, a transcript model,
