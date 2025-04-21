@@ -1182,7 +1182,7 @@ plotDNAandAA <- function(GeneTxInfo, plot_range = NULL, FASTA = NULL, nucleotide
   plot_width <- abs(diff(range(genelim_adj)))
   font_size <- (plot_width / num_nucleotides) * 1.1
   font_size <- max(min(font_size, 5), 2)
-  font_size <- font_size * 1.1
+  font_size <- font_size * 1.3
   
   # Generate three-frame translations
   frames <- c(0, 1, 2)
@@ -1256,7 +1256,7 @@ plotDNAandAA <- function(GeneTxInfo, plot_range = NULL, FASTA = NULL, nucleotide
   }
   
   aa_df_combined <- do.call(rbind, aa_sequences)
-  aa_font_size <- font_size * 1.25
+  aa_font_size <- font_size * 1.3
   aa_df_combined$frame_label <- frame_label_map[as.character(aa_df_combined$frame)]
   aa_df_combined$fill_value <- aa_df_combined$frame_label
   aa_df_combined$fill_value[aa_df_combined$amino_acid == 'M'] <- 'Start'
@@ -2663,13 +2663,9 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
 
           } else {
             # Default coding transcripts frame assignment
-            Ribo_main <- RiboRslt
-            if (!is.null(eORFTxInfo)) {
-              eORF_positions <- unlist(lapply(seq_along(eORFTxInfo$xlim.eORF), function(j) {
-                ranges <- eORFTxInfo$xlim.eORF[[j]]
-                seq(min(start(ranges)), max(end(ranges)))
-              }))
-              Ribo_main <- Ribo_main[!(Ribo_main$position %in% eORF_positions), ]
+            Ribo_main <- assign_frames(Ribo_main, cds_ranges, GeneTxInfo$strand)
+            if (frame_logic != "tx_start") {                       # keep tx‑start frames for CDS genes
+            Ribo_main <- assign_frames(Ribo_main, cds_ranges, GeneTxInfo$strand)
             }
 
             Ribo_main <- assign_frames(Ribo_main, cds_ranges, GeneTxInfo$strand)
@@ -2918,11 +2914,11 @@ ggRibo_decom <- function(gene_id, tx_id, eORF.tx_id = NULL,
                          RNAcoverline = "grey", RNAbackground = "#FEFEAE",
                          fExtend = 0,
                          tExtend = 0,
-                         RNAseq = inputs_full$RNAseq[1],
-                         Riboseq = inputs_full$Riboseq[1],
-                         SampleNames = Samples[1],
+                         RNAseq = inputs_full$RNAseq,
+                         Riboseq = inputs_full$Riboseq,
+                         SampleNames = Samples,
                          GRangeInfo = Txome_Range,
-                         RNAseqBamPaired = RNAseqBamPairorSingle[1],
+                         RNAseqBamPaired = RNAseqBamPairorSingle,
                          Y_scale = "all",
                          Ribo_fix_height = NULL,
                          plot_ORF_ranges = FALSE,
@@ -2939,12 +2935,9 @@ ggRibo_decom <- function(gene_id, tx_id, eORF.tx_id = NULL,
                          data_types = "Ribo-seq",
                          plot_unassigned_reads = TRUE,
                          selected_isoforms = NULL,
-                         frame_logic = NULL
+                         frame_logic = NULL,
+                         nth_sample = 1
 ) {
-  # Validate data_types length matches SampleNames
-  if (length(data_types) != length(SampleNames)) {
-    stop("The length of data_types must match the number of samples.")
-  }
 
   # Validate Y_scale
   if (!(Y_scale %in% c("all", "each"))) {
@@ -2961,11 +2954,6 @@ ggRibo_decom <- function(gene_id, tx_id, eORF.tx_id = NULL,
   # Check GRangeInfo provided
   if (is.null(GRangeInfo)) {
     stop("GRangeInfo (e.g., Txome_Range) must be provided.")
-  }
-
-  # ggRibo_decom only supports one sample at a time
-  if (length(SampleNames) > 1) {
-    stop("ggRibo_decom only supports one sample at a time.")
   }
 
   has_overlapping_ORF <- FALSE
@@ -3021,6 +3009,11 @@ ggRibo_decom <- function(gene_id, tx_id, eORF.tx_id = NULL,
       }
     }
   }
+
+  RNAseq <- RNAseq[nth_sample]
+  Riboseq <- Riboseq[nth_sample]
+  SampleNames <- SampleNames[nth_sample]
+  RNAseqBamPaired <- RNAseqBamPaired[nth_sample]
 
   strand_info <- as.character(strand(unlist(txByYFG)))[1]
   chr <- as.character(seqnames(unlist(txByYFG)))[1]
@@ -3100,19 +3093,6 @@ ggRibo_decom <- function(gene_id, tx_id, eORF.tx_id = NULL,
 
     gene_ranges <- GRanges(seqnames=chr, ranges=IRanges(range_left, range_right), strand=strand_info)
   }
-
-  # Process input data using create_seq_input
-  inputs <- create_seq_input(
-    rna_files = RNAseq,
-    ribo_files = Riboseq,
-    sample_names = SampleNames,
-    rna_types = NULL,  # Auto-detect
-    ribo_types = NULL, # Auto-detect
-    include_rna = !is.null(RNAseq),
-    rna_paired = RNAseqBamPaired
-  )
-  RNAseq <- inputs$RNAseq
-  Riboseq <- inputs$Riboseq
 
   # Process Riboseq data
   Riboseq_list <- list()
@@ -4018,14 +3998,14 @@ ggRibo_tx <- function(gene_id, tx_id, eORF.tx_id = NULL,
           p <- p + geom_segment(
             data=RiboRslt,
             aes(x=position, xend=position, y=0, yend=count_scaled, color=plot_frame),
-            na.rm=TRUE
+            linewidth=0.5, na.rm=TRUE
           ) +
             scale_color_manual(values=frame_colors, na.value="grey", drop=FALSE)
         } else {
           p <- p + geom_segment(
             data=RiboRslt,
             aes(x=position, xend=position, y=0, yend=count_scaled),
-            color=sample_color[i], na.rm=TRUE
+            color=sample_color[i], linewidth=0.5, na.rm=TRUE
           )
         }
 
@@ -4507,7 +4487,7 @@ plotDNAandAA_tx <- function(GeneTxInfo, plot_range = NULL, FASTA = NULL, nucleot
   dna_df$fill_value <- dna_df$nucleotide
 
   font_size  <- max(min((region_length/length(dna_chars))*1.2,5),2)*1.3
-  aa_font_sz <- font_size *1.1
+  aa_font_sz <- font_size *1.3
 
   # Figure out main CDS
   cds_gr <- GeneTxInfo$cdsByYFGtx[[tx_id]]
