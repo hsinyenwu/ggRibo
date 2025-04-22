@@ -2816,10 +2816,10 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
   num_datasets <- ifelse(!is.null(RNAseq),length(RNAseq),0)
 
   title_height <-0.2
-  rna_ribo_height <-0.8
+  rna_ribo_height <-0.7
 
   if (is.null(gene_model_height_ratio)) {
-    gene_model_height_ratio <-0.2+(num_transcripts)*0.1
+    gene_model_height_ratio <-0.1+(num_transcripts)*0.15
   }
   gene_model_height <- gene_model_height_ratio
 
@@ -3880,7 +3880,7 @@ ggRibo_tx <- function(gene_id, tx_id, eORF.tx_id = NULL,
         xlab("") +
         annotate("text", x=x_min, y=max(y_limits)*0.95,
                  label=SampleNames[i],
-                 hjust=0, vjust=0, size=3, fontface="bold")
+                 hjust=0, vjust=0.1, size=3, fontface="bold")
 
       # Ribo-seq + frame assignment
       if (nrow(RiboRslt)>0) {
@@ -4068,8 +4068,11 @@ ggRibo_tx <- function(gene_id, tx_id, eORF.tx_id = NULL,
   title_height      <- 0.2
   rna_ribo_height   <- 0.8
   num_samples <- length(RNAseq)
-  gene_model_height <- gene_model_height_ratio * (0.1 + 0.1 * num_samples)
+  gene_model_height <- gene_model_height_ratio * (0.3 + 0.1 * num_samples)
   if (show_seq && !is.null(FASTA)) {
+    gene_model_height <- gene_model_height * 1.1
+  }
+  if (!is.null(eORF.tx_id)) {
     gene_model_height <- gene_model_height * 1.1
   }
   dna_aa_height     <- if(!is.null(dna_aa_plot)) dna_aa_height_ratio else 0
