@@ -1,9 +1,10 @@
-
-
+ggRibo_tx provided a tool to visualize the ribo-seq reads (colored for periodicity) and RNA-seq coverage for a single transcript. While we prefer using single gene view with ggRibo, some genes have long introns and difficult to visualize with ggRibo. In that case, ggRibo_tx will be useful. However, visualizing with ggRibo first for checking expressed isoforms is still recommended.    
+Here is an example:
 ```
 #Install the new version and load test data (Arabidopsis) if you have not done so.
 library(devtools)
 install_github("hsinyenwu/ggRibo@v2025.3.30", dependencies = TRUE, force = TRUE)
+library(ggRibo)
 #path to annotated gtf
 agtf <- system.file("extdata", "TAIR10.29_part.gtf", package = "ggRibo", mustWork = TRUE)
 #path to RNA-seq bigwig coverage files
@@ -43,34 +44,55 @@ inputs_full <- create_seq_input(
   sample_names = c("Root", "Shoot")
 )
 ```
-#### Just ggRibo (isoform 3 is expressed)
+#### Just ggRibo (isoform 3 is expressed) for the entire gene.
 ```
 ggRibo(gene_id="AT3G02470",tx_id="AT3G02470.3",
        eORF.tx_id = "AT3G02468.1",
        plot_ORF_ranges=T,
-       NAME = "SAMDC, CPuORF”)
+       NAME = "SAMDC, CPuORF")
 ```
+![image](https://github.com/user-attachments/assets/cd27d8ae-98e5-4659-90c5-ff19f9ee4b43)
 
-#### ggRibo_tx: Plot isoform 1 (not expressed, see an intron)
+#### ggRibo_tx: Plot isoform 1 (not expressed, see a strong intron in the plot)
+Since this is a single transcript plot (e.g. plotting for cDNA), we should not see a strong intron.
 ```
 ggRibo_tx(gene_id="AT3G02470",tx_id="AT3G02470.1",
        eORF.tx_id = "AT3G02468.1",
        plot_ORF_ranges=T,
+       gene_model_height_ratio=1.9,
        NAME = "SAMDC, CPuORF")
 ```
+![image](https://github.com/user-attachments/assets/a1d65c5f-bab0-4099-adf8-5f940932c77c)
 
-#### Plot isoform 3 (expressed, no intron)
+#### Plot isoform 3 (expressed, no intron showen in the plot)
 ```
 ggRibo_tx(gene_id="AT3G02470",tx_id="AT3G02470.3",
        eORF.tx_id = "AT3G02468.1",
        plot_ORF_ranges=T,
+       gene_model_height_ratio=1.9,
        NAME = "SAMDC, CPuORF")
 ```
+![image](https://github.com/user-attachments/assets/0d05810c-292f-497f-a14d-1819b2e7772a)
+
+#### Plot isoform 4 (not expressed, miss RNA-seq coverage in the first exon)
+```
+ggRibo_tx(gene_id="AT3G02470",tx_id="AT3G02470.3",
+       eORF.tx_id = "AT3G02468.1",
+       plot_ORF_ranges=T,
+       gene_model_height_ratio=1.9,
+       NAME = "SAMDC, CPuORF")
+```
+![image](https://github.com/user-attachments/assets/3f3271af-2c2a-4744-83fa-5c7137f25e5d)
+
 #### Zoom in view
 ```
 ggRibo_tx(gene_id="AT3G02470",tx_id="AT3G02470.3",
           eORF.tx_id = "AT3G02468.1",
           plot_ORF_ranges=T,
           plot_range=c(210,380),
-          NAME = "SAMDC, CPuORF”)
+          gene_model_height_ratio=1.9,
+          NAME = "SAMDC, CPuORF")
 ```
+![image](https://github.com/user-attachments/assets/a6335df4-2c7f-4a48-bea0-43e32d8c525b)
+
+
