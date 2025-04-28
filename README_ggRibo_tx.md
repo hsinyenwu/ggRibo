@@ -62,7 +62,7 @@ ggRibo_tx(gene_id="AT3G02470",tx_id="AT3G02470.1",
        gene_model_height_ratio=1.9,
        NAME = "SAMDC, CPuORF")
 ```
-![image](https://github.com/user-attachments/assets/a1d65c5f-bab0-4099-adf8-5f940932c77c)
+<img src=https://github.com/user-attachments/assets/a1d65c5f-bab0-4099-adf8-5f940932c77c width="600" height="300">
 
 #### Plot isoform 3 (expressed, no intron showen in the plot)
 ```
@@ -72,7 +72,7 @@ ggRibo_tx(gene_id="AT3G02470",tx_id="AT3G02470.3",
        gene_model_height_ratio=1.9,
        NAME = "SAMDC, CPuORF")
 ```
-![image](https://github.com/user-attachments/assets/0d05810c-292f-497f-a14d-1819b2e7772a)
+<img src=https://github.com/user-attachments/assets/0d05810c-292f-497f-a14d-1819b2e7772a width="600" height="300">
 
 #### Plot isoform 4 (not expressed, miss RNA-seq coverage in the first exon)
 ```
@@ -82,7 +82,7 @@ ggRibo_tx(gene_id="AT3G02470",tx_id="AT3G02470.3",
        gene_model_height_ratio=1.9,
        NAME = "SAMDC, CPuORF")
 ```
-![image](https://github.com/user-attachments/assets/3f3271af-2c2a-4744-83fa-5c7137f25e5d)
+<img src=https://github.com/user-attachments/assets/3f3271af-2c2a-4744-83fa-5c7137f25e5d width="600" height="300">
 
 #### Zoom in view
 ```
@@ -93,6 +93,6 @@ ggRibo_tx(gene_id="AT3G02470",tx_id="AT3G02470.3",
           gene_model_height_ratio=1.9,
           NAME = "SAMDC, CPuORF")
 ```
-![image](https://github.com/user-attachments/assets/a6335df4-2c7f-4a48-bea0-43e32d8c525b)
+<img src=https://github.com/user-attachments/assets/a6335df4-2c7f-4a48-bea0-43e32d8c525b width="600" height="300">
 
 
