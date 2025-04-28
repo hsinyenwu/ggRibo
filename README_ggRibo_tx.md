@@ -51,7 +51,7 @@ ggRibo(gene_id="AT3G02470",tx_id="AT3G02470.3",
        plot_ORF_ranges=T,
        NAME = "SAMDC, CPuORF")
 ```
-<img src=https://github.com/user-attachments/assets/cd27d8ae-98e5-4659-90c5-ff19f9ee4b43 width="300" height="200">
+<img src=https://github.com/user-attachments/assets/cd27d8ae-98e5-4659-90c5-ff19f9ee4b43 width="600" height="500">
 
 #### ggRibo_tx: Plot isoform 1 (not expressed, see a strong intron in the plot)
 Since this is a single transcript plot (e.g. plotting for cDNA), we should not see a strong intron.
