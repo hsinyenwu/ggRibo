@@ -45,6 +45,8 @@ inputs_full <- create_seq_input(
 )
 ```
 #### Just ggRibo (isoform 3 is expressed) for the entire gene.
+Why only isoform 3 is expressed? First isoform lacks an intron. Forth isoform lacks RNA-seq reads that cover its first exon.  
+
 ```
 ggRibo(gene_id="AT3G02470",tx_id="AT3G02470.3",
        eORF.tx_id = "AT3G02468.1",
