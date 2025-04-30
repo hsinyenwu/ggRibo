@@ -4094,7 +4094,7 @@ ggRibo_tx <- function(gene_id, tx_id, eORF.tx_id = NULL,
   combined_plot <- cowplot::plot_grid(
     title_plot,
     plotlist=c(plot_list, list(spacer_plot), list(dna_aa_plot), list(gene_model_plot)),
-    ncol=1, align="v", rel_heights=rel_heights
+    ncol=1, align="v", axis="lr" , rel_heights=rel_heights
   )
   return(combined_plot)
 }
