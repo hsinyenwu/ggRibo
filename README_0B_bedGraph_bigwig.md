@@ -3,8 +3,8 @@
 We added the support for bedGraph and BigWig formats in the ggRibo package to load both RNA-seq reads and Ribo-seq P-sites. Users can now leverage these coverage-focused file formats for their analyses. Unlike BAM files, which store detailed alignments for RNA-seq reads, bedGraph and BigWig formats concentrate on representing genome-wide coverage or signal intensity data in a concise and user-friendly manner. **For strand-specific datasets, files are typically separated into two: one for reads aligned to the forward strand and another for the reverse strand.** A particular advantage of BigWig over bedGraph is that it is compressed and indexed, enabling rapid retrieval of specific regions and **reducing both file size and RAM usage for visualization.**  
 
 ### 1. RNA-seq bam file to bedGraph and BigWig
-Here is an example for how to convert RNA-seq bam files to bedGraph and BigWig formats. In this example there are two samples. You will need samtools, bedtools and bedGraphToBigWig to run the code in linux. Also remember to change the paths for your system.
-***Modify your path and file names accordingly***
+Here is an example for how to convert RNA-seq bam files to bedGraph and BigWig formats. In this example there are two samples. You will need samtools, bedtools and bedGraphToBigWig to run the code in linux. Also remember to change the paths for your system.  
+***Please modify your path and file names accordingly***
 ```bash
 # Essential: Load samtools and bedtools first
 # Define the base path for input and output files (same as the provided code)
