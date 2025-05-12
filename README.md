@@ -7,8 +7,8 @@
 [Other Examples: plot ncRNA](https://github.com/hsinyenwu/ggRibo/blob/v2025.3.30/README_1_noncodingRNA.md)  
 [Other Examples: plot overlapping ORFs](https://github.com/hsinyenwu/ggRibo/blob/v2025.3.30/README_2_overlapping_ORFs.md)  
 [Other Examples: plot dORF](https://github.com/hsinyenwu/ggRibo/blob/v2025.3.30/README_3_dORF_translation.md)  
-[ggRNA](https://github.com/hsinyenwu/ggRibo/blob/v2025.3.30/README_ggRNA.md)  
-[ggRibo_tx](https://github.com/hsinyenwu/ggRibo/blob/v2025.3.30/README_ggRibo_tx.md)  
+[ggRNA for RNA-seq data](https://github.com/hsinyenwu/ggRibo/blob/v2025.3.30/README_ggRNA.md)  
+[ggRibo_tx for single-transcript view](https://github.com/hsinyenwu/ggRibo/blob/v2025.3.30/README_ggRibo_tx.md)  
 
 ### Introduction
 Ribo-seq (ribosome profiling) is a powerful technique for studying mRNA translation by deep sequencing ribosome-protected footprints. A key feature of Ribo-seq data is 3-nucleotide periodicity, which reflects the ribosome’s codon-by-codon progression during translation. This 3-nucleotide periodicity facilitates the discovery of unannotated translation events and provides insights into translational regulation. Here, we present ggRibo, an R package designed for visualizing 3-nucleotide periodicity within a genomic context. ggRibo enables visual confirmation of translated and unannotated isoforms, as well as additional translation events, including upstream open reading frames (ORFs), downstream ORFs, stop codon readthrough, and correction of misannotated ORFs due to genome sequencing errors.  
