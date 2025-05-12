@@ -1,5 +1,5 @@
 ## *ggRibo*: a ggplot-based single-gene viewer for visualizing Ribo-seq and related omics datasets
-***Index:***
+***Index:***  
 [Introduction and sample examples](https://github.com/hsinyenwu/ggRibo/blob/v2025.3.30/README.md)  
 [Ribo-seq tabular data prep](https://github.com/hsinyenwu/ggRibo/blob/v2025.3.30/README_0A_preparing_Ribo-seq_for_ggRibo.md)   
 [bigWig and bedGraph files prep](https://github.com/hsinyenwu/ggRibo/blob/v2025.3.30/README_0B_bedGraph_bigwig.md)  
