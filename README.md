@@ -1,4 +1,8 @@
 ## *ggRibo*: a ggplot-based single-gene viewer for visualizing Ribo-seq and related omics datasets
+Index
+[Ribo-seq tabular data prep](https://github.com/hsinyenwu/ggRibo/blob/v2025.3.30/README_0A_preparing_Ribo-seq_for_ggRibo.md)
+
+
 ### Introduction
 Ribo-seq (ribosome profiling) is a powerful technique for studying mRNA translation by deep sequencing ribosome-protected footprints. A key feature of Ribo-seq data is 3-nucleotide periodicity, which reflects the ribosome’s codon-by-codon progression during translation. This 3-nucleotide periodicity facilitates the discovery of unannotated translation events and provides insights into translational regulation. Here, we present ggRibo, an R package designed for visualizing 3-nucleotide periodicity within a genomic context. ggRibo enables visual confirmation of translated and unannotated isoforms, as well as additional translation events, including upstream open reading frames (ORFs), downstream ORFs, stop codon readthrough, and correction of misannotated ORFs due to genome sequencing errors.  
 
