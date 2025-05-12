@@ -63,6 +63,70 @@ for sample in "${SAMPLES[@]}"; do
 done
 ```
 
+### 2. Ribo-seq P-sites from RiboTaper (P_sites_all) to bedGraph and BigWig
+Here is just an example with RiboTaper, you can also convert the P-site files from other software to bedGraph and BigWig formats.
+```
+#Load bedtools bedGraphToBigWig first
+# (Optional) If bedGraphToBigWig is available in another module, load it here:
+# module load UHTS/Analysis/bedGraphToBigWig/<version>
+SAMPLE1=/path/to/P_sites_all_sample1
+SAMPLE2=/path/to/P_sites_all_sample2
+
+# Path to your chromosome size file
+CHROM_SIZES="/path/to/TAIR10.fas.fai" # CHROM_SIZES, just a fai (FASTA index) file
+
+cd /path/to/data
+
+# Loop over the two samples
+for SAMPLE in SAMPLE1 SAMPLE2
+do
+    FILE=${!SAMPLE}
+    ############################################################################
+    # 1) Prepare a clean 6-column BED (chrom, start, end, name, score=0, strand)
+    ############################################################################
+    # If your input file has extra columns, we can cut the first 6 columns to keep it “clean.”
+    # Adjust this if your file has a different name or layout.
+    awk 'BEGIN{OFS="\t"} {print $1,$2,$3,$4,"0",$6}' "$FILE" > ${SAMPLE}.6col.bed
+
+    ############################################################################
+    # 2) Split by strand (+ vs -) and sort
+    ############################################################################
+    awk '$6=="+"' ${SAMPLE}.6col.bed | sort -k1,1 -k2,2n > ${SAMPLE}.plus.bed
+    awk '$6=="-"' ${SAMPLE}.6col.bed | sort -k1,1 -k2,2n > ${SAMPLE}.minus.bed
+
+    ############################################################################
+    # 3) Convert each strand’s reads to a bedGraph of coverage
+    #    (-bg sums the per-position coverage automatically)
+    ############################################################################
+    genomeCoverageBed \
+        -strand + \
+        -bg \
+        -i ${SAMPLE}.plus.bed \
+        -g ${CHROM_SIZES} \
+        > ${SAMPLE}.plus.bedGraph
+
+    genomeCoverageBed \
+        -strand - \
+        -bg \
+        -i ${SAMPLE}.minus.bed \
+        -g ${CHROM_SIZES} \
+        > ${SAMPLE}.minus.bedGraph
+
+    ############################################################################
+    # 4) Convert each bedGraph to BigWig
+    #    (Requires bedGraphToBigWig and a proper chromosome size file)
+    ############################################################################
+    bedGraphToBigWig ${SAMPLE}.plus.bedGraph  ${CHROM_SIZES}  ${SAMPLE}.plus.bw
+    bedGraphToBigWig ${SAMPLE}.minus.bedGraph ${CHROM_SIZES}  ${SAMPLE}.minus.bw
+
+    # Done with this sample!
+    echo "Finished processing $SAMPLE"
+    #remove intermediate files
+    rm ${SAMPLE}.6col.bed ${SAMPLE}.plus.bed ${SAMPLE}.minus.bed
+done
+```
+
+
 ### 3. Run the test code for example files
 ```
 #path to annotated gtf
