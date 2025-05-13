@@ -49,7 +49,8 @@ bioconductor_packages <- c(
     "Rsamtools", 
     "IRanges", 
     "BiocParallel", 
-    "txdbmaker"
+    "txdbmaker",
+    "BSgenome"
 )
 
 BiocManager::install(bioconductor_packages)
