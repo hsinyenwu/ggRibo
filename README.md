@@ -68,8 +68,9 @@ install_github("hsinyenwu/ggRibo")
 
 <img width="675" alt="image" src="https://github.com/user-attachments/assets/efc31d7d-7d9f-4b01-a95e-f541183ddde6" />
 
-**Load example files in the ggRibo package.**
+**Load package and example files in the ggRibo package.**
 ```
+library(ggRibo)
 #Path for example data from ggRibo package
 #path to annotated gtf
 agtf <- system.file("extdata", "TAIR10.29_part.gtf", package = "ggRibo", mustWork = TRUE) #Annotated gtf
