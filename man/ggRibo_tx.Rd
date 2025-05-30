@@ -34,7 +34,8 @@ ggRibo_tx(
   data_types = rep("Ribo-seq", length(SampleNames)),
   plot_range = NULL,
   nucleotide_color_scheme = "default",
-  oORF_coloring = "extend_mORF"
+  oORF_coloring = "extend_mORF",
+  ribo_linewidth = 0.5
 )
 }
 \arguments{
@@ -97,13 +98,15 @@ ggRibo_tx(
 \item{nucleotide_color_scheme}{If \code{"colorblind"}, uses a color-blind-friendly palette for nucleotides in DNA/AA. Otherwise uses \code{"default"}.}
 
 \item{oORF_coloring}{Coloring scheme for overlapping ORFs: \code{"extend_mORF"} (use main CDS frame for overlapping eORFs) or \code{"oORF_colors"} (use eORF-specific frames). Default is \code{"extend_mORF"}.}
+
+\item{ribo_linewidth}{Numeric value to control the thickness of Ribo-seq read count lines. Default is \code{0.5}.}
 }
 \value{
 A combined \code{ggplot} object displaying RNA-seq coverage, Ribo-seq coverage, optional eORFs, a transcript model,
-  and (if requested) the spliced DNA/AA sequences, all in transcript coordinates.
+and (if requested) the spliced DNA/AA sequences, all in transcript coordinates.
 }
 \description{
 This function plots RNA-seq coverage and frame-specific Ribo-seq read counts
-for a specified transcript in *transcript* coordinates (exon-spliced).
+for a specified transcript in \emph{transcript} coordinates (exon-spliced).
 It optionally plots eORFs, genomic sequences, and a transcript model.
 }

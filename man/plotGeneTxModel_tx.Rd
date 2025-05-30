@@ -13,9 +13,9 @@ plotGeneTxModel_tx(
 )
 }
 \arguments{
-\item{GeneTxInfo}{A `Gene_info` object containing gene/transcript information.}
+\item{GeneTxInfo}{A \code{Gene_info} object containing gene/transcript information.}
 
-\item{eORFTxInfo}{An optional `eORF_info` object.}
+\item{eORFTxInfo}{An optional \code{eORF_info} object.}
 
 \item{plot_ORF_ranges}{Logical, whether to plot ORF ranges.}
 
@@ -24,7 +24,7 @@ plotGeneTxModel_tx(
 \item{plot_range}{Optional numeric vector (start, end) in transcript coordinates.}
 }
 \value{
-A `ggplot` object representing the transcript model.
+A \code{ggplot} object representing the transcript model.
 }
 \description{
 Creates a transcript model plot showing exons, UTRs, CDS, and optional eORFs

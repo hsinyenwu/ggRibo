@@ -39,7 +39,8 @@ ggRibo_decom(
   plot_unassigned_reads = TRUE,
   selected_isoforms = NULL,
   frame_logic = NULL,
-  nth_sample = 1
+  nth_sample = 1,
+  ribo_linewidth = 0.5
 )
 }
 \arguments{
@@ -106,10 +107,14 @@ ggRibo_decom(
 \item{selected_isoforms}{Optional. Vector of transcript IDs to plot. If specified, only these isoforms and tx_id are shown.}
 
 \item{frame_logic}{Character. Determines how reading frames are assigned:
-- "tx_start": Frame 0 starts at the beginning of the transcript.
-- "CDS_start": Frame 0 starts at the annotated ORF start.
-- "CDS_extend": Frame 0 starts at the annotated ORF start and extends to both sides.
-Defaults to "tx_start" if no ORF is annotated, otherwise "CDS_start".}
+\itemize{
+\item "tx_start": Frame 0 starts at the beginning of the transcript.
+\item "CDS_start": Frame 0 starts at the annotated ORF start.
+\item "CDS_extend": Frame 0 starts at the annotated ORF start and extends to both sides.
+Defaults to "tx_start" if no ORF is annotated, otherwise "CDS_start".
+}}
+
+\item{ribo_linewidth}{Numeric value to control the thickness of Ribo-seq read count lines. Default is \code{0.5}.}
 }
 \value{
 A combined ggplot object with RNA-Seq coverage, three frame-specific Ribo-Seq plots, gene model, and optionally DNA/AA sequences.
