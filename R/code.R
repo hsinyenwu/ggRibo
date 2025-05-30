@@ -1851,7 +1851,6 @@ ggRNA <- function(gene_id, tx_id, Extend = 100, NAME = "",
   return(combined_plot)
 }
 
-
 #' Plot RNA-seq and Ribo-seq coverage for a gene
 #'
 #' The `ggRibo` function creates a comprehensive plot displaying RNA-seq coverage and Ribo-seq read counts
@@ -1889,6 +1888,7 @@ ggRNA <- function(gene_id, tx_id, Extend = 100, NAME = "",
 #' @param data_types Vector of sample data type names for each sample (e.g., "Ribo-seq").
 #' @param selected_isoforms Optional vector of transcript IDs to plot. If provided, only these isoforms plus `tx_id` are shown.
 #' @param nucleotide_color_scheme If "default", uses bright colors for the nucleotides in plotDNAandAA. If "colorblind", uses a color‐blind friendly palette.
+#' @param ribo_linewidth Numeric value to control the thickness of Ribo-seq read count lines. Default is \code{0.5}.
 #'
 #' @return A combined ggplot object displaying RNA-seq coverage, Ribo-seq data, gene models, and optional sequences.
 #' @export
@@ -1917,7 +1917,8 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
                    plot_genomic_direction = FALSE,
                    data_types = rep("Ribo-seq", length(SampleNames)),
                    selected_isoforms = NULL,
-                   nucleotide_color_scheme = "default") {
+                   nucleotide_color_scheme = "default",
+                   ribo_linewidth = 0.5) {
 
   # Validate that data_types matches number of samples
   if (length(data_types) != length(SampleNames)) {
@@ -2429,10 +2430,10 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
 
           # Plot Ribo-seq using frame colors or single color
           if (sample_color_i=="color") {
-            p <- p + geom_segment(data=RiboRslt, aes(x=position, xend=position, y=0, yend=count_scaled, color=frame))
+            p <- p + geom_segment(data=RiboRslt, aes(x=position, xend=position, y=0, yend=count_scaled, color=frame), linewidth=ribo_linewidth)
             p <- p + scale_color_manual(values=frame_colors, na.value="grey")
           } else {
-            p <- p + geom_segment(data=RiboRslt, aes(x=position, xend=position, y=0, yend=count_scaled), color=sample_color_i)
+            p <- p + geom_segment(data=RiboRslt, aes(x=position, xend=position, y=0, yend=count_scaled), color=sample_color_i, linewidth=ribo_linewidth)
           }
 
         } else {
@@ -2479,9 +2480,9 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
 
             if (sample_color_i == "color") {
               p <- p + geom_segment(data=Ribo_main[Ribo_main$region_type=='non_overlapping',],
-                                    aes(x=position, xend=position, y=0, yend=count_scaled), color='grey')
+                                    aes(x=position, xend=position, y=0, yend=count_scaled), color='grey', linewidth=ribo_linewidth)
               p <- p + geom_segment(data=Ribo_main[Ribo_main$region_type=='overlapping',],
-                                    aes(x=position, xend=position, y=0, yend=count_scaled, color=frame))
+                                    aes(x=position, xend=position, y=0, yend=count_scaled, color=frame), linewidth=ribo_linewidth)
 
               if (!is.null(eORFTxInfo)) {
                 for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
@@ -2494,15 +2495,14 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
                     eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
                     eORF_Riboseq <- assign_frames(eORF_Riboseq, eORF_ranges, GeneTxInfo$strand)
                     p <- p + geom_segment(data=eORF_Riboseq,
-                                          aes(x=position,xend=position,y=0,yend=count_scaled,color=frame))
+                                          aes(x=position, xend=position, y=0, yend=count_scaled, color=frame), linewidth=ribo_linewidth)
                   }
                 }
               }
               p <- p + scale_color_manual(values=frame_colors, na.value='grey')
-
             } else {
               p <- p + geom_segment(data=Ribo_main,
-                                    aes(x=position,xend=position,y=0,yend=count_scaled),color=sample_color_i)
+                                    aes(x=position, xend=position, y=0, yend=count_scaled), color=sample_color_i, linewidth=ribo_linewidth)
               if (!is.null(eORFTxInfo)) {
                 for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
                   eORF_Riboseq <- eORF_Riboseq_list[[i]][[j]]
@@ -2512,7 +2512,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
                     }
                     eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
                     p <- p + geom_segment(data=eORF_Riboseq,
-                                          aes(x=position,xend=position,y=0,yend=count_scaled),color=sample_color_i)
+                                          aes(x=position, xend=position, y=0, yend=count_scaled), color=sample_color_i, linewidth=ribo_linewidth)
                   }
                 }
               }
@@ -2534,7 +2534,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
             if (sample_color_i=="color") {
               p <- p +
                 geom_segment(data=Ribo_main,
-                             aes(x=position,xend=position,y=0,yend=count_scaled,color=frame))
+                             aes(x=position,xend=position,y=0,yend=count_scaled,color=frame), linewidth=ribo_linewidth)
 
               if (!is.null(eORFTxInfo)) {
                 for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
@@ -2549,7 +2549,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
 
                     p <- p +
                       geom_segment(data=eORF_Riboseq,
-                                   aes(x=position,xend=position,y=0,yend=count_scaled,color=frame))
+                                   aes(x=position,xend=position,y=0,yend=count_scaled,color=frame), linewidth=ribo_linewidth)
                   }
                 }
               }
@@ -2559,7 +2559,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
             } else {
               p <- p +
                 geom_segment(data=Ribo_main,
-                             aes(x=position,xend=position,y=0,yend=count_scaled),color=sample_color_i)
+                             aes(x=position,xend=position,y=0,yend=count_scaled),color=sample_color_i, linewidth=ribo_linewidth)
               if (!is.null(eORFTxInfo)) {
                 for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
                   eORF_Riboseq <- eORF_Riboseq_list[[i]][[j]]
@@ -2570,7 +2570,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
                     eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
                     p <- p +
                       geom_segment(data=eORF_Riboseq,
-                                   aes(x=position,xend=position,y=0,yend=count_scaled),color=sample_color_i)
+                                   aes(x=position,xend=position,y=0,yend=count_scaled),color=sample_color_i, linewidth=ribo_linewidth)
                   }
                 }
               }
@@ -2599,7 +2599,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
             if (sample_color_i=="color") {
               p <- p +
                 geom_segment(data=RiboRslt,
-                             aes(x=position,xend=position,y=0,yend=count_scaled,color=frame))
+                             aes(x=position,xend=position,y=0,yend=count_scaled,color=frame), linewidth=ribo_linewidth)
 
               if (!is.null(eORFTxInfo)) {
                 for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
@@ -2633,7 +2633,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
 
                       p <- p +
                         geom_segment(data=eORF_Riboseq,
-                                     aes(x=position,xend=position,y=0,yend=count_scaled,color=frame))
+                                     aes(x=position,xend=position,y=0,yend=count_scaled,color=frame), linewidth=ribo_linewidth)
                     }
                   }
                 }
@@ -2644,7 +2644,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
             } else {
               p <- p +
                 geom_segment(data=RiboRslt,
-                             aes(x=position,xend=position,y=0,yend=count_scaled),color=sample_color_i)
+                             aes(x=position,xend=position,y=0,yend=count_scaled),color=sample_color_i, linewidth=ribo_linewidth)
               if (!is.null(eORFTxInfo)) {
                 for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
                   eORF_Riboseq <- eORFTxInfo$eORF_Riboseq_list[[i]][[j]]
@@ -2655,7 +2655,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
                     eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
                     p <- p +
                       geom_segment(data=eORF_Riboseq,
-                                   aes(x=position,xend=position,y=0,yend=count_scaled),color=sample_color_i)
+                                   aes(x=position,xend=position,y=0,yend=count_scaled),color=sample_color_i, linewidth=ribo_linewidth)
                   }
                 }
               }
@@ -2678,7 +2678,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
             if (sample_color_i=="color") {
               p <- p +
                 geom_segment(data=Ribo_main,
-                             aes(x=position,xend=position,y=0,yend=count_scaled,color=frame))
+                             aes(x=position,xend=position,y=0,yend=count_scaled,color=frame), linewidth=ribo_linewidth)
 
               if (!is.null(eORFTxInfo)) {
                 for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
@@ -2692,7 +2692,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
                     eORF_Riboseq <- assign_frames(eORF_Riboseq, eORF_ranges, GeneTxInfo$strand)
                     p <- p +
                       geom_segment(data=eORF_Riboseq,
-                                   aes(x=position,xend=position,y=0,yend=count_scaled,color=frame))
+                                   aes(x=position,xend=position,y=0,yend=count_scaled,color=frame), linewidth=ribo_linewidth)
                   }
                 }
               }
@@ -2702,7 +2702,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
             } else {
               p <- p +
                 geom_segment(data=Ribo_main,
-                             aes(x=position,xend=position,y=0,yend=count_scaled),color=sample_color_i)
+                             aes(x=position,xend=position,y=0,yend=count_scaled),color=sample_color_i, linewidth=ribo_linewidth)
               if (!is.null(eORFTxInfo)) {
                 for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
                   eORF_Riboseq <- eORF_Riboseq_list[[i]][[j]]
@@ -2713,7 +2713,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
                     eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
                     p <- p +
                       geom_segment(data=eORF_Riboseq,
-                                   aes(x=position,xend=position,y=0,yend=count_scaled),color=sample_color_i)
+                                   aes(x=position,xend=position,y=0,yend=count_scaled),color=sample_color_i, linewidth=ribo_linewidth)
                   }
                 }
               }
@@ -2905,7 +2905,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
 #'   - "CDS_start": Frame 0 starts at the annotated ORF start.
 #'   - "CDS_extend": Frame 0 starts at the annotated ORF start and extends to both sides.
 #'   Defaults to "tx_start" if no ORF is annotated, otherwise "CDS_start".
-#'
+#' @param ribo_linewidth Numeric value to control the thickness of Ribo-seq read count lines. Default is \code{0.5}.
 #' @return A combined ggplot object with RNA-Seq coverage, three frame-specific Ribo-Seq plots, gene model, and optionally DNA/AA sequences.
 #'
 #' @export
@@ -2936,7 +2936,8 @@ ggRibo_decom <- function(gene_id, tx_id, eORF.tx_id = NULL,
                          plot_unassigned_reads = TRUE,
                          selected_isoforms = NULL,
                          frame_logic = NULL,
-                         nth_sample = 1
+                         nth_sample = 1,
+                         ribo_linewidth = 0.5
 ) {
 
   # Validate Y_scale
@@ -3346,11 +3347,11 @@ ggRibo_decom <- function(gene_id, tx_id, eORF.tx_id = NULL,
 
       # Plot unassigned reads if requested
       if (plot_unassigned && nrow(na_data)>0) {
-        p <- p + geom_segment(data=na_data, aes(x=position, xend=position, y=0, yend=count_scaled), color="grey", na.rm=TRUE)
+        p <- p + geom_segment(data=na_data, aes(x=position, xend=position, y=0, yend=count_scaled), color="grey", linewidth=ribo_linewidth, na.rm=TRUE)
       }
 
       if (nrow(Ribo_df)>0) {
-        p <- p + geom_segment(data=Ribo_df, aes(x=position, xend=position, y=0, yend=count_scaled), color=frame_color, na.rm=TRUE)
+        p <- p + geom_segment(data=Ribo_df, aes(x=position, xend=position, y=0, yend=count_scaled), color=frame_color, linewidth=ribo_linewidth, na.rm=TRUE)
       }
 
       # Add eORF vertical lines if eORFTxInfo available
@@ -3634,6 +3635,7 @@ ggRibo_decom <- function(gene_id, tx_id, eORF.tx_id = NULL,
 #' @param plot_range Optional numeric \code{c(start,end)} specifying the transcript coordinate range to plot.
 #' @param nucleotide_color_scheme If \code{"colorblind"}, uses a color-blind-friendly palette for nucleotides in DNA/AA. Otherwise uses \code{"default"}.
 #' @param oORF_coloring Coloring scheme for overlapping ORFs: \code{"extend_mORF"} (use main CDS frame for overlapping eORFs) or \code{"oORF_colors"} (use eORF-specific frames). Default is \code{"extend_mORF"}.
+#' @param ribo_linewidth Numeric value to control the thickness of Ribo-seq read count lines. Default is \code{0.5}.
 #'
 #' @return A combined \code{ggplot} object displaying RNA-seq coverage, Ribo-seq coverage, optional eORFs, a transcript model,
 #'   and (if requested) the spliced DNA/AA sequences, all in transcript coordinates.
@@ -3662,7 +3664,7 @@ ggRibo_tx <- function(gene_id, tx_id, eORF.tx_id = NULL,
                       data_types = rep("Ribo-seq", length(SampleNames)),
                       plot_range = NULL,
                       nucleotide_color_scheme = "default",
-                      oORF_coloring = "extend_mORF")
+                      oORF_coloring = "extend_mORF",ribo_linewidth = 0.5)
 {
   # Basic checks
   if (!is.null(eORF.tx_id) && is.null(eORFRangeInfo) && exists("eORF_Range", envir = .GlobalEnv)) {
@@ -3998,14 +4000,14 @@ ggRibo_tx <- function(gene_id, tx_id, eORF.tx_id = NULL,
           p <- p + geom_segment(
             data=RiboRslt,
             aes(x=position, xend=position, y=0, yend=count_scaled, color=plot_frame),
-            linewidth=0.5, na.rm=TRUE
+            linewidth=ribo_linewidth, na.rm=TRUE
           ) +
             scale_color_manual(values=frame_colors, na.value="grey", drop=FALSE)
         } else {
           p <- p + geom_segment(
             data=RiboRslt,
             aes(x=position, xend=position, y=0, yend=count_scaled),
-            color=sample_color[i], linewidth=0.5, na.rm=TRUE
+            color=sample_color[i], linewidth=ribo_linewidth, na.rm=TRUE
           )
         }
 
@@ -4642,4 +4644,3 @@ plotDNAandAA_tx <- function(GeneTxInfo, plot_range = NULL, FASTA = NULL, nucleot
   }
   return(p)
 }
-
