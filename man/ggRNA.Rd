@@ -5,8 +5,8 @@
 \title{Plot RNA-seq coverage for a gene}
 \usage{
 ggRNA(
-  gene_id,
-  tx_id,
+  gene_id = NULL,
+  tx_id = NULL,
   Extend = 100,
   NAME = "",
   RNAcoverline = "grey",

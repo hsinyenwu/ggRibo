@@ -5,8 +5,8 @@
 \title{Plot RNA-seq and Ribo-seq Coverage in Transcript Coordinates}
 \usage{
 ggRibo_tx(
-  gene_id,
-  tx_id,
+  gene_id = NULL,
+  tx_id = NULL,
   eORF.tx_id = NULL,
   eORFRangeInfo = eORF_Range,
   Extend = 100,

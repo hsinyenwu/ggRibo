@@ -18,6 +18,8 @@ An R6 class to store range information from the genomic annotation.
 \item{\code{fiveUTR}}{Five prime untranslated regions grouped by transcript.}
 
 \item{\code{threeUTR}}{Three prime untranslated regions grouped by transcript.}
+
+\item{\code{tx_to_gene}}{Define the transcript vs gene relationship}
 }
 \if{html}{\out{</div>}}
 }
@@ -33,7 +35,7 @@ An R6 class to store range information from the genomic annotation.
 \if{latex}{\out{\hypertarget{method-Range_info-new}{}}}
 \subsection{Method \code{new()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Range_info$new(exonsByTx, txByGene, cdsByTx, fiveUTR, threeUTR)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Range_info$new(exonsByTx, txByGene, cdsByTx, fiveUTR, threeUTR, tx_to_gene)}\if{html}{\out{</div>}}
 }
 
 }

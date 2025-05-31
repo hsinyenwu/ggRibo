@@ -5,8 +5,8 @@
 \title{Plot RNA-seq and Ribo-seq coverage for a gene}
 \usage{
 ggRibo(
-  gene_id,
-  tx_id,
+  gene_id = NULL,
+  tx_id = NULL,
   eORF.tx_id = NULL,
   eORFRangeInfo = NULL,
   Extend = 100,

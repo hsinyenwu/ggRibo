@@ -7,8 +7,8 @@ It generates three separate plots corresponding to the three reading frames (0, 
 that do not fall within any annotated ORF regions. It can also display extended ORFs (eORFs), genomic sequences, and gene models.}
 \usage{
 ggRibo_decom(
-  gene_id,
-  tx_id,
+  gene_id = NULL,
+  tx_id = NULL,
   eORF.tx_id = NULL,
   eORFRangeInfo = NULL,
   Extend = 100,
