@@ -20,6 +20,16 @@ RNAseqBamPairorSingle=c("paired","single","paired","single")
 
 #Load example transcriptome annotation file
 gtf_import(annotation=agtf,format="gtf",dataSource="Araport",organism="Arabidopsis thaliana")
+
+RNA_files <- list(
+  Root_RNA,Root_RNAse,Shoot_RNA,Shoot_RNAse
+)
+
+inputs_full <- create_seq_input(
+  rna_files = RNA_files,
+  sample_names = Samples,
+  rna_paired=RNAseqBamPairorSingle
+)
 ```
 #### Examples:
 **Plot with the y-axis from each sample.**
