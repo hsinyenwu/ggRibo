@@ -17,30 +17,31 @@
 #' @param organism Optional organism name.
 #' @return A \code{Range_info} object stored in the global environment as \code{Txome_Range}.
 gtf_import <- function(annotation, format = "gtf", dataSource = "", organism = "") {
-  # Create a TxDb object from the given annotation file using txdbmaker
-  txdb <- txdbmaker::makeTxDbFromGFF(annotation, format = format, dataSource = dataSource, organism = organism)
-
-  # Extract exonic regions grouped by transcript
+  txdb <- suppressWarnings(txdbmaker::makeTxDbFromGFF(annotation, format = format, dataSource = dataSource, organism = organism))
   exonsByTx <- exonsBy(txdb, by = 'tx', use.names = TRUE)
-  # Extract transcript ranges grouped by gene
   txByGene <- transcriptsBy(txdb, by = 'gene')
-  # Extract coding DNA sequence (CDS) ranges grouped by transcript
   cdsByTx <- cdsBy(txdb, by = "tx", use.names = TRUE)
-  # Extract 5' UTR ranges grouped by transcript
   fiveUTR <- fiveUTRsByTranscript(txdb, use.names = TRUE)
-  # Extract 3' UTR ranges grouped by transcript
   threeUTR <- threeUTRsByTranscript(txdb, use.names = TRUE)
-
-  # Create a Range_info object to store all extracted genomic range information
+  
+  # Create a transcript-to-gene lookup table efficiently
+  tx_to_gene <- AnnotationDbi::select(txdb, keys = keys(txdb, keytype = "TXNAME"), 
+                       columns = c("TXNAME", "GENEID"), 
+                       keytype = "TXNAME")
+  colnames(tx_to_gene) <- c("tx_id", "gene_id")
+  
+  # Sort the lookup table by tx_id (smallest to largest)
+  tx_to_gene <- tx_to_gene[order(tx_to_gene$tx_id), ]
+  
+  # Create Range_info object
   Txome_Range <- Range_info$new(
     exonsByTx = exonsByTx,
     txByGene = txByGene,
     cdsByTx = cdsByTx,
     fiveUTR = fiveUTR,
-    threeUTR = threeUTR
+    threeUTR = threeUTR,
+    tx_to_gene = tx_to_gene
   )
-
-  # Assign the newly created Range_info object to a global variable Txome_Range for easy access
   assign("Txome_Range", Txome_Range, envir = .GlobalEnv)
 }
 
@@ -56,7 +57,7 @@ gtf_import <- function(annotation, format = "gtf", dataSource = "", organism = "
 #' @return An \code{eORF_Range_info} object stored in the global environment as \code{eORF_Range}.
 eORF_import <- function(annotation, format = "gtf", dataSource = "", organism = "") {
   # Create a TxDb object from the eORF annotation file
-  txdb <- txdbmaker::makeTxDbFromGFF(annotation, format = format, dataSource = dataSource, organism = organism)
+  txdb <- suppressWarnings(txdbmaker::makeTxDbFromGFF(annotation, format = format, dataSource = dataSource, organism = organism))
 
   # Extract CDS ranges by transcript, which correspond to eORFs
   cdsByTx <- cdsBy(txdb, by = "tx", use.names = TRUE)
@@ -336,6 +337,8 @@ exclude_eORF_reads <- function(Ribo_data, eORFTxInfo, strand) {
 
   return(Ribo_data)
 }
+
+
 
 #' Get RNA-seq coverage for a sample
 #'
@@ -1384,6 +1387,52 @@ plotDNAandAA <- function(GeneTxInfo, plot_range = NULL, FASTA = NULL, nucleotide
   return(p_dna_aa)
 }
 
+#' Helper function to resolve gene_id and tx_id based on provided inputs
+#' @param GRangeInfo A genomic range information object (e.g., `Txome_Range`) containing annotations.
+#' @param gene_id Character string specifying the gene ID of interest.
+#' @param tx_id Character string specifying the transcript ID to be used as the main isoform.
+#'
+#' @return gene_id or tx_id
+
+get_gene_tx <- function(gene_id = NULL, tx_id = NULL, GRangeInfo) {
+  if (is.null(gene_id) && is.null(tx_id)) {
+    stop("Either gene_id or tx_id must be provided.")
+  }
+  
+  if (!is.null(gene_id) && !is.null(tx_id)) {
+    txByYFG <- GRangeInfo$txByGene[gene_id]
+    if (length(txByYFG) == 0 || !tx_id %in% txByYFG[[1]]$tx_name) {
+      stop(paste("Transcript", tx_id, "is not associated with gene", gene_id))
+    }
+    return(list(gene_id = gene_id, tx_id = tx_id))
+  }
+  
+  if (is.null(gene_id)) {
+    tx_to_gene <- GRangeInfo$tx_to_gene
+    matches <- tx_to_gene[tx_to_gene$tx_id == tx_id, ]
+    if (nrow(matches) == 0) {
+      stop(paste("Transcript", tx_id, "not found in any gene."))
+    }
+    if (nrow(matches) > 1) {
+      warning(paste("Transcript", tx_id, "found in multiple genes:", paste(matches$gene_id, collapse = ", "), ". Using the first one."))
+    }
+    gene_id <- matches$gene_id[1]
+    return(list(gene_id = gene_id, tx_id = tx_id))
+  }
+  
+  if (is.null(tx_id)) {
+    tx_to_gene <- GRangeInfo$tx_to_gene
+    matches <- tx_to_gene[tx_to_gene$gene_id == gene_id, ]
+    if (nrow(matches) == 0) {
+      stop(paste("No transcripts found for gene", gene_id))
+    }
+    # Select the smallest tx_id (already sorted in tx_to_gene)
+    tx_id <- matches$tx_id[1]
+    return(list(gene_id = gene_id, tx_id = tx_id))
+  }
+}
+
+
 
 #' Plot RNA-seq coverage for a gene
 #'
@@ -1415,7 +1464,7 @@ plotDNAandAA <- function(GeneTxInfo, plot_range = NULL, FASTA = NULL, nucleotide
 #'
 #' @return A combined ggplot object displaying RNA-seq coverage, gene models, and optionally genomic sequences.
 #' @export
-ggRNA <- function(gene_id, tx_id, Extend = 100, NAME = "",
+ggRNA <- function(gene_id = NULL, tx_id = NULL, Extend = 100, NAME = "",
                   RNAcoverline = "grey", RNAbackground = "#FEFEAE",
                   RNAseq = inputs_full$RNAseq,
                   SampleNames = Samples,
@@ -1449,6 +1498,10 @@ ggRNA <- function(gene_id, tx_id, Extend = 100, NAME = "",
   if (is.null(GRangeInfo)) {
     stop("GRangeInfo (e.g., Txome_Range) must be provided.")
   }
+  # Obtain gene_id and/or tx_id
+  gene_tx <- get_gene_tx(gene_id, tx_id, GRangeInfo)
+  gene_id <- gene_tx$gene_id
+  tx_id <- gene_tx$tx_id
 
   # Extract transcripts for the given gene ID
   txByYFG <- GRangeInfo$txByGene[gene_id]
@@ -1892,7 +1945,7 @@ ggRNA <- function(gene_id, tx_id, Extend = 100, NAME = "",
 #'
 #' @return A combined ggplot object displaying RNA-seq coverage, Ribo-seq data, gene models, and optional sequences.
 #' @export
-ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
+ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                    eORFRangeInfo = NULL, Extend = 100, NAME = "",
                    RNAcoverline = "grey", RNAbackground = "#FEFEAE",
                    fExtend = 0,
@@ -1941,6 +1994,10 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
   if (is.null(GRangeInfo)) {
     stop("GRangeInfo (e.g., Txome_Range) must be provided.")
   }
+  # Obtain gene_id and/or tx_id
+  gene_tx <- get_gene_tx(gene_id, tx_id, GRangeInfo)
+  gene_id <- gene_tx$gene_id
+  tx_id <- gene_tx$tx_id
 
   # Handle eORF annotation if provided
   has_overlapping_ORF <- FALSE
@@ -2909,7 +2966,7 @@ ggRibo <- function(gene_id, tx_id, eORF.tx_id = NULL,
 #' @return A combined ggplot object with RNA-Seq coverage, three frame-specific Ribo-Seq plots, gene model, and optionally DNA/AA sequences.
 #'
 #' @export
-ggRibo_decom <- function(gene_id, tx_id, eORF.tx_id = NULL,
+ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                          eORFRangeInfo = NULL, Extend = 100, NAME = "",
                          RNAcoverline = "grey", RNAbackground = "#FEFEAE",
                          fExtend = 0,
@@ -2956,6 +3013,11 @@ ggRibo_decom <- function(gene_id, tx_id, eORF.tx_id = NULL,
   if (is.null(GRangeInfo)) {
     stop("GRangeInfo (e.g., Txome_Range) must be provided.")
   }
+
+  # Obtain gene_id and/or tx_id
+  gene_tx <- get_gene_tx(gene_id, tx_id, GRangeInfo)
+  gene_id <- gene_tx$gene_id
+  tx_id <- gene_tx$tx_id
 
   has_overlapping_ORF <- FALSE
   if (!is.null(eORF.tx_id)) {
@@ -3641,7 +3703,7 @@ ggRibo_decom <- function(gene_id, tx_id, eORF.tx_id = NULL,
 #'   and (if requested) the spliced DNA/AA sequences, all in transcript coordinates.
 #'
 #' @export
-ggRibo_tx <- function(gene_id, tx_id, eORF.tx_id = NULL,
+ggRibo_tx <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                       eORFRangeInfo=eORF_Range, Extend = 100, NAME = "",
                       RNAcoverline = "grey", RNAbackground = "#FEFEAE",
                       fExtend = 0, tExtend = 0,
@@ -3684,6 +3746,11 @@ ggRibo_tx <- function(gene_id, tx_id, eORF.tx_id = NULL,
   if (is.null(GRangeInfo)) {
     stop("GRangeInfo (e.g., Txome_Range) must be provided.")
   }
+
+  # Obtain gene_id and/or tx_id
+  gene_tx <- get_gene_tx(gene_id, tx_id, GRangeInfo)
+  gene_id <- gene_tx$gene_id
+  tx_id <- gene_tx$tx_id
 
   # Retrieve transcripts
   txByYFG <- GRangeInfo$txByGene[gene_id]
