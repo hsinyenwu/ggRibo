@@ -1,4 +1,4 @@
-## Two ways to generate P-site tabular file for ggRibo
+## 1. Two ways to generate P-site tabular file for ggRibo
 
 **Note: the Ribo-seq P-site coordinate file should look like this:**
 The first to forth columns are:  
@@ -56,7 +56,7 @@ write.table(comb, file=out_file, col.names = FALSE, row.names = FALSE,
             quote = FALSE, sep="\t")
 ```
 
-## Converting Ribo-seq P-sites from tabular to bedGraph and BigWig
+## 2. Converting Ribo-seq P-sites from tabular to bedGraph and BigWig
 See section 2 [here](https://github.com/hsinyenwu/ggRibo/blob/v2025.3.30/README_0B_bedGraph_bigwig.md)
 You can also obtain the P-site bedGraph or BigWig files from other tools.
 
