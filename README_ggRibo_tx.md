@@ -2,8 +2,8 @@ ggRibo_tx provided a tool to visualize the ribo-seq reads (colored for periodici
 Here is an example:
 ```
 #Install the new version and load test data (Arabidopsis) if you have not done so.
-library(devtools)
-install_github("hsinyenwu/ggRibo@v2025.3.30", dependencies = TRUE, force = TRUE)
+#library(devtools)
+#install_github("hsinyenwu/ggRibo@v2025.5.30", dependencies = TRUE, force = TRUE)
 library(ggRibo)
 #path to annotated gtf
 agtf <- system.file("extdata", "TAIR10.29_part.gtf", package = "ggRibo", mustWork = TRUE)
