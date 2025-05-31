@@ -12,24 +12,25 @@
 #' @field cdsByTx Coding sequences grouped by transcript.
 #' @field fiveUTR Five prime untranslated regions grouped by transcript.
 #' @field threeUTR Three prime untranslated regions grouped by transcript.
+#' @field tx_to_gene Define the transcript vs gene relationship
+# Define the Range_info class
 Range_info <- R6::R6Class("Range_info",
-                          public = list(
-                            exonsByTx = NULL,      # Exons grouped by transcript
-                            txByGene = NULL,       # Transcripts grouped by gene
-                            cdsByTx = NULL,        # Coding sequences grouped by transcript
-                            fiveUTR = NULL,        # 5' UTR regions grouped by transcript
-                            threeUTR = NULL,       # 3' UTR regions grouped by transcript
-
-                            # Initialization method for Range_info
-                            initialize = function(exonsByTx, txByGene, cdsByTx, fiveUTR, threeUTR) {
-                              # Assign provided genomic ranges to class fields
-                              self$exonsByTx <- exonsByTx
-                              self$txByGene <- txByGene
-                              self$cdsByTx <- cdsByTx
-                              self$fiveUTR <- fiveUTR
-                              self$threeUTR <- threeUTR
-                            }
-                          )
+  public = list(
+    exonsByTx = NULL,
+    txByGene = NULL,
+    cdsByTx = NULL,
+    fiveUTR = NULL,
+    threeUTR = NULL,
+    tx_to_gene = NULL,
+    initialize = function(exonsByTx, txByGene, cdsByTx, fiveUTR, threeUTR, tx_to_gene) {
+      self$exonsByTx <- exonsByTx
+      self$txByGene <- txByGene
+      self$cdsByTx <- cdsByTx
+      self$fiveUTR <- fiveUTR
+      self$threeUTR <- threeUTR
+      self$tx_to_gene <- tx_to_gene
+    }
+  )
 )
 
 # R6 Class to store eORF (extra Open Reading Frame) range information
