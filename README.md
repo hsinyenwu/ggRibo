@@ -139,14 +139,12 @@ The result below shows that the root an shoot in Arabidopsis express different t
 ```
 ggRibo(gene_id="AT4G21910",tx_id="AT4G21910.1",
        Y_scale="each",Extend=c(400,50),
-       RNAseq = inputs_full$RNAseq,Riboseq = inputs_full$Riboseq,
        NAME = "MATE efflux family protein")
 ```
 ![image](https://github.com/user-attachments/assets/3aa258cb-718e-4a99-96da-359998f43c03)
 ```
 ggRibo(gene_id="AT4G21910",tx_id="AT4G21910.2",
        Y_scale="each",Extend=c(400,50),
-       RNAseq = inputs_full$RNAseq,Riboseq = inputs_full$Riboseq,
        NAME = "MATE efflux family protein")
 ```
 ![image](https://github.com/user-attachments/assets/c217a5ef-d2ff-4069-bdf7-a54c29ab7f22)
