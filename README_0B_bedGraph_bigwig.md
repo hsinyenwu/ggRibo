@@ -14,6 +14,10 @@ cd $PATH1
 # Define the list of samples to process
 SAMPLES=("Sample1" "Sample2")
 
+# Define CHROM_SIZES file path for the bedGraphToBigWig function.
+CHROM_SIZES="/path/to/TAIR10.fas.fai" # CHROM_SIZES, just a fai (FASTA index) file
+
+
 # Loop over each sample
 for sample in "${SAMPLES[@]}"; do
     echo "${sample}"
