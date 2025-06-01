@@ -2,13 +2,13 @@
 [ggRibo Basic](https://github.com/hsinyenwu/ggRibo/blob/v2025.5.30/README.md)  
 [Prepare_Ribo-seq data](https://github.com/hsinyenwu/ggRibo/blob/v2025.5.30/README_0A_preparing_Ribo-seq_for_ggRibo.md)  
 [Prepare bedGraph and bigWig for RNA-seq and Ribo-seq](https://github.com/hsinyenwu/ggRibo/blob/v2025.5.30/README_0B_bedGraph_bigwig.md)  
-#[Visualizing human data](https://github.com/hsinyenwu/ggRibo/blob/v2025.5.30/README_human_ggRibo_examples.md)  
+**[Visualizing human data](https://github.com/hsinyenwu/ggRibo/blob/v2025.5.30/README_human_ggRibo_examples.md)**  
 [Visualizing noncoding RNA](https://github.com/hsinyenwu/ggRibo/blob/v2025.5.30/README_1_noncodingRNA.md)  
 [Visualizing overlapping ORFs](https://github.com/hsinyenwu/ggRibo/blob/v2025.5.30/README_2_overlapping_ORFs.md)  
 [Visualizing downstream ORFs](https://github.com/hsinyenwu/ggRibo/blob/v2025.5.30/README_3_dORF_translation.md)  
 [Examples for ggRNA](https://github.com/hsinyenwu/ggRibo/blob/v2025.5.30/README_ggRNA.md)  
 [Examples for ggRibo_tx](https://github.com/hsinyenwu/ggRibo/blob/v2025.5.30/README_ggRibo_tx.md)  
-**[Multiomics visualization with ggRibo](https://github.com/hsinyenwu/ggRibo/blob/v2025.5.30/README_multiomics.md)**
+**[Multiomics visualization with ggRibo](https://github.com/hsinyenwu/ggRibo/blob/v2025.5.30/README_multiomics.md)**  
 
 ### Introduction
 Ribo-seq (ribosome profiling) is a powerful technique for studying mRNA translation by deep sequencing ribosome-protected footprints. A key feature of Ribo-seq data is 3-nucleotide periodicity, which reflects the ribosome’s codon-by-codon progression during translation. This 3-nucleotide periodicity facilitates the discovery of unannotated translation events and provides insights into translational regulation. Here, we present ggRibo, an R package designed for visualizing 3-nucleotide periodicity within a genomic context. ggRibo enables visual confirmation of translated and unannotated isoforms, as well as additional translation events, including upstream open reading frames (ORFs), downstream ORFs, stop codon readthrough, and correction of misannotated ORFs due to genome sequencing errors.  
