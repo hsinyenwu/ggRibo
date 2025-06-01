@@ -1,7 +1,11 @@
-Here we show one example of multiomics visualization. The RNA-seq examples are from Arabidopsis Root, Shoot and Seedling. The single-nucleotide resolution data are Arabidopsis Root Ribo-seq, Arabidopsis Shoot Ribo-seq, and Arabidopsis seedlings CAGE-seq.  
-For Ribo-seq, the nucleotide position selected for each read count is the 1st nucleotide of the persumed P-site.  
-For CAGE-seq, he nucleotide position selected for each read count is the 1st position of the CAGE-seq read (i.e., transcription start site).  
-
+### Multiomics Visualization
+Here we show the alternative transcription start sites for the Arabidopsis BCA4 gene:  
+The RNA-seq examples are from Arabidopsis Root, Shoot and Seedling. The single-nucleotide resolution data are Arabidopsis Root Ribo-seq, Arabidopsis Shoot Ribo-seq, and Arabidopsis seedlings CAGE-seq.  
+For Ribo-seq, the nucleotide position selected for each read count is the 1st nucleotide of the inferred P-site. See the [Introduction](https://github.com/hsinyenwu/ggRibo/blob/v2025.5.30/README.md) for detail.    
+For CAGE-seq, the nucleotide position selected for each read count is the 1st position of the CAGE-seq read (i.e., transcription start site).  
+***For visualizing single-nucleotide resolution (SNR) multiomics data:***
+***1. Identify/process the SNR data as the tabular/bigWig/bedGraph file as the Ribo-seq data.***
+***2. Include the SNR data as one of the Ribo-seq data for the "create_seq_input" function (see below)***
 ```
 #path to annotated gtf
 agtf <- system.file("extdata", "TAIR10.29_part.gtf", package = "ggRibo", mustWork = TRUE)
@@ -18,6 +22,7 @@ CAGE_seq <- system.file("extdata", "wt_R123_chr34.txt", package = "ggRibo", must
 ```
 
 ```
+#include CAGE_seq file in the "ribo_files" vector
 inputs_full <- create_seq_input(
     rna_files = c(Root_RNA,Shoot_RNA,Seedling_RNA),
     ribo_files = c(Root_Ribo,Shoot_Ribo,CAGE_seq),
@@ -50,4 +55,4 @@ ggRibo(gene_id="AT4G21910",tx_id="AT4G21910.1",
 ```
 ![image](https://github.com/user-attachments/assets/6583a0bf-45ef-43b2-b556-74cd2f5a7795)
 
-
+### For other gene
