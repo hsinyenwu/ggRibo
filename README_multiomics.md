@@ -1,3 +1,6 @@
+Here we show one example of multiomics visualization. The RNA-seq examples are from Arabidopsis Root, Shoot and Seedling. The single-nucleotide resolution data are Arabidopsis Root Ribo-seq, Arabidopsis Shoot Ribo-seq, and Arabidopsis seedlings CAGE-seq.  
+For Ribo-seq, the nucleotide position selected for each read count is the 1st nucleotide of the persumed P-site.  
+For CAGE-seq, he nucleotide position selected for each read count is the 1st position of the CAGE-seq read (i.e., transcription start site).  
 
 ```
 #path to annotated gtf
