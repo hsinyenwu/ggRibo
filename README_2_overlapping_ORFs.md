@@ -47,7 +47,6 @@ eORF_import(annotation=ugtf, format="gtf",dataSource="Araport",organism="Arabido
 ```
 CTRL_RNA="~/path/to/RNA_CTRL_merged.bam"
 CTRL_ribo="~/path/to/CTRL_expressed_P_sites_sort_count"
-FA <- FaFile("~/path/to/TAIR10_chr_all_2.fas")
 
 RNA_files <- list(CTRL_RNA)
 Ribo_files <- list(CTRL_ribo)
