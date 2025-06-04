@@ -175,18 +175,18 @@ inputs_full <- create_seq_input(
   sample_names = c("Root", "Shoot")
 )
 
-ggRibo(gene_id="AT3G02470",tx_id="AT3G02470.3",
+ggRibo(tx_id="AT3G02470.3",
           eORF.tx_id = "AT3G02468.1",
           Y_scale="each",Extend=50,
           gene_model_height_ratio=0.8,
           plot_ORF_ranges=T,
           NAME = "SAMDC, CPuORF")
 
-ggRibo(gene_id="AT4G21910",tx_id="AT4G21910.1",
+ggRibo(tx_id="AT4G21910.1",
        Y_scale="each",Extend=c(400,50),
        NAME = "MATE efflux family protein")
 
-ggRibo(gene_id="AT4G21910",tx_id="AT4G21910.2",
+ggRibo(tx_id="AT4G21910.2",
        Y_scale="each",Extend=c(400,50),
        NAME = "MATE efflux family protein")
 ```
