@@ -48,7 +48,7 @@ inputs_full <- create_seq_input(
 Why only isoform 3 is expressed? First isoform lacks an intron. Forth isoform lacks RNA-seq reads that cover its first exon.  
 
 ```
-ggRibo(gene_id="AT3G02470",tx_id="AT3G02470.3",
+ggRibo(tx_id="AT3G02470.3",
        eORF.tx_id = "AT3G02468.1",
        plot_ORF_ranges=T,
        NAME = "SAMDC, CPuORF")
@@ -58,7 +58,7 @@ ggRibo(gene_id="AT3G02470",tx_id="AT3G02470.3",
 #### ggRibo_tx: Plot isoform 1 (not expressed, see a strong intron in the plot)
 Since this is a single transcript plot (e.g. plotting for cDNA), we should not see a strong intron.
 ```
-ggRibo_tx(gene_id="AT3G02470",tx_id="AT3G02470.1",
+ggRibo_tx(tx_id="AT3G02470.1",
        eORF.tx_id = "AT3G02468.1",
        plot_ORF_ranges=T,
        gene_model_height_ratio=1.9,
@@ -68,7 +68,7 @@ ggRibo_tx(gene_id="AT3G02470",tx_id="AT3G02470.1",
 
 #### Plot isoform 3 (expressed, no intron showen in the plot)
 ```
-ggRibo_tx(gene_id="AT3G02470",tx_id="AT3G02470.3",
+ggRibo_tx(tx_id="AT3G02470.3",
        eORF.tx_id = "AT3G02468.1",
        plot_ORF_ranges=T,
        gene_model_height_ratio=1.9,
@@ -78,7 +78,7 @@ ggRibo_tx(gene_id="AT3G02470",tx_id="AT3G02470.3",
 
 #### Plot isoform 4 (not expressed, miss RNA-seq coverage in the first exon)
 ```
-ggRibo_tx(gene_id="AT3G02470",tx_id="AT3G02470.3",
+ggRibo_tx(tx_id="AT3G02470.3",
        eORF.tx_id = "AT3G02468.1",
        plot_ORF_ranges=T,
        gene_model_height_ratio=1.9,
@@ -88,7 +88,7 @@ ggRibo_tx(gene_id="AT3G02470",tx_id="AT3G02470.3",
 
 #### Zoom in view
 ```
-ggRibo_tx(gene_id="AT3G02470",tx_id="AT3G02470.3",
+ggRibo_tx(tx_id="AT3G02470.3",
           eORF.tx_id = "AT3G02468.1",
           plot_ORF_ranges=T,
           plot_range=c(210,380),
