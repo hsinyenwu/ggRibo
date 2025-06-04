@@ -10,6 +10,15 @@
 [Examples for ggRibo_tx](https://github.com/hsinyenwu/ggRibo/blob/v2025.5.30/README_ggRibo_tx.md)  
 **[Multiomics visualization with ggRibo](https://github.com/hsinyenwu/ggRibo/blob/v2025.5.30/README_multiomics.md)**  
 
+## Recent update!!! (Thanks to our helpful reviewers)
+(1) New input function: RNA-seq and Ribo-seq reads are imported by the *create_seq_input* function.   
+(2) New function for single transcript view: ggRibo_tx.  
+(3) The FASTA parameter for all plotting functions now also take BSgenome object.  
+(4) All plotting functions now takes bigWig and bedGraph format for input.  
+(5) Only tx_id is needed for plotting. In the old version, you need to provide both gene_id and tx_id.   
+(6) New parameters: ribo_linewidth (adjust Ribo-seq linewidth) and rna_linewidth (adjust RNA-seq coverage linewidth) for all plotting functions.   
+(7) New tutorial for multiomics visualization.  
+
 ### Introduction
 Ribo-seq (ribosome profiling) is a powerful technique for studying mRNA translation by deep sequencing ribosome-protected footprints. A key feature of Ribo-seq data is 3-nucleotide periodicity, which reflects the ribosome’s codon-by-codon progression during translation. This 3-nucleotide periodicity facilitates the discovery of unannotated translation events and provides insights into translational regulation. Here, we present ggRibo, an R package designed for visualizing 3-nucleotide periodicity within a genomic context. ggRibo enables visual confirmation of translated and unannotated isoforms, as well as additional translation events, including upstream open reading frames (ORFs), downstream ORFs, stop codon readthrough, and correction of misannotated ORFs due to genome sequencing errors.  
 
@@ -192,7 +201,6 @@ Make the simple plot.
 ```
 # plot the entire gene
 ggRibo(
-  gene_id = "AT3G50500",
   tx_id = "AT3G50500.1",
   NAME="SnRK2.2",
   Extend=50)
@@ -207,7 +215,6 @@ Show DNA sequence and focus on the uORF.
 eORF_import(annotation=CiPS_TuORFs_gff3, format="gff3",dataSource="Araport",organism="Arabidopsis thaliana")
 # show minimum uORF
 ggRibo(
-  gene_id = "AT3G50500",
   tx_id = "AT3G50500.1",
   eORF.tx_id = "AT3G50500.1_227_232",
   NAME="SnRK2.2",
@@ -221,7 +228,6 @@ ggRibo(
 **Use nucleotide_color_scheme="colorblind" for an alternative coloring scheme**
 ```
 ggRibo(
-    gene_id = "AT3G50500",
     tx_id = "AT3G50500.1",
     eORF.tx_id = "AT3G50500.1_227_232",
     NAME="SnRK2.2",
@@ -243,7 +249,7 @@ ggRibo(
 (9) plot_genomic_direction (Boolean): plot the direction of the gene on the genome browser on top right side of the top plot.  
 (10) sample_color (text vector): the color of the reads in each sample (from top to bottom). If you want the reads in the plot are color according to the 3 frames, use "color".  Otherwise just give a single color. For example, if we provide: sample_color=c("color","purple"), reads in the first plot will be colored according to their frames, but all reads in the second plot will be colored purple. The default for all plots are "color".   
 (11) frame_colors (text vector): colors for the 3 frames, default is red, but and green as c("0"="#FF0000", "1"="#3366FF", "2"="#009900"). You can choose the color you like.  
-(12) selected_isoforms (text vector): you can select certain isoforms to plot.  
+(12) **selected_isoforms** (text vector): you can select certain isoforms to plot.  
 (13) data_types (text vector): This parameter is for the right Y-axis labels. Default for all data is Ribo-seq.   
 (14) dna_aa_height_ratio (numeric): change is height of DNA/AA plot.  
 (15) **show_seq** (Boolean): show DNA (when plot range <=201 nucleotides) and AA sequences.   
