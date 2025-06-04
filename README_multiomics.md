@@ -27,7 +27,7 @@ Input data files with the **create_seq_input** function.
 inputs_full <- create_seq_input(
     rna_files = c(Root_RNA,Shoot_RNA,Seedling_RNA),
     ribo_files = c(Root_Ribo,Shoot_Ribo,CAGE_seq),
-    sample_names = Samples
+    sample_names = c("Root","Shoot","Seedling")
 )
 ```
 
@@ -71,7 +71,7 @@ Input CAGE data files with the **create_seq_input** function as above.
 inputs_full <- create_seq_input(
     rna_files = c(Seedling_RNA),
     ribo_files = c(CAGE_seq),
-    sample_names = Samples
+    sample_names = "Seedling CAGE"
 )
 ```
 Load CAGE-seq data. Note that there is no Ribo-seq data here.  
