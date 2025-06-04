@@ -21,6 +21,11 @@ Root_Ribo <- system.file("extdata", "riboRoot.bed", package = "ggRibo", mustWork
 Shoot_Ribo <- system.file("extdata", "riboShoot.bed", package = "ggRibo", mustWork = TRUE) #Shoot Ribo-seq data
 CAGE_seq <- system.file("extdata", "wt_R123_chr34.txt", package = "ggRibo", mustWork = TRUE) #Seedling CAGE-seq data
 ```
+Load annotation with **gtf_import**.
+```
+#Load example transcriptome annotation file
+gtf_import(annotation=agtf,format="gtf",dataSource="Araport",organism="Arabidopsis thaliana")
+```
 Input data files with the **create_seq_input** function.  
 ```
 #include CAGE_seq file in the "ribo_files" vector
@@ -64,7 +69,11 @@ Seedling_RNA <- system.file("extdata", "RNA_CTRL_merged_sub34.bam", package = "g
 #path to Ribo-seq datasets
 CAGE_seq <- system.file("extdata", "wt_R123_chr34.txt", package = "ggRibo", mustWork = TRUE) #Seedling CAGE-seq data
 ```
-
+Load annotation with **gtf_import**.  
+```
+#Load example transcriptome annotation file
+gtf_import(annotation=agtf,format="gtf",dataSource="Araport",organism="Arabidopsis thaliana")
+```
 Input CAGE data files with the **create_seq_input** function as above.  
 ```
 #include CAGE_seq file in the "ribo_files" vector
