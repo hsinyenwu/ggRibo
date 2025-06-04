@@ -14,7 +14,7 @@
 (1) New input function: RNA-seq and Ribo-seq reads are imported by the *create_seq_input* function.   
 (2) New function for single transcript view: [ggRibo_tx](https://github.com/hsinyenwu/ggRibo/blob/v2025.5.30/README_ggRibo_tx.md).  
 (3) The FASTA parameter for all plotting functions now takes both FASTA and BSgenome object.  
-(4) All plotting functions now takes bigWig and bedGraph format for input.  
+(4) All plotting functions now takes [bigWig and bedGraph](https://github.com/hsinyenwu/ggRibo/blob/v2025.6.2/README_0B_bedGraph_bigwig.md) format for input.  
 (5) Only tx_id is needed for plotting. In the old version, you need to provide both gene_id and tx_id.   
 (6) New parameters: ribo_linewidth (adjust Ribo-seq linewidth) and rna_linewidth (adjust RNA-seq coverage linewidth) for all plotting functions.   
 (7) New tutorial for [Multiomics Visualization](https://github.com/hsinyenwu/ggRibo/blob/v2025.6.2/README_multiomics.md).  
