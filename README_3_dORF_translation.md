@@ -20,7 +20,8 @@ ggRibo(gene_id="AT1G27950",
        Extend = 300)
 ```
 Almost cannot see it. The dORF must be very poorly translated comparing to the main ORF.    
-![image](https://github.com/user-attachments/assets/7e51defc-f4d1-4340-812d-e9e03c2352ca)
+![image](https://github.com/user-attachments/assets/0fa1130d-e2ad-4bc9-96b2-59482ad9376d)
+
 
 But you can set the height (Y-axis value) for the Ribo-seq reads in the plots with `Ribo_fix_height`. Here I set the height of Ribo-seq to 8, which means the maximum of Y-axis for Ribo-seq is 8 reads.  
 ```
