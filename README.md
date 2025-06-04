@@ -17,7 +17,6 @@ detach("package:ggRibo", unload=TRUE)
 #Remove the old version of ggRibo if you installed it before
 remove.packages("ggRibo")
 #Follow the stage below to install ggRibo.
-=
 ```
 
 ## Recent update!!! (Thanks to our helpful reviewers)
