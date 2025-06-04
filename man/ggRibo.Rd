@@ -22,6 +22,7 @@ ggRibo(
   RNAseqBamPaired = RNAseqBamPairorSingle,
   Y_scale = "all",
   Ribo_fix_height = NULL,
+  RNA_fix_height = NULL,
   plot_ORF_ranges = TRUE,
   oORF_coloring = "extend_mORF",
   frame_colors = c(`0` = "#FF0000", `1` = "#3366FF", `2` = "#009900"),
@@ -36,7 +37,8 @@ ggRibo(
   data_types = rep("Ribo-seq", length(SampleNames)),
   selected_isoforms = NULL,
   nucleotide_color_scheme = "default",
-  ribo_linewidth = 0.5
+  ribo_linewidth = 0.5,
+  rna_linewidth = 0.5
 )
 }
 \arguments{
@@ -74,6 +76,8 @@ ggRibo(
 
 \item{Ribo_fix_height}{Numeric value to fix the maximum height of Ribo-seq counts in the plot.}
 
+\item{RNA_fix_height}{Numeric to fix the max RNA-seq coverage height. Default is \code{NULL}.}
+
 \item{plot_ORF_ranges}{Logical indicating whether to plot ORF ranges in the gene model. Default is FALSE.}
 
 \item{oORF_coloring}{Character string specifying coloring method for overlapping ORFs ("oORF_colors" or "extend_mORF").}
@@ -103,6 +107,8 @@ ggRibo(
 \item{nucleotide_color_scheme}{If "default", uses bright colors for the nucleotides in plotDNAandAA. If "colorblind", uses a color‐blind friendly palette.}
 
 \item{ribo_linewidth}{Numeric value to control the thickness of Ribo-seq read count lines. Default is \code{0.5}.}
+
+\item{rna_linewidth}{Numeric value to control the thickness of RNA-seq step lines. Default is \code{0.5}.}
 }
 \value{
 A combined ggplot object displaying RNA-seq coverage, Ribo-seq data, gene models, and optional sequences.

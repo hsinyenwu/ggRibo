@@ -22,6 +22,7 @@ ggRibo_tx(
   RNAseqBamPaired = RNAseqBamPairorSingle,
   Y_scale = "all",
   Ribo_fix_height = NULL,
+  RNA_fix_height = NULL,
   plot_ORF_ranges = TRUE,
   frame_colors = c(`0` = "#FF0000", `1` = "#3366FF", `2` = "#009900"),
   sample_color = rep("color", length(Riboseq)),
@@ -35,7 +36,8 @@ ggRibo_tx(
   plot_range = NULL,
   nucleotide_color_scheme = "default",
   oORF_coloring = "extend_mORF",
-  ribo_linewidth = 0.5
+  ribo_linewidth = 0.5,
+  rna_linewidth = 0.5
 )
 }
 \arguments{
@@ -73,6 +75,8 @@ ggRibo_tx(
 
 \item{Ribo_fix_height}{Numeric to fix the max Ribo-seq coverage height. Default is \code{NULL}.}
 
+\item{RNA_fix_height}{Numeric to fix the max RNA-seq coverage height. Default is \code{NULL}.}
+
 \item{plot_ORF_ranges}{Logical; if \code{TRUE}, attempt to plot eORFs in the gene model. Default is \code{TRUE}.}
 
 \item{frame_colors}{Named vector of colors for reading frames 0,1,2.}
@@ -100,6 +104,8 @@ ggRibo_tx(
 \item{oORF_coloring}{Coloring scheme for overlapping ORFs: \code{"extend_mORF"} (use main CDS frame for overlapping eORFs) or \code{"oORF_colors"} (use eORF-specific frames). Default is \code{"extend_mORF"}.}
 
 \item{ribo_linewidth}{Numeric value to control the thickness of Ribo-seq read count lines. Default is \code{0.5}.}
+
+\item{rna_linewidth}{Numeric value to control the thickness of RNA-seq step lines. Default is \code{0.5}.}
 }
 \value{
 A combined \code{ggplot} object displaying RNA-seq coverage, Ribo-seq coverage, optional eORFs, a transcript model,

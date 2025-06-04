@@ -22,10 +22,12 @@ ggRNA(
   FASTA = NULL,
   dna_aa_height_ratio = 0.5,
   gene_model_height_ratio = NULL,
+  RNA_fix_height = NULL,
   transcript_label_font_size = 10,
   plot_genomic_direction = FALSE,
   selected_isoforms = NULL,
-  nucleotide_color_scheme = "default"
+  nucleotide_color_scheme = "default",
+  rna_linewidth = 0.5
 )
 }
 \arguments{
@@ -63,6 +65,8 @@ ggRNA(
 
 \item{gene_model_height_ratio}{Numeric value to adjust the height of the gene model plot. If NULL, it is auto-calculated.}
 
+\item{RNA_fix_height}{Numeric to fix the max RNA-seq coverage height. Default is \code{NULL}.}
+
 \item{transcript_label_font_size}{Numeric controlling the font size of the transcript ID labels in the gene model plot.}
 
 \item{plot_genomic_direction}{Logical indicating whether to plot an arrow showing genomic direction. Default is FALSE.}
@@ -70,6 +74,8 @@ ggRNA(
 \item{selected_isoforms}{Optional vector of transcript IDs to plot. If provided, only these isoforms (and \code{tx_id}) will be shown.}
 
 \item{nucleotide_color_scheme}{If "default", uses bright colors for the nucleotides in plotDNAandAA. If "colorblind", uses a color‐blind friendly palette.}
+
+\item{rna_linewidth}{Numeric value to control the thickness of RNA-seq step lines. Default is \code{0.5}.}
 }
 \value{
 A combined ggplot object displaying RNA-seq coverage, gene models, and optionally genomic sequences.

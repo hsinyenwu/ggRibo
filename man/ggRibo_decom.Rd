@@ -24,6 +24,7 @@ ggRibo_decom(
   RNAseqBamPaired = RNAseqBamPairorSingle,
   Y_scale = "all",
   Ribo_fix_height = NULL,
+  RNA_fix_height = NULL,
   plot_ORF_ranges = FALSE,
   oORF_coloring = NULL,
   frame_colors = c(`0` = "#FF0000", `1` = "#3366FF", `2` = "#009900"),
@@ -40,7 +41,8 @@ ggRibo_decom(
   selected_isoforms = NULL,
   frame_logic = NULL,
   nth_sample = 1,
-  ribo_linewidth = 0.5
+  ribo_linewidth = 0.5,
+  rna_linewidth = 0.5
 )
 }
 \arguments{
@@ -77,6 +79,8 @@ ggRibo_decom(
 \item{Y_scale}{Character. Either "all" or "each", controlling the Y-axis scaling for RNA-seq coverage. Defaults to "all".}
 
 \item{Ribo_fix_height}{Numeric, optional. Caps Ribo-Seq counts at a fixed height, ignoring Y_scale.}
+
+\item{RNA_fix_height}{Numeric to fix the max RNA-seq coverage height. Default is \code{NULL}.}
 
 \item{plot_ORF_ranges}{Logical. If TRUE, highlights annotated ORF ranges on the gene model. Defaults to FALSE.}
 
@@ -115,6 +119,8 @@ Defaults to "tx_start" if no ORF is annotated, otherwise "CDS_start".
 }}
 
 \item{ribo_linewidth}{Numeric value to control the thickness of Ribo-seq read count lines. Default is \code{0.5}.}
+
+\item{rna_linewidth}{Numeric value to control the thickness of RNA-seq step lines. Default is \code{0.5}.}
 }
 \value{
 A combined ggplot object with RNA-Seq coverage, three frame-specific Ribo-Seq plots, gene model, and optionally DNA/AA sequences.
