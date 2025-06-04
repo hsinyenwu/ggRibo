@@ -48,10 +48,18 @@ eORF_import(annotation=ugtf, format="gtf",dataSource="Araport",organism="Arabido
 CTRL_RNA="~/path/to/RNA_CTRL_merged.bam"
 CTRL_ribo="~/path/to/CTRL_expressed_P_sites_sort_count"
 FA <- FaFile("~/path/to/TAIR10_chr_all_2.fas")
-Samples = c("Seedlings")
-RiboseqData = Ribo_data(c(CTRL_ribo),SampleNames=Samples)
-RNAseqData = CTRL_RNA
-RNAseqBamPairorSingle="paired"
+
+RNA_files <- list(CTRL_RNA)
+Ribo_files <- list(CTRL_ribo)
+Samples <- c("Seedlings")
+
+# Prepare coverage descriptors
+inputs_full <- create_seq_input(
+  rna_files = RNA_files,
+  ribo_files = Ribo_files,
+  sample_names = Samples,
+)
+
 #Load annotated transcript gtf
 gtf_import(annotation="~/path/to/Araport11+CTRL_20181206.gtf",format="gtf",dataSource="Araport",organism="Arabidopsis thaliana")
 #Load uORF ouORF gtf
@@ -61,7 +69,6 @@ eORF_import(annotation="/path/to/AT3G57170_uORFs.gtf", format="gtf",dataSource="
 ```
 #Run the plotting function
 ggRibo(
-  gene_id = "AT3G57170",
   tx_id = "AT3G57170.1",
   eORF.tx_id = "AT3G57170.1",
   NAME="Gpi1 family protein",
@@ -72,7 +79,6 @@ ggRibo(
 **Plot 2 extra ORFs (one uORF and one ouORF):**  
 ```
 ggRibo(
-  gene_id = "AT3G57170",
   tx_id = "AT3G57170.1",
   eORF.tx_id = c("AT3G57170.1","AT3G57170.2"),
   NAME="Gpi1 family protein",
@@ -83,7 +89,6 @@ ggRibo(
 **Focus on the first uORF:**  
 ```
 ggRibo(
-  gene_id = "AT3G57170",
   tx_id = "AT3G57170.1",
   eORF.tx_id = "AT3G57170.2",
   NAME="Gpi1 family protein",
@@ -106,7 +111,6 @@ ggRibo(
 **Show the ouORF frame relative to the main ORF**  
 ```
 ggRibo(
-  gene_id = "AT3G57170",
   tx_id = "AT3G57170.1",
   eORF.tx_id = "AT3G57170.1",
   NAME="Gpi1 family protein",
@@ -118,7 +122,6 @@ ggRibo(
 **Show the ouORF frame alone**  
 ```
 ggRibo(
-  gene_id = "AT3G57170",
   tx_id = "AT3G57170.1",
   eORF.tx_id = "AT3G57170.1",
   NAME="Gpi1 family protein",
@@ -133,7 +136,6 @@ ggRibo_decon takes only one Ribo-seq and RNA-seq samples and plot the 3 frames s
 **If we only assign frame colors to the annotated CDS**    
 ```
 ggRibo_decom(
-  gene_id = "AT3G57170",
   tx_id = "AT3G57170.1",
   NAME="Gpi1 family protein",
   oORF_coloring = "extend_mORF",
@@ -149,7 +151,7 @@ ggRibo_decom(
 3. frame_logic="CDS_extend", the frame 0 starts from the beginning of the annotated CDS and extend to the two ends of the transcript.  
 
 **We can try frame_logic = "CDS_extend")**   
-Not the eORF ranges are shown, but do not guide the coloring of eORF ribo-seq reads.
+Now the eORF ranges are shown, but do not guide the coloring of eORF ribo-seq reads.
 ```
 ggRibo_decom(
     gene_id = "AT3G57170",
@@ -164,7 +166,6 @@ ggRibo_decom(
 From the above data, we can see isoform 1 is expressed for the above gene, so we can use ggRibo_tx to see the uORF and ouORFs.
 ```
 ggRibo_tx(
-    gene_id = "AT3G57170",
     tx_id = "AT3G57170.1",
     eORF.tx_id = "AT3G57170.1",
     NAME="Gpi1 family protein",
@@ -175,22 +176,20 @@ ggRibo_tx(
 To see only uORF and ouORF (their frame coloring is based on their own frames):
 ```
 ggRibo_tx(
-    gene_id = "AT3G57170",
     tx_id = "AT3G57170.1",
     eORF.tx_id = c("AT3G57170.1","AT3G57170.2"),
     NAME="Gpi1 family protein",
-    gene_model_height_ratio =1.8,
+    gene_model_height_ratio =1.2,
     oORF_coloring = "oORF_colors")
 ```
 ![image](https://github.com/user-attachments/assets/8ffc7082-01b2-4abc-bbdf-2abcbf8ed7b9)
 To see ouORF (its frame coloring scheme is extended from the main ORF):
 ```
 ggRibo_tx(
-    gene_id = "AT3G57170",
     tx_id = "AT3G57170.1",
     eORF.tx_id = c("AT3G57170.1","AT3G57170.2"),
     NAME="Gpi1 family protein",
-    gene_model_height_ratio =1.8,
+    gene_model_height_ratio =1.2,
     oORF_coloring = "extend_mORF")
 ```
 ![image](https://github.com/user-attachments/assets/1a69f318-bb31-4d78-a34e-b08d28458bd9)
