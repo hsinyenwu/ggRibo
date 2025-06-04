@@ -29,7 +29,7 @@ ggRibo(tx_id = "AT1G27950.1",
        Ribo_fix_height = 8,
        Extend = 300)
 ```
-![image](https://github.com/user-attachments/assets/6eccf63b-4ef2-4794-b3a4-e3236a350e5f)
+![image](https://github.com/user-attachments/assets/babeec52-1336-4ada-a060-6f1c7bc8a58f)
 
 We can futher zoom in the dORF to see it more clearly. We select `plot_range = c(9741980,9742125)` and add `show_seq = TRUE, FASTA = FA`  
 ```
@@ -40,7 +40,8 @@ ggRibo(tx_id = "AT1G27950.1",
        Ribo_fix_height = 8,
        Extend = 300)
 ```
-![image](https://github.com/user-attachments/assets/9b3bce91-3ff3-4121-8ccc-d252d475caee)
+![image](https://github.com/user-attachments/assets/588be8d8-b224-43c0-89ba-edce3e6e3717)
+
 
 
 
