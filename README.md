@@ -35,7 +35,7 @@ Additionally, ggRibo allows the comparison of Ribo-seq data with other sequencin
 
 By integrating these datasets, ggRibo enables researchers to identify factors that influence translation or associated processes, thus aiding hypothesis generation about mechanisms governing gene expression and mRNA translation steps.
 
-**Notably, while ggRibo is focusing on Ribo-seq analysis, it could be used independently of Ribo-seq data. See [Multiomics] section for examples.**
+**Notably, while ggRibo is focusing on Ribo-seq analysis, it could be used independently of Ribo-seq data. See [Multiomics](https://github.com/hsinyenwu/ggRibo/blob/v2025.6.2/README_multiomics.md) section for examples.**
 
 ### Plotting Ribo-seq reads
 Each Ribo-seq read is represented with its first nucleotide aligned to the P-site (Figure 1A). The offset indicates the distance from the first nucleotide of the Ribo-seq read to the P-site of the ribosome. The offset can be obtained from metagene analysis of Ribo-seq reads using RiboTaper, Ribo-seQC, or other Ribo-seq analysis software. The cumulative P-site counts from all reads within the selected gene range were plotted (e.g., Figure 1B). Note the P-site offsets could vary in different organisms and organelles (see panels D-E).   
