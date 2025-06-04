@@ -27,9 +27,7 @@ Input data files with the **create_seq_input** function.
 inputs_full <- create_seq_input(
     rna_files = c(Root_RNA,Shoot_RNA,Seedling_RNA),
     ribo_files = c(Root_Ribo,Shoot_Ribo,CAGE_seq),
-    sample_names = Samples,
-    rna_types = rep("bam", 3),
-    ribo_types = rep("tabular", 3)
+    sample_names = Samples
 )
 ```
 
@@ -55,6 +53,36 @@ ggRibo(tx_id="AT4G21910.1",
        NAME = "MATE efflux family protein")
 ```
 ![image](https://github.com/user-attachments/assets/6583a0bf-45ef-43b2-b556-74cd2f5a7795)
+Since seedling sample is the mix of root and shoot samples, we see both isoforms expressed and translated in this sample.
+
+### Visualizing other omics data independent of ggRibo
+```
+#path to annotated gtf
+agtf <- system.file("extdata", "TAIR10.29_part.gtf", package = "ggRibo", mustWork = TRUE)
+#path to RNA-seq datasets
+Seedling_RNA <- system.file("extdata", "RNA_CTRL_merged_sub34.bam", package = "ggRibo", mustWork = TRUE)
+#path to Ribo-seq datasets
+CAGE_seq <- system.file("extdata", "wt_R123_chr34.txt", package = "ggRibo", mustWork = TRUE) #Seedling CAGE-seq data
+```
+
+Input CAGE data files with the **create_seq_input** function as above.  
+```
+#include CAGE_seq file in the "ribo_files" vector
+inputs_full <- create_seq_input(
+    rna_files = c(Seedling_RNA),
+    ribo_files = c(CAGE_seq),
+    sample_names = Samples
+)
+```
+Load CAGE-seq data. Note that there is no Ribo-seq data here.  
+```
+#Here use sample_color="blue" for CAGE-seq
+ggRibo(tx_id="AT4G21910.1",
+       Y_scale="each",Extend=c(400,50),
+       data_types=c("Ribo-seq","Ribo-seq","CAGE-seq"),
+       sample_color=c("color","color","blue"),
+       NAME = "MATE efflux family protein")
+```
 
 For other multiomics data types, it is crucial to identify the nucleotide position(s) for quantification and plotting. Here are some examples:  
 1. TI-seq for translation initiation sites: 1st position of the p-site.  
