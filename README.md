@@ -9,7 +9,16 @@
 [Examples for ggRNA](https://github.com/hsinyenwu/ggRibo/blob/v2025.5.30/README_ggRNA.md)  
 [Examples for ggRibo_tx](https://github.com/hsinyenwu/ggRibo/blob/v2025.5.30/README_ggRibo_tx.md)   
 **[Multiomics visualization with ggRibo](https://github.com/hsinyenwu/ggRibo/blob/v2025.5.30/README_multiomics.md)**   
-  
+
+## Recent update!!! (Thanks to our helpful reviewers)
+(1) New input function: RNA-seq and Ribo-seq reads are imported by the *create_seq_input* function.   
+(2) New function for single transcript view: [ggRibo_tx](https://github.com/hsinyenwu/ggRibo/blob/v2025.5.30/README_ggRibo_tx.md).  
+(3) The FASTA parameter for all plotting functions now takes both FASTA and BSgenome object.  
+(4) All plotting functions now takes [bigWig and bedGraph](https://github.com/hsinyenwu/ggRibo/blob/v2025.6.2/README_0B_bedGraph_bigwig.md) format for input.  
+(5) Only tx_id is needed for plotting. In the old version, you need to provide both gene_id and tx_id. You can also only provide gene_id, and the ggRibo functions will plot with the first transcript id after sorted.     
+(6) New parameters: ribo_linewidth (adjust Ribo-seq linewidth) and rna_linewidth (adjust RNA-seq coverage linewidth) for all plotting functions.   
+(7) New tutorial for [Multiomics Visualization](https://github.com/hsinyenwu/ggRibo/blob/v2025.6.2/README_multiomics.md).  
+
 Due to the intensive changes, we encourage the users to install the latest version of ggRibo.
 ```
 #Unload the ggRibo first if you have it loaded
@@ -19,21 +28,14 @@ remove.packages("ggRibo")
 #Follow the stage below to install ggRibo.
 ```
 
-## Recent update!!! (Thanks to our helpful reviewers)
-(1) New input function: RNA-seq and Ribo-seq reads are imported by the *create_seq_input* function.   
-(2) New function for single transcript view: [ggRibo_tx](https://github.com/hsinyenwu/ggRibo/blob/v2025.5.30/README_ggRibo_tx.md).  
-(3) The FASTA parameter for all plotting functions now takes both FASTA and BSgenome object.  
-(4) All plotting functions now takes [bigWig and bedGraph](https://github.com/hsinyenwu/ggRibo/blob/v2025.6.2/README_0B_bedGraph_bigwig.md) format for input.  
-(5) Only tx_id is needed for plotting. In the old version, you need to provide both gene_id and tx_id.   
-(6) New parameters: ribo_linewidth (adjust Ribo-seq linewidth) and rna_linewidth (adjust RNA-seq coverage linewidth) for all plotting functions.   
-(7) New tutorial for [Multiomics Visualization](https://github.com/hsinyenwu/ggRibo/blob/v2025.6.2/README_multiomics.md).  
-
 ### Introduction
-Ribo-seq (ribosome profiling) is a powerful technique for studying mRNA translation by deep sequencing ribosome-protected footprints. A key feature of Ribo-seq data is 3-nucleotide periodicity, which reflects the ribosome’s codon-by-codon progression during translation. This 3-nucleotide periodicity facilitates the discovery of unannotated translation events and provides insights into translational regulation. Here, we present ggRibo, an R package designed for visualizing 3-nucleotide periodicity within a genomic context. ggRibo enables visual confirmation of translated and unannotated isoforms, as well as additional translation events, including upstream open reading frames (ORFs), downstream ORFs, stop codon readthrough, and correction of misannotated ORFs due to genome sequencing errors.  
+Ribo-seq (ribosome profiling) is a powerful technique for studying mRNA translation by deep sequencing ribosome-protected footprints. A key feature of Ribo-seq data is 3-nucleotide periodicity, which reflects the ribosome’s codon-by-codon progression during translation. This 3-nucleotide periodicity facilitates the discovery of unannotated translation events and provides insights into translational regulation. Here, we present ggRibo, an R package designed for visualizing 3-nucleotide periodicity within a genomic context. ggRibo enables visual confirmation of translated isoforms, including unannotated ones, as well as additional translation events, including upstream open reading frames (ORFs), downstream ORFs, stop codon readthrough, and correcting misannotated ORFs due to genome sequencing errors.  
 
-Additionally, ggRibo allows for the comparison of Ribo-seq data with other sequencing methods that provide single nucleotide resolution (SNR), such as Translation Initiation sequencing (TI-seq), degradome sequencing (PARE-seq, Parallel Analysis of RNA Ends), GMUCT (Genome-Wide Mapping of Uncapped Transcripts), and Cap Analysis of Gene Expression sequencing (CAGE-seq). Some epitranscriptomic sequencing methods that detect the exact position of mRNA modifications, such as m6A-SAC-seq (N⁶-methyladenosine-Selective Alkylation Cleavage sequencing, which detects m6A sites) and BID-seq (bisulfite-induced deletion sequencing, which detects pseudouridine (Ψ) sites), are also SNR data. In SNR data, only one nucleotide position within each sequencing read carries the entire biological meaning for that read. For example, the P-site nucleotide of TI-seq reads indicates translation initiation sites on mRNAs, the first nucleotide of degradome-seq reads marks the 5’ end of RNA degradation intermediates, and the first nucleotide of CAGE-seq reads denotes transcription start sites.  
+Additionally, ggRibo allows the comparison of Ribo-seq data with other sequencing methods that provide single nucleotide resolution (SNR), such as Translation Initiation sequencing (TI-seq), degradome sequencing (PARE-seq, Parallel Analysis of RNA Ends), GMUCT (Genome-Wide Mapping of Uncapped Transcripts), and Cap Analysis of Gene Expression sequencing (CAGE-seq). Some epitranscriptomic sequencing methods that detect the exact position of mRNA modifications, such as m6A-SAC-seq (N⁶-methyladenosine-Selective Alkylation Cleavage sequencing, which detects m6A sites) and BID-seq (bisulfite-induced deletion sequencing, which detects pseudouridine (Ψ) sites), also provide SNR data. In SNR data, only one nucleotide position within each sequencing read carries the entire biological meaning for that read. For example, the P-site nucleotide of TI-seq reads indicates translation initiation sites on mRNAs, the first nucleotide of degradome-seq reads marks the 5’ end of RNA degradation intermediates, and the first nucleotide of CAGE-seq reads denotes transcription start sites.  
 
-By integrating these diverse datasets, ggRibo enables researchers to identify factors that influence translation or are associated with translational processes, thereby facilitating the generation of hypotheses about the mechanisms governing diverse steps of gene expression and mRNA translation.  
+By integrating these datasets, ggRibo enables researchers to identify factors that influence translation or associated processes, thus aiding hypothesis generation about mechanisms governing gene expression and mRNA translation steps.
+
+**Notably, while ggRibo is focusing on Ribo-seq analysis, it could be used independently of Ribo-seq data. See [Multiomics] section for examples.**
 
 ### Plotting Ribo-seq reads
 Each Ribo-seq read is represented with its first nucleotide aligned to the P-site (Figure 1A). The offset indicates the distance from the first nucleotide of the Ribo-seq read to the P-site of the ribosome. The offset can be obtained from metagene analysis of Ribo-seq reads using RiboTaper, Ribo-seQC, or other Ribo-seq analysis software. The cumulative P-site counts from all reads within the selected gene range were plotted (e.g., Figure 1B). Note the P-site offsets could vary in different organisms and organelles (see panels D-E).   
