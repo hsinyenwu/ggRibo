@@ -8,8 +8,8 @@
 [Visualizing downstream ORFs](https://github.com/hsinyenwu/ggRibo/blob/v2025.5.30/README_3_dORF_translation.md)  
 [Examples for ggRNA](https://github.com/hsinyenwu/ggRibo/blob/v2025.5.30/README_ggRNA.md)  
 [Examples for ggRibo_tx](https://github.com/hsinyenwu/ggRibo/blob/v2025.5.30/README_ggRibo_tx.md)   
+**[Multiomics visualization with ggRibo](https://github.com/hsinyenwu/ggRibo/blob/v2025.5.30/README_multiomics.md)**   
   
-**[Multiomics visualization with ggRibo](https://github.com/hsinyenwu/ggRibo/blob/v2025.5.30/README_multiomics.md)**  
 Due to the intensive changes, we encourage the users to install the latest version of ggRibo.
 ```
 #Unload the ggRibo first if you have it loaded
