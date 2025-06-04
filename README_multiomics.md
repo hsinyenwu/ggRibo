@@ -83,8 +83,10 @@ ggRibo(tx_id="AT4G21910.1",
        sample_color=c("blue"),
        NAME = "MATE efflux family protein")
 ```
+![image](https://github.com/user-attachments/assets/666a53f6-2b91-449f-ad7f-6e973bfa1202)
 
+### Note for other omics data.
 For other multiomics data types, it is crucial to identify the nucleotide position(s) for quantification and plotting. Here are some examples:  
 1. TI-seq for translation initiation sites: 1st position of the p-site.  
 2. TSS-seq for transcription start sites: as CAGE-seq, uses 1st position of the sequencing read.  
-3. m6A-SAC-seq and ac4C-seq for mRNA modifications: positions contain the modifications.  
+3. m6A-SAC-seq and ac4C-seq for mRNA modifications: nucleotide positions contain the modifications.  
