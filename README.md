@@ -118,7 +118,6 @@ inputs_full <- create_seq_input(
 
 # Plot with ggRibo (Example)
 ggRibo(
-  gene_id = "AT4G21910",
   tx_id = "AT4G21910.1"
 )
 #Input paired-end data
@@ -130,7 +129,6 @@ inputs_full <- create_seq_input(
 
 # Plot with ggRibo (Example)
 ggRibo(
-  gene_id = "AT4G21910",
   tx_id = "AT4G21910.1"
 )
 ```
@@ -138,13 +136,13 @@ ggRibo(
 #### Plot different isoforms 
 The result below shows that the root an shoot in Arabidopsis express different transcripts. And the 4th isoforms is likely not transcribed and translated.
 ```
-ggRibo(gene_id="AT4G21910",tx_id="AT4G21910.1",
+ggRibo(tx_id="AT4G21910.1",
        Y_scale="each",Extend=c(400,50),
        NAME = "MATE efflux family protein")
 ```
 ![image](https://github.com/user-attachments/assets/3aa258cb-718e-4a99-96da-359998f43c03)
 ```
-ggRibo(gene_id="AT4G21910",tx_id="AT4G21910.2",
+ggRibo(tx_id="AT4G21910.2",
        Y_scale="each",Extend=c(400,50),
        NAME = "MATE efflux family protein")
 ```
@@ -155,7 +153,7 @@ ggRibo(gene_id="AT4G21910",tx_id="AT4G21910.2",
 #Load CPuORF gtf
 # eORF means extra ORF. the eORF_import could be used to import gtf/gff3 for uORF, overlapping uORF, nested ORF, overlapping dORF and dORF.  
 eORF_import(annotation=ugtf, format="gtf",dataSource="Araport",organism="Arabidopsis thaliana")
-ggRibo(gene_id="AT3G02470",tx_id="AT3G02470.1",
+ggRibo(tx_id="AT3G02470.1",
        eORF.tx_id = "AT3G02468.1",
        Y_scale="each",Extend=50,
        NAME = "SAMDC, CPuORF")
