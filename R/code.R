@@ -1451,6 +1451,7 @@ get_gene_tx <- function(gene_id = NULL, tx_id = NULL, GRangeInfo) {
 #' @param GRangeInfo A genomic range information object (e.g., `Txome_Range`) containing annotations.
 #' @param RNAseqBamPaired A vector indicating whether each RNA-seq BAM file is paired-end ("paired") or single-end ("single"), used only if RNAseq contains BAM paths.
 #' @param Y_scale Character string, either "all" or "each", specifying how to scale the Y-axis for RNA-seq coverage. Default is "all".
+#' @param RNA_fix_height Numeric to fix the max RNA-seq coverage height. Default is \code{NULL}.
 #' @param plot_ORF_ranges Logical indicating whether to plot ORF ranges in the gene model. Default is FALSE.
 #' @param plot_range Optional numeric vector of length two specifying a custom genomic range to plot.
 #' @param show_seq Logical indicating whether to display the DNA and amino acid sequences. Default is FALSE.
@@ -1461,6 +1462,7 @@ get_gene_tx <- function(gene_id = NULL, tx_id = NULL, GRangeInfo) {
 #' @param transcript_label_font_size Numeric controlling the font size of the transcript ID labels in the gene model plot.
 #' @param selected_isoforms Optional vector of transcript IDs to plot. If provided, only these isoforms (and `tx_id`) will be shown.
 #' @param nucleotide_color_scheme If "default", uses bright colors for the nucleotides in plotDNAandAA. If "colorblind", uses a color‐blind friendly palette.
+#' @param rna_linewidth Numeric value to control the thickness of RNA-seq step lines. Default is \code{0.5}.
 #'
 #' @return A combined ggplot object displaying RNA-seq coverage, gene models, and optionally genomic sequences.
 #' @export
@@ -1477,10 +1479,12 @@ ggRNA <- function(gene_id = NULL, tx_id = NULL, Extend = 100, NAME = "",
                   FASTA = NULL,
                   dna_aa_height_ratio = 0.5,
                   gene_model_height_ratio = NULL,
+                  RNA_fix_height = NULL,
                   transcript_label_font_size = 10,
                   plot_genomic_direction = FALSE,
                   selected_isoforms = NULL,
-                  nucleotide_color_scheme = "default"
+                  nucleotide_color_scheme = "default",
+                  rna_linewidth = 0.5
 ) {
   # Validate Y_scale parameter
   if (!(Y_scale %in% c("all", "each"))) {
@@ -1650,6 +1654,12 @@ ggRNA <- function(gene_id = NULL, tx_id = NULL, Extend = 100, NAME = "",
       }
     }
   }
+  # Cap RNA-seq counts if RNA_fix_height is provided
+  if (!is.null(RNA_fix_height)) {
+      RNAseq_list <- lapply(RNAseq_list, function(vec) {
+          pmin(vec, RNA_fix_height)
+     })
+  }
 
   # Determine global max coverage for scaling
   if (length(RNAseq_list)>0) {
@@ -1681,7 +1691,7 @@ ggRNA <- function(gene_id = NULL, tx_id = NULL, Extend = 100, NAME = "",
       # Start plotting
       p <- ggplot() +
         geom_col(data=RNAseq_df, aes(x=position, y=count), fill=RNAbackground[i], color=RNAbackground[i], na.rm=TRUE) +
-        geom_step(data=RNAseq_df, aes(x=position, y=count), color=RNAcoverline, na.rm=TRUE) +
+        geom_step(data=RNAseq_df, aes(x=position, y=count), linewidth = rna_linewidth, color=RNAcoverline, na.rm=TRUE) +
         theme_bw() +
         theme(
           axis.text.x=element_blank(),
@@ -1737,12 +1747,12 @@ ggRNA <- function(gene_id = NULL, tx_id = NULL, Extend = 100, NAME = "",
         range_left + delta_x
       }
       hjust_label <- 0
-      y_label <- current_max_Y + 0.01*current_max_Y
+      y_label <- y_limits[2] * 0.9  # 90% of the upper y-limit
       p <- p + annotate("text",
-                        x=x_label,y=y_label,
-                        label=SampleNames[i],
-                        hjust=hjust_label,vjust=0,
-                        size=3,fontface="bold")
+                  x = x_label, y = y_label,
+                  label = SampleNames[i],
+                  hjust = hjust_label, vjust = 1,  # Change vjust to 1 for bottom alignment
+                  size = 3, fontface = "bold")
 
       p <- p + theme(
         axis.text.x=element_blank(),
@@ -1868,10 +1878,16 @@ ggRNA <- function(gene_id = NULL, tx_id = NULL, Extend = 100, NAME = "",
     dna_aa_height <-0
   }
 
-  total_height_units <- title_height+(num_datasets*rna_ribo_height)+dna_aa_height+gene_model_height
+  # Define spacer plot and height
+  spacer_plot <- ggplot() + theme_void()
+  spacer_height <- 0.03  # Adjust gap size as needed
+
+# Update total height and rel_heights
+  total_height_units <- title_height + (num_datasets * rna_ribo_height) + spacer_height + dna_aa_height + gene_model_height
   rel_heights <- c(
     title_height,
-    rep(rna_ribo_height,num_datasets),
+    rep(rna_ribo_height, num_datasets),
+    spacer_height,  # Add spacer height
     dna_aa_height,
     gene_model_height
   ) / total_height_units
@@ -1890,15 +1906,15 @@ ggRNA <- function(gene_id = NULL, tx_id = NULL, Extend = 100, NAME = "",
 
   # Combine all: title, RNAseq coverage plots, dna/aa plot, gene model
   combined_plot <- cowplot::plot_grid(
-    title_plot,
-    plotlist=c(plot_list,list(dna_aa_plot),list(gene_model_plot)),
-    ncol=1,
-    align="v",
-    rel_heights=rel_heights,
-    axis="lr",
-    labels=NULL,
-    label_size=10,
-    label_fontface="plain"
+  title_plot,
+  plotlist = c(plot_list, list(spacer_plot), list(dna_aa_plot), list(gene_model_plot)),
+  ncol = 1,
+  align = "v",
+  rel_heights = rel_heights,
+  axis = "lr",
+  labels = NULL,
+  label_size = 10,
+  label_fontface = "plain"
   )
 
   return(combined_plot)
@@ -1927,6 +1943,7 @@ ggRNA <- function(gene_id = NULL, tx_id = NULL, Extend = 100, NAME = "",
 #' @param RNAseqBamPaired Vector indicating whether each RNA-seq BAM file is paired-end ("paired") or single-end ("single"), used only if RNAseq contains BAM paths.
 #' @param Y_scale Character string, either "all" or "each", specifying how to scale the Y-axis for RNA-seq coverage. Default is "all".
 #' @param Ribo_fix_height Numeric value to fix the maximum height of Ribo-seq counts in the plot.
+#' @param RNA_fix_height Numeric to fix the max RNA-seq coverage height. Default is \code{NULL}.
 #' @param plot_ORF_ranges Logical indicating whether to plot ORF ranges in the gene model. Default is FALSE.
 #' @param oORF_coloring Character string specifying coloring method for overlapping ORFs ("oORF_colors" or "extend_mORF").
 #' @param frame_colors Named vector of colors for the reading frames (0,1,2). Default is c("0"="#FF0000", "1"="#3366FF", "2"="#009900").
@@ -1942,6 +1959,7 @@ ggRNA <- function(gene_id = NULL, tx_id = NULL, Extend = 100, NAME = "",
 #' @param selected_isoforms Optional vector of transcript IDs to plot. If provided, only these isoforms plus `tx_id` are shown.
 #' @param nucleotide_color_scheme If "default", uses bright colors for the nucleotides in plotDNAandAA. If "colorblind", uses a color‐blind friendly palette.
 #' @param ribo_linewidth Numeric value to control the thickness of Ribo-seq read count lines. Default is \code{0.5}.
+#' @param rna_linewidth Numeric value to control the thickness of RNA-seq step lines. Default is \code{0.5}.
 #'
 #' @return A combined ggplot object displaying RNA-seq coverage, Ribo-seq data, gene models, and optional sequences.
 #' @export
@@ -1957,6 +1975,7 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                    RNAseqBamPaired = RNAseqBamPairorSingle,
                    Y_scale = "all",
                    Ribo_fix_height = NULL,
+                   RNA_fix_height = NULL,
                    plot_ORF_ranges = TRUE,
                    oORF_coloring = "extend_mORF",
                    frame_colors = c("0"="#FF0000", "1"="#3366FF", "2"="#009900"),
@@ -1971,7 +1990,8 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                    data_types = rep("Ribo-seq", length(SampleNames)),
                    selected_isoforms = NULL,
                    nucleotide_color_scheme = "default",
-                   ribo_linewidth = 0.5) {
+                   ribo_linewidth = 0.5,
+                   rna_linewidth = 0.5) {
 
   # Validate that data_types matches number of samples
   if (length(data_types) != length(SampleNames)) {
@@ -2263,6 +2283,13 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
     }
   }
 
+  # Cap RNA-seq counts if RNA_fix_height is specified
+  if (!is.null(RNA_fix_height)) {
+    RNAseq_list <- lapply(RNAseq_list, function(vec) {
+      pmin(vec, RNA_fix_height)
+    })
+  }
+
   # Determine global maxima for RNAseq and Riboseq data for scaling
   if (length(RNAseq_list)>0) {
     max_Y_global <- max(unlist(RNAseq_list), na.rm=TRUE)
@@ -2356,7 +2383,7 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
       } else {
         RNAseq_df_line$position <- RNAseq_df_line$position + 0.5
       }
-      p <- p + geom_step(data=RNAseq_df_line, aes(x=position, y=count), color=RNAcoverline, na.rm=TRUE)
+      p <- p + geom_step(data=RNAseq_df_line, aes(x=position, y=count),linewidth =rna_linewidth, color=RNAcoverline, na.rm=TRUE)
 
       # Basic theming
       p <- p + theme_bw() +
@@ -2795,18 +2822,12 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
       } else {
         GeneTxInfo$range_left + delta_x
       }
-      y_label <- if (!is.null(Ribo_fix_height) || Y_scale=="all") {
-        current_max_Y
-      } else {
-        current_max_Y + 0.01*current_max_Y
-      }
-
+      y_label <- y_limits[2] * 0.95
       p <- p + annotate("text",
-                        x=x_label,y=y_label,
-                        label=SampleNames[i],
-                        hjust=0.15,vjust=0,
-                        size=3,fontface="bold")
-
+                  x = x_label, y = y_label,
+                  label = SampleNames[i],
+                  hjust = 0.15, vjust = 1,
+                  size = 3, fontface = "bold")
       p <- p + theme(
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank(),
@@ -2886,14 +2907,19 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
     dna_aa_height <-0
   }
 
-  total_height_units <- title_height+(num_datasets*rna_ribo_height)+dna_aa_height+gene_model_height
+  # Define spacer plot and height
+  spacer_plot <- ggplot() + theme_void()
+  spacer_height <- 0.03
+
+  # Update total height and rel_heights
+  total_height_units <- title_height + (num_datasets * rna_ribo_height) + spacer_height + dna_aa_height + gene_model_height
   rel_heights <- c(
     title_height,
-    rep(rna_ribo_height,num_datasets),
+    rep(rna_ribo_height, num_datasets),
+    spacer_height,
     dna_aa_height,
     gene_model_height
   ) / total_height_units
-
   # Create a title plot
   title_plot <- ggplot()+
     theme_void()+
@@ -2908,15 +2934,15 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
 
   # Combine all plots: title, coverage plots, dna/aa plot, gene model
   combined_plot <- cowplot::plot_grid(
-    title_plot,
-    plotlist=c(plot_list,list(dna_aa_plot),list(gene_model_plot)),
-    ncol=1,
-    align="v",
-    rel_heights=rel_heights,
-    axis="lr",
-    labels=NULL,
-    label_size=10,
-    label_fontface="plain"
+  title_plot,
+  plotlist = c(plot_list, list(spacer_plot), list(dna_aa_plot), list(gene_model_plot)),
+  ncol = 1,
+  align = "v",
+  rel_heights = rel_heights,
+  axis = "lr",
+  labels = NULL,
+  label_size = 10,
+  label_fontface = "plain"
   )
   return(combined_plot)
 }
@@ -2943,6 +2969,7 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
 #' @param RNAseqBamPaired Character vector. Indicates if each RNA-Seq BAM is paired-end ("paired") or single-end ("single").
 #' @param Y_scale Character. Either "all" or "each", controlling the Y-axis scaling for RNA-seq coverage. Defaults to "all".
 #' @param Ribo_fix_height Numeric, optional. Caps Ribo-Seq counts at a fixed height, ignoring Y_scale.
+#' @param RNA_fix_height Numeric to fix the max RNA-seq coverage height. Default is \code{NULL}.
 #' @param plot_ORF_ranges Logical. If TRUE, highlights annotated ORF ranges on the gene model. Defaults to FALSE.
 #' @param oORF_coloring Character, optional. Method for coloring overlapping ORFs. "oORF_colors" or "extend_mORF".
 #' @param frame_colors Named character vector. Colors for frames 0, 1, and 2. Defaults provided.
@@ -2963,6 +2990,7 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
 #'   - "CDS_extend": Frame 0 starts at the annotated ORF start and extends to both sides.
 #'   Defaults to "tx_start" if no ORF is annotated, otherwise "CDS_start".
 #' @param ribo_linewidth Numeric value to control the thickness of Ribo-seq read count lines. Default is \code{0.5}.
+#' @param rna_linewidth Numeric value to control the thickness of RNA-seq step lines. Default is \code{0.5}.
 #' @return A combined ggplot object with RNA-Seq coverage, three frame-specific Ribo-Seq plots, gene model, and optionally DNA/AA sequences.
 #'
 #' @export
@@ -2978,6 +3006,7 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                          RNAseqBamPaired = RNAseqBamPairorSingle,
                          Y_scale = "all",
                          Ribo_fix_height = NULL,
+                         RNA_fix_height = NULL,
                          plot_ORF_ranges = FALSE,
                          oORF_coloring = NULL,
                          frame_colors = c("0"="#FF0000", "1"="#3366FF", "2"="#009900"),
@@ -2994,7 +3023,8 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                          selected_isoforms = NULL,
                          frame_logic = NULL,
                          nth_sample = 1,
-                         ribo_linewidth = 0.5
+                         ribo_linewidth = 0.5,
+                         rna_linewidth = 0.5
 ) {
 
   # Validate Y_scale
@@ -3260,6 +3290,13 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
     RNAseq_list[[1]] <- get_RNAseq_coverage(RNAseq[[1]], GeneTxInfo$generangesplus, strand_info)
   }
 
+  # Cap RNA-seq counts if RNA_fix_height is provided
+  if (!is.null(RNA_fix_height)) {
+    RNAseq_list <- lapply(RNAseq_list, function(vec) {
+        pmin(vec, RNA_fix_height)
+    })
+  }
+
   if (length(RNAseq_list)>0) {
     max_Y_global <- max(unlist(RNAseq_list), na.rm=TRUE)
   } else {
@@ -3353,13 +3390,13 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
 
       p <- ggplot() +
         geom_col(data=RNAseq_df, aes(x=position, y=count), fill=RNAbackground[1], color=RNAbackground[1], na.rm=TRUE) +
-        geom_step(data=RNAseq_df_line, aes(x=position, y=count), color=RNAcoverline, na.rm=TRUE) +
+        geom_step(data=RNAseq_df_line, aes(x=position, y=count), linewidth = rna_linewidth, color=RNAcoverline, na.rm=TRUE) +
         theme_bw() +
         theme(
           axis.text.x=element_blank(),
           axis.ticks.x=element_blank(),
           legend.position="none",
-          plot.margin=unit(c(0,0.2,0,0.2),"lines"),
+          plot.margin=unit(c(0,0.2,-0.8,0.2),"lines"),
           panel.grid.major.x=element_blank(),
           panel.grid.minor.x=element_blank(),
           panel.grid.minor.y=element_blank(),
@@ -3546,7 +3583,7 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
     } else {
       GeneTxInfo$range_left + delta_x
     }
-    y_label <- current_max_Y + 0.01*current_max_Y
+    y_label <- y_limits[2] * 0.9
 
     p0 <- p0 + annotate("text",
                         x=x_label,y=y_label,
@@ -3619,10 +3656,16 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
       dna_aa_height <-0
     }
 
-    total_height_units <- title_height+(3*frame_plot_height)+dna_aa_height+gene_model_height
+    # Define spacer plot and height
+    spacer_plot <- ggplot() + theme_void()
+    spacer_height <- 0.03
+
+    # Update total height and rel_heights
+    total_height_units <- title_height + (3 * frame_plot_height) + spacer_height + dna_aa_height + gene_model_height
     rel_heights <- c(
       title_height,
-      rep(frame_plot_height,3),
+      rep(frame_plot_height, 3),
+      spacer_height,  # Add spacer height
       dna_aa_height,
       gene_model_height
     ) / total_height_units
@@ -3644,6 +3687,7 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
       p0,
       p1,
       p2,
+      spacer_plot,
       dna_aa_plot,
       gene_model_plot,
       ncol=1,
@@ -3684,6 +3728,7 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
 #' @param RNAseqBamPaired Vector indicating pairing for BAM (e.g. \code{"paired"} or \code{"single"}). Not used for bigWig.
 #' @param Y_scale Either \code{"all"} or \code{"each"}, controlling y-scaling across samples. Default is \code{"all"}.
 #' @param Ribo_fix_height Numeric to fix the max Ribo-seq coverage height. Default is \code{NULL}.
+#' @param RNA_fix_height Numeric to fix the max RNA-seq coverage height. Default is \code{NULL}.
 #' @param plot_ORF_ranges Logical; if \code{TRUE}, attempt to plot eORFs in the gene model. Default is \code{TRUE}.
 #' @param frame_colors Named vector of colors for reading frames 0,1,2.
 #' @param sample_color Either \code{"color"} or a vector of colors for each sample, controlling how Ribo-seq reads are drawn.
@@ -3698,6 +3743,7 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
 #' @param nucleotide_color_scheme If \code{"colorblind"}, uses a color-blind-friendly palette for nucleotides in DNA/AA. Otherwise uses \code{"default"}.
 #' @param oORF_coloring Coloring scheme for overlapping ORFs: \code{"extend_mORF"} (use main CDS frame for overlapping eORFs) or \code{"oORF_colors"} (use eORF-specific frames). Default is \code{"extend_mORF"}.
 #' @param ribo_linewidth Numeric value to control the thickness of Ribo-seq read count lines. Default is \code{0.5}.
+#' @param rna_linewidth Numeric value to control the thickness of RNA-seq step lines. Default is \code{0.5}.
 #'
 #' @return A combined \code{ggplot} object displaying RNA-seq coverage, Ribo-seq coverage, optional eORFs, a transcript model,
 #'   and (if requested) the spliced DNA/AA sequences, all in transcript coordinates.
@@ -3714,6 +3760,7 @@ ggRibo_tx <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                       RNAseqBamPaired = RNAseqBamPairorSingle,
                       Y_scale = "all",
                       Ribo_fix_height = NULL,
+                      RNA_fix_height = NULL,
                       plot_ORF_ranges = TRUE,
                       frame_colors = c("0"="#FF0000","1"="#3366FF","2"="#009900"),
                       sample_color = rep("color", length(Riboseq)),
@@ -3726,7 +3773,9 @@ ggRibo_tx <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                       data_types = rep("Ribo-seq", length(SampleNames)),
                       plot_range = NULL,
                       nucleotide_color_scheme = "default",
-                      oORF_coloring = "extend_mORF",ribo_linewidth = 0.5)
+                      oORF_coloring = "extend_mORF",
+                      ribo_linewidth = 0.5,
+                      rna_linewidth = 0.5)
 {
   # Basic checks
   if (!is.null(eORF.tx_id) && is.null(eORFRangeInfo) && exists("eORF_Range", envir = .GlobalEnv)) {
@@ -3838,6 +3887,14 @@ ggRibo_tx <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
     }
   }
 
+  # Cap RNA-seq counts if RNA_fix_height is provided
+  if (!is.null(RNA_fix_height)) {
+    RNAseq_list <- lapply(RNAseq_list, function(df) {
+      df$count <- pmin(df$count, RNA_fix_height)
+      return(df)
+    })
+  }
+
   # Gene_info object
   cdsByYFGtx <- GRangeInfo$cdsByTx[tx_id]
   xlimCds <- list(cdsByYFGtx[[1]])
@@ -3925,10 +3982,11 @@ ggRibo_tx <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
         y_limits <- c(0, if(nrow(RNAseq_df)>0) max(RNAseq_df$count,na.rm=TRUE)*1.1 else 1)
       }
 
+      y_label <- y_limits[2] * 0.90  # Lower to 90% of the upper limit
       p <- ggplot() +
         geom_col(data=RNAseq_df, aes(x=position, y=count),
                  fill=RNAbackground[i], color=RNAbackground[i], na.rm=TRUE) +
-        geom_step(data=RNAseq_df, aes(x=position-0.5, y=count),
+        geom_step(data=RNAseq_df, aes(x=position-0.5, y=count),linewidth = rna_linewidth,
                   color=RNAcoverline, na.rm=TRUE) +
         theme_bw() +
         theme(
@@ -3947,9 +4005,11 @@ ggRibo_tx <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                            name="RNA-seq\ncoverage",
                            sec.axis=sec_axis(~. / scale_factor, name=data_types[i])) +
         xlab("") +
-        annotate("text", x=x_min, y=max(y_limits)*0.95,
-                 label=SampleNames[i],
-                 hjust=0, vjust=0.1, size=3, fontface="bold")
+        annotate("text",
+                  x = x_min, y = y_label,
+                  label = SampleNames[i],
+                  hjust = 0, vjust = 1,
+                  size = 3, fontface = "bold")
 
       # Ribo-seq + frame assignment
       if (nrow(RiboRslt)>0) {
@@ -4145,7 +4205,7 @@ ggRibo_tx <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
     gene_model_height <- gene_model_height * 1.1
   }
   dna_aa_height     <- if(!is.null(dna_aa_plot)) dna_aa_height_ratio else 0
-  spacer_height     <- if(!is.null(dna_aa_plot)) 0.02 else 0
+  spacer_height     <- if(!is.null(dna_aa_plot)) 0.03 else 0
 
   total_height <- title_height + (num_samples * rna_ribo_height) + spacer_height + dna_aa_height + gene_model_height
   rel_heights  <- c(title_height,
@@ -4161,10 +4221,12 @@ ggRibo_tx <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
   spacer_plot <- if(!is.null(dna_aa_plot)) ggplot() + theme_void() else NULL
 
   combined_plot <- cowplot::plot_grid(
-    title_plot,
-    plotlist=c(plot_list, list(spacer_plot), list(dna_aa_plot), list(gene_model_plot)),
-    ncol=1, align="v", axis="lr" , rel_heights=rel_heights
-  )
+  title_plot,
+  plotlist = c(plot_list, list(spacer_plot), list(dna_aa_plot), list(gene_model_plot)),
+  ncol = 1,
+  align = "v",
+  axis = "lr",
+  rel_heights = rel_heights)
   return(combined_plot)
 }
 
@@ -4404,7 +4466,7 @@ plotGeneTxModel_tx <- function(GeneTxInfo,
   p_gene <- ggplot() +
     geom_rect(data = plot_data,
               aes(xmin = start - 0.5, xmax = end + 0.5, ymin = ymin, ymax = ymax, fill = feature),
-              color = "black", size = 0.5) +
+              color = "black", linewidth = 0.5) +
     scale_fill_manual(values = feature_colors, breaks = legend_features) +
     scale_x_continuous(limits = c(x_min - 0.5, x_max + 0.5), name = "Transcript Position") +
     scale_y_continuous(limits = y_limits, breaks = y_breaks, labels = y_labels) +
@@ -4434,7 +4496,7 @@ plotGeneTxModel_tx <- function(GeneTxInfo,
         y = start_truncated$ymin - 0.01,
         yend = start_truncated$ymax + 0.01
       )
-      p_gene <- p_gene + geom_segment(data = start_segments, aes(x = x, xend = xend, y = y, yend = yend), color = "white", size = 1.5)
+      p_gene <- p_gene + geom_segment(data = start_segments, aes(x = x, xend = xend, y = y, yend = yend), color = "white", linewidth = 1.5)
     }
 
     end_truncated <- truncated_data[truncated_data$end_truncated, ]
@@ -4445,7 +4507,7 @@ plotGeneTxModel_tx <- function(GeneTxInfo,
         y = end_truncated$ymin - 0.01,
         yend = end_truncated$ymax + 0.01
       )
-      p_gene <- p_gene + geom_segment(data = end_segments, aes(x = x, xend = xend, y = y, yend = yend), color = "white", size = 1.5)
+      p_gene <- p_gene + geom_segment(data = end_segments, aes(x = x, xend = xend, y = y, yend = yend), color = "white", linewidth = 1.5)
     }
   }
 
