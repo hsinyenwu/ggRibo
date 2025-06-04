@@ -36,7 +36,7 @@ inputs_full <- create_seq_input(
 Example plot.
 ```
 #data_types changes the right y-axis labels for your datasets. Default is "Ribo-seq"
-ggRibo(gene_id="AT4G21910",tx_id="AT4G21910.1",
+ggRibo(tx_id="AT4G21910.1",
        Y_scale="each",Extend=c(400,50),
        data_types=c("Ribo-seq","Ribo-seq","CAGE-seq"),
        NAME = "MATE efflux family protein")
@@ -48,7 +48,7 @@ Show CAGE-seq reads in blue.
 #sample_color could change the nucleotide resolution read colors
 #sample_color default is "color", which shows 3-nucleotide periodicity 
 #Here use sample_color="blue" for CAGE-seq
-ggRibo(gene_id="AT4G21910",tx_id="AT4G21910.1",
+ggRibo(tx_id="AT4G21910.1",
        Y_scale="each",Extend=c(400,50),
        data_types=c("Ribo-seq","Ribo-seq","CAGE-seq"),
        sample_color=c("color","color","blue"),
