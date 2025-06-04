@@ -12,6 +12,7 @@ For noncoding gene or noncoding isoforms, their ribo-seq coloring for reading fr
 ### Plot an annotated noncoding gene TAS3
 ```
 #Load data first
+#Download data at Mendeley data https://data.mendeley.com/datasets/wm6cS5zbtw/1
 CTRL_RNA="~/path/to/RNA_CTRL_merged.bam"
 CTRL_ribo="~/path/to/CTRL_expressed_P_sites_sort_count"
 
