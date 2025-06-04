@@ -12,7 +12,9 @@ For noncoding gene or noncoding isoforms, their ribo-seq coloring for reading fr
 ### Plot an annotated noncoding gene TAS3
 ```
 #Load data first
-#Download data at Mendeley data https://data.mendeley.com/datasets/wm6cS5zbtw/1
+#Download RNA-seq and Ribo-seq data at Mendeley data https://data.mendeley.com/datasets/wm6cS5zbtw/1
+#save the files to your computer
+
 CTRL_RNA="~/path/to/RNA_CTRL_merged.bam"
 CTRL_ribo="~/path/to/CTRL_expressed_P_sites_sort_count"
 
@@ -31,7 +33,6 @@ inputs_full <- create_seq_input(
 gtf_import(annotation="~/path/to/Araport11+CTRL_20181206.gtf",format="gtf",dataSource="Araport",organism="Arabidopsis thaliana")
 
 ggRibo(
-  gene_id = "AT3G17185",
   tx_id = "AT3G17185.1",
   NAME="TAS3",
   Extend=200)
@@ -40,8 +41,7 @@ ggRibo(
 
 Check the reads in 3 frames with ggRibo_decom (decom for decomposition).
 ```
-ggRibo_decom(gene_id = "AT3G17185",
-             tx_id = "AT3G17185.1",
+ggRibo_decom(tx_id = "AT3G17185.1",
              NAME="TAS3",
              plot_genomic_direction = TRUE,
              Extend=50)
@@ -52,8 +52,7 @@ ggRibo_decom(gene_id = "AT3G17185",
 As mentioned above, for non-coding RNAs, ggRibo assigns the reading frame from the first nucleotide of the annotated RNA sequence, rather than from the start of a CDS/ORF, as it does for coding RNAs. As a result, a translated ORF in a non-coding RNA may enrich one of the reading frames in red, blue, or green. For sORF1 (below), the main translated ORF is colored green. However, you can still provide a gtf with annotated ORF ranges for visualizing this sORF. 
 
 ```
-ggRibo(gene_id = "AT1G10682",
-       tx_id = "AT1G10682.1",
+ggRibo(tx_id = "AT1G10682.1",
        NAME="sORF1",
        Extend=50)
 ```
@@ -61,8 +60,7 @@ ggRibo(gene_id = "AT1G10682",
 
 Ribo-seq reads decomposition for frame enrichment:
 ```
-ggRibo_decom(gene_id = "AT1G10682",
-             tx_id = "AT1G10682.1",
+ggRibo_decom(tx_id = "AT1G10682.1",
              NAME="sORF1",
              Extend=50)
 ```
@@ -76,7 +74,6 @@ Plot the noncoding isoform *AT1G01060.7*
 tgtf <- system.file("extdata", "AT1G01060_test.gtf", package = "ggRibo", mustWork = TRUE)
 gtf_import(annotation=tgtf, format="gtf",dataSource="Araport",organism="Arabidopsis thaliana")
 ggRibo(
-  gene_id = "AT1G01060",
   tx_id = "AT1G01060.7",
   NAME="",
   Extend=200)
@@ -86,7 +83,6 @@ ggRibo(
 Plot the noncoding isoform *AT1G01060.7* with ggRibo_decom for frames enriched. 
 ```
 ggRibo_decom(
-  gene_id = "AT1G01060",
   tx_id = "AT1G01060.7",
   NAME="",
   Extend=200)
@@ -96,7 +92,6 @@ ggRibo_decom(
 Plot a coding isoform for LHY.
 ```
 ggRibo(
-  gene_id = "AT1G01060",
   tx_id = "AT1G01060.4",
   NAME="",
   Extend=200)
