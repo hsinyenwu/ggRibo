@@ -12,12 +12,12 @@
 
 ## Recent update!!! (Thanks to our helpful reviewers)
 (1) New input function: RNA-seq and Ribo-seq reads are imported by the *create_seq_input* function.   
-(2) New function for single transcript view: ggRibo_tx.  
-(3) The FASTA parameter for all plotting functions now also take BSgenome object.  
+(2) New function for single transcript view: [ggRibo_tx](https://github.com/hsinyenwu/ggRibo/blob/v2025.5.30/README_ggRibo_tx.md).  
+(3) The FASTA parameter for all plotting functions now takes both FASTA and BSgenome object.  
 (4) All plotting functions now takes bigWig and bedGraph format for input.  
 (5) Only tx_id is needed for plotting. In the old version, you need to provide both gene_id and tx_id.   
 (6) New parameters: ribo_linewidth (adjust Ribo-seq linewidth) and rna_linewidth (adjust RNA-seq coverage linewidth) for all plotting functions.   
-(7) New tutorial for multiomics visualization.  
+(7) New tutorial for [Multiomics Visualization](https://github.com/hsinyenwu/ggRibo/blob/v2025.6.2/README_multiomics.md).  
 
 ### Introduction
 Ribo-seq (ribosome profiling) is a powerful technique for studying mRNA translation by deep sequencing ribosome-protected footprints. A key feature of Ribo-seq data is 3-nucleotide periodicity, which reflects the ribosome’s codon-by-codon progression during translation. This 3-nucleotide periodicity facilitates the discovery of unannotated translation events and provides insights into translational regulation. Here, we present ggRibo, an R package designed for visualizing 3-nucleotide periodicity within a genomic context. ggRibo enables visual confirmation of translated and unannotated isoforms, as well as additional translation events, including upstream open reading frames (ORFs), downstream ORFs, stop codon readthrough, and correction of misannotated ORFs due to genome sequencing errors.  
