@@ -234,22 +234,28 @@ ggRibo(
 ![image](https://github.com/user-attachments/assets/1fe171f2-4036-4a9e-8fee-2f8a466ce8e5)
 
 #### Key parameters for ggRibo
-(1) Extend (integer or a two integer vector): extend the plot range for both side of the plot. You can either use one number, which means same extension for both side, or use a vector with two values to extend left and right sides differently.  
-(2) Y_scale (Boolean): the y-axis scale for each sample for the gene of interest. It could be "each", means each sample scale by itself to its max. The alternative is "all", means all samples are scaled together (same max Y-axis scale).  
-(3) fExtend (integer): entend the 5' side of annotated CDS and also extend the frame of the annotated CDS. This is designed for visualizing non-AUG start.  
-(4) tExtend (integer): entend the 3' side of annotated CDS and also extend the frame of the annotated CDS.  This is designed for visualizing stop codon readthrough.   
-(5) eORF.tx_id (text): input the transcript id for extra ORFs. Remember the eORF gtf should be input with the eORF_import function and the transcript id for extra ORFs is included in the eORF gtf.   
-(6) plot_genomic_direction (Boolean): plot the direction of the gene on the genome browser on top right side of the top plot.  
-(7) sample_color (text vector): the color of the reads in each sample (from top to bottom). If you want the reads in the plot are color according to the 3 frames, use "color". Otherwise just give a single color. For example, if we provide: sample_color=c("color","purple"), reads in the first plot will be colored according to their frames, but all reads in the second plot will be colored purple. The default for all plots are "color".   
-(8) frame_colors (text vector): colors for the 3 frames, default is c("0"="#FF0000", "1"="#3366FF", "2"="#009900"), you can choose the color you like.  
-(9) selected_isoforms (text vector): you can select certain isoforms to plot. 
-(10) data_types (text vector): This parameter is for the right Y-axis labels. Default for all data is Ribo-seq.
-(11) dna_aa_height_ratio (numeric): change is height of DNA/AA plot.
-(12) gene_model_height_ratio (numeric): change is height of transcript model plot.
-(13) show_seq (Boolean): show DNA (when plot range <=201 nucleotides) and AA sequences 
-(14) FASTA (a genome FASTA file or a BSGenome object): contain genomic sequences, required when show_seq=T
-(15) plot_range (2 inegter numeric vector): defined the range for the plot.
-(16) oORF_coloring:	Character string specifying coloring method for overlapping ORFs ("oORF_colors" or "extend_mORF"). "oORF_colors" means only show the 3-nt periodicity for the oORF. "extend_mORF" means extend the mORF frames to cover the extra ORFs.
+(1) gene_id: (optional) if you only provide gene_id but no tx_id, ggRibo will use the first transcript it sorted for tx_id.   
+(2) **tx_id**: you only need to input tx_id. A helper function get_gene_tx obtain the gene_id information.  
+(3) **gene_model_height_ratio**: very important for adjusting the height of gene/transcript models.  
+(4) Extend (integer or a two integer vector): extend the plot range for both side of the plot. You can either use one number, which means same extension for both side, or use a vector with two values to extend left and right sides differently.  
+(5) Y_scale (Boolean): the y-axis scale for each sample for the gene of interest. It could be "each", means each sample scale by itself to its max. The alternative is "all", means all samples are scaled together (same max Y-axis scale).  
+(6) fExtend (integer): entend the 5' side of annotated CDS and also extend the frame of the annotated CDS. This is designed for visualizing non-AUG start.  
+(7) tExtend (integer): entend the 3' side of annotated CDS and also extend the frame of the annotated CDS.  This is designed for visualizing stop codon readthrough.   
+(8) **eORF.tx_id** (text): input the transcript id for extra ORFs. Remember the eORF gtf should be input with the eORF_import function and the transcript id for extra ORFs is included in the eORF gtf.   
+(9) plot_genomic_direction (Boolean): plot the direction of the gene on the genome browser on top right side of the top plot.  
+(10) sample_color (text vector): the color of the reads in each sample (from top to bottom). If you want the reads in the plot are color according to the 3 frames, use "color".  Otherwise just give a single color. For example, if we provide: sample_color=c("color","purple"), reads in the first plot will be colored according to their frames, but all reads in the second plot will be colored purple. The default for all plots are "color".   
+(11) frame_colors (text vector): colors for the 3 frames, default is red, but and green as c("0"="#FF0000", "1"="#3366FF", "2"="#009900"). You can choose the color you like.  
+(12) selected_isoforms (text vector): you can select certain isoforms to plot.  
+(13) data_types (text vector): This parameter is for the right Y-axis labels. Default for all data is Ribo-seq.   
+(14) dna_aa_height_ratio (numeric): change is height of DNA/AA plot.  
+(15) **show_seq** (Boolean): show DNA (when plot range <=201 nucleotides) and AA sequences.   
+(16) **FASTA** (a genome FASTA file or a BSGenome object): contain genomic sequences, required when show_seq=T.  
+(17) **plot_range** (2 inegter numeric vector): defined the range for the plot. Used to zoom in a region.  
+(18) oORF_coloring:	Character string specifying coloring method for overlapping ORFs ("oORF_colors" or "extend_mORF"). "oORF_colors" means only show the 3-nt periodicity for the oORF. "extend_mORF" means extend the mORF frames to cover the extra ORFs.  
+(19) Ribo_fix_height: limit the height of Ribo-seq to a value for all Ribo-seq plots.  
+(20) RNA_fix_height: limit the height of Ribo-seq to a value for all RNA-seq plots.  
+(21) **ribo_linewidth**: control the linewidth for Ribo-seq counts.  
+(22) rna_linewidth: control the linewidth for the grey coverage lines for RNA-seq.  
 
 ## Citation: [ggRibo: a ggplot-based single-gene viewer for visualizing Ribo-seq and related omics datasets](https://www.biorxiv.org/content/10.1101/2025.01.30.635743v1)
 
