@@ -9,6 +9,15 @@
 [Examples for ggRNA](https://github.com/hsinyenwu/ggRibo/blob/v2025.5.30/README_ggRNA.md)  
 [Examples for ggRibo_tx](https://github.com/hsinyenwu/ggRibo/blob/v2025.5.30/README_ggRibo_tx.md)  
 **[Multiomics visualization with ggRibo](https://github.com/hsinyenwu/ggRibo/blob/v2025.5.30/README_multiomics.md)**  
+Due to the intensive changes, we encourage the users to install the latest version of ggRibo.
+```
+#Unload the ggRibo first if you have it loaded
+detach("package:ggRibo", unload=TRUE)
+#Remove the old version of ggRibo if you installed it before
+remove.packages("ggRibo")
+#Follow the stage below to install ggRibo.
+=
+```
 
 ## Recent update!!! (Thanks to our helpful reviewers)
 (1) New input function: RNA-seq and Ribo-seq reads are imported by the *create_seq_input* function.   
