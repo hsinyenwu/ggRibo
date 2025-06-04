@@ -11,6 +11,24 @@ For noncoding gene or noncoding isoforms, their ribo-seq coloring for reading fr
 
 ### Plot an annotated noncoding gene TAS3
 ```
+#Load data first
+CTRL_RNA="~/path/to/RNA_CTRL_merged.bam"
+CTRL_ribo="~/path/to/CTRL_expressed_P_sites_sort_count"
+
+RNA_files <- list(CTRL_RNA)
+Ribo_files <- list(CTRL_ribo)
+Samples <- c("Seedlings")
+
+# Prepare coverage descriptors
+inputs_full <- create_seq_input(
+  rna_files = RNA_files,
+  ribo_files = Ribo_files,
+  sample_names = Samples,
+)
+
+#Load annotated transcript gtf
+gtf_import(annotation="~/path/to/Araport11+CTRL_20181206.gtf",format="gtf",dataSource="Araport",organism="Arabidopsis thaliana")
+
 ggRibo(
   gene_id = "AT3G17185",
   tx_id = "AT3G17185.1",
