@@ -60,7 +60,7 @@ ggRibo(tx_id="AT4G21910.1",
 ![image](https://github.com/user-attachments/assets/6583a0bf-45ef-43b2-b556-74cd2f5a7795)
 Since seedling sample is the mix of root and shoot samples, we see both isoforms expressed and translated in this sample.
 
-### Visualizing other omics data *independent* of ggRibo
+## Visualizing other omics data *independent* of ggRibo
 ```
 #path to annotated gtf
 agtf <- system.file("extdata", "TAIR10.29_part.gtf", package = "ggRibo", mustWork = TRUE)
