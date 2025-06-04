@@ -79,8 +79,8 @@ Load CAGE-seq data. Note that there is no Ribo-seq data here.
 #Here use sample_color="blue" for CAGE-seq
 ggRibo(tx_id="AT4G21910.1",
        Y_scale="each",Extend=c(400,50),
-       data_types=c("Ribo-seq","Ribo-seq","CAGE-seq"),
-       sample_color=c("color","color","blue"),
+       data_types=c("CAGE-seq"),
+       sample_color=c("blue"),
        NAME = "MATE efflux family protein")
 ```
 
