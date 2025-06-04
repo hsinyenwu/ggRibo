@@ -24,8 +24,7 @@ Almost cannot see it. The dORF must be very poorly translated comparing to the m
 
 But you can set the height (Y-axis value) for the Ribo-seq reads in the plots with `Ribo_fix_height`. Here I set the height of Ribo-seq to 8, which means the maximum of Y-axis for Ribo-seq is 8 reads.  
 ```
-ggRibo(gene_id="AT1G27950",
-       tx_id = "AT1G27950.1",
+ggRibo(tx_id = "AT1G27950.1",
        eORF.tx_id="AT1G27950.1",
        Ribo_fix_height = 8,
        Extend = 300)
@@ -34,8 +33,7 @@ ggRibo(gene_id="AT1G27950",
 
 We can futher zoom in the dORF to see it more clearly. We select `plot_range = c(9741980,9742125)` and add `show_seq = TRUE, FASTA = FA`  
 ```
-ggRibo(gene_id="AT1G27950",
-       tx_id = "AT1G27950.1",
+ggRibo(tx_id = "AT1G27950.1",
        eORF.tx_id="AT1G27950.1",
        plot_range = c(9741980,9742125),
        show_seq = TRUE,FASTA = FA,
