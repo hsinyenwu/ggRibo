@@ -1,7 +1,7 @@
 ## Advanced ggRibo part 1: plot Ribo-seq reads on annotated noncoding RNAs
 
 ## Mendeley data site:
-***You can find processed data for testing here:[Arabidopsis Data](https://data.mendeley.com/datasets/wm6cS5zbtw/1)***
+***You can find processed data for testing here: [Arabidopsis Data](https://data.mendeley.com/datasets/wm6cS5zbtw/1)***
 
 ### Reading frame coloring for ncRNA:
 For noncoding gene or noncoding isoforms, their ribo-seq coloring for reading frame is different from coding ORFs.  
