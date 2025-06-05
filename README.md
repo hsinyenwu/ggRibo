@@ -30,7 +30,12 @@ remove.packages("ggRibo")
 #Follow the stage below to install ggRibo.
 ```
 
-### Introduction
+### Mendeley data for human and Arabidopsis.
+Throughout the tutorial, we use Arabidopsis data either included with the package or saved in the Mendeley data. 
+[Arabidopsis](https://data.mendeley.com/datasets/wm6cS5zbtw/1)   
+[Human](https://data.mendeley.com/datasets/m3t293k4wr/1)  
+
+## Introduction
 Ribo-seq (ribosome profiling) is a powerful technique for studying mRNA translation by deep sequencing ribosome-protected footprints. A key feature of Ribo-seq data is 3-nucleotide periodicity, which reflects the ribosome’s codon-by-codon progression during translation. This 3-nucleotide periodicity facilitates the discovery of unannotated translation events and provides insights into translational regulation. Here, we present ggRibo, an R package designed for visualizing 3-nucleotide periodicity within a genomic context. ggRibo enables visual confirmation of translated isoforms, including unannotated ones, as well as additional translation events, including upstream open reading frames (ORFs), downstream ORFs, stop codon readthrough, and correcting misannotated ORFs due to genome sequencing errors.  
 
 Additionally, ggRibo allows the comparison of Ribo-seq data with other sequencing methods that provide single nucleotide resolution (SNR), such as Translation Initiation sequencing (TI-seq), degradome sequencing (PARE-seq, Parallel Analysis of RNA Ends), GMUCT (Genome-Wide Mapping of Uncapped Transcripts), and Cap Analysis of Gene Expression sequencing (CAGE-seq). Some epitranscriptomic sequencing methods that detect the exact position of mRNA modifications, such as m6A-SAC-seq (N⁶-methyladenosine-Selective Alkylation Cleavage sequencing, which detects m6A sites) and BID-seq (bisulfite-induced deletion sequencing, which detects pseudouridine (Ψ) sites), also provide SNR data. In SNR data, only one nucleotide position within each sequencing read carries the entire biological meaning for that read. For example, the P-site nucleotide of TI-seq reads indicates translation initiation sites on mRNAs, the first nucleotide of degradome-seq reads marks the 5’ end of RNA degradation intermediates, and the first nucleotide of CAGE-seq reads denotes transcription start sites.  
@@ -39,22 +44,22 @@ By integrating these datasets, ggRibo enables researchers to identify factors th
 
 **Notably, while ggRibo is focusing on Ribo-seq analysis, it could be used independently of Ribo-seq data. See [Multiomics](https://github.com/hsinyenwu/ggRibo/blob/v2025.6.2/README_multiomics.md) section for examples.**
 
-### Plotting Ribo-seq reads
+## Plotting Ribo-seq reads
 Each Ribo-seq read is represented with its first nucleotide aligned to the P-site (Figure 1A). The offset indicates the distance from the first nucleotide of the Ribo-seq read to the P-site of the ribosome. The offset can be obtained from metagene analysis of Ribo-seq reads using RiboTaper, Ribo-seQC, or other Ribo-seq analysis software. The cumulative P-site counts from all reads within the selected gene range are plotted (e.g., Figure 1B). Note the P-site offsets can vary in different organisms and organelles (see panels D and E).    
   
 <img width="675" alt="image" src="https://github.com/user-attachments/assets/b1b16e9a-2a0d-45bd-b55e-77a4c5c68aad" />
 
-### Gene-context plot vs single transcript plot for presenting Ribo-seq plots
+## Gene-context plot vs single transcript plot for presenting Ribo-seq plots
 Here we show one example gene with 3 isoforms (Figure 2A). Using the single transcript style plot, it is impossible to check which transcript(s) are translated (Figure 2B). Isoform 3 is not transcribed in the sample and leads to a confusing plot (bottom panel of Figure 2B). In gene-context plot, we can clearly see the first and second isoforms are transcribed and translated (Figure 2C) even though only isoform 1 is colored for periodicity. Therefore, genome/gene-context Ribo-seq plot provides a bird’s-eye view of the translation for all isoforms. However, single transcript plot is very helpful for genes that have long (or too many) introns. In that case, you can check the Gene-context plot first to identify expressed isoforms then use the single transcript plot for detailed presentation. The ggRibo package contains ggRibo for gene structure view and ggRibo_tx for single transcript view.
   
 <img width="675" alt="image" src="https://github.com/user-attachments/assets/7cbcacb4-a42d-45ab-bbcb-cd45bc1923a6" />
 
-### *How to understand a ggRibo plot*   
+## *How to understand a ggRibo plot*   
 The gene structure plot shown in Figure 2C is a ggRibo plot, where Ribo-seq reads are color-coded to demonstrate the 3-nucleotide periodicity: red for the first (expected/annotated) reading frame, blue for the second, and green for the third (Figures 2C). Reads outside the ORF range are displayed in gray. RNA-seq coverage is represented with a light yellow background (Figures 2C).   
 
-### Steps and examples for the basic usage of ggRibo  
+## Steps and examples for the basic usage of ggRibo  
 
-#### Install ggRibo and its required packages:  
+### Install ggRibo and its required packages:  
 
 (1) Install required packages.
 ```
@@ -91,7 +96,7 @@ library(devtools)
 install_github("hsinyenwu/ggRibo")
 ```
 
-#### Load RNA-seq, Ribo-seq and annotation files  
+### Load RNA-seq, Ribo-seq and annotation files  
 1. Ribo-seq input could be a tabular format with 4 columns for (1) read counts, (2) chromosome, (3) position of the 1st nucleotide of P-site and (4) strand. Alternatively, you can also input bedGraph or bigWig format files. For preparing files for ggRibo, see [Here](https://github.com/hsinyenwu/ggRibo/blob/v2025.1.25/README_a0_preparing_Ribo-seq_for_ggRibo.md).  
 2. RNA-seq files could be the bam files from RNA-seq reads aligned with STAR or HISAT2. You can also convert your data to bedGraph or bigWig formats, see [Here](https://github.com/hsinyenwu/ggRibo/blob/v2025.3.30/README_0B_bedGraph_bigwig.md). 
 3. The FASTA (or a BSGenome object) and gtf/gff files for visualizing DNA and amino acid sequences.  
@@ -170,7 +175,7 @@ ggRibo(tx_id="AT4G21910.2",
 ```
 ![image](https://github.com/user-attachments/assets/c217a5ef-d2ff-4069-bdf7-a54c29ab7f22)
 
-#### Plot a uORF
+### Plot a uORF
 ```
 #Load CPuORF gtf
 # eORF means extra ORF. the eORF_import could be used to import gtf/gff3 for uORF, overlapping uORF, nested ORF, overlapping dORF and dORF.  
@@ -182,7 +187,7 @@ ggRibo(tx_id="AT3G02470.1",
 ```
 ![image](https://github.com/user-attachments/assets/52b62a05-2d93-4f34-8b63-b2485a6555b5)
 
-#### Check sequences for the uORF
+### Check sequences for the uORF
 Download annotation and data files from [here](https://data.mendeley.com/datasets/89j7snbm2r/2):  
 (1) GTF (Araport11+CTRL_20181206.gtf)  
 (2) FASTA (TAIR10_chr_all_2.fas) #you can also use a BSGenome object 
@@ -250,7 +255,7 @@ ggRibo(
 ```
 ![image](https://github.com/user-attachments/assets/1fe171f2-4036-4a9e-8fee-2f8a466ce8e5)
 
-#### Key parameters for ggRibo
+### Key parameters for ggRibo
 (1) gene_id: (optional) if you only provide gene_id but no tx_id, ggRibo will use the first transcript it sorted for tx_id.   
 (2) **tx_id**: you only need to input tx_id. A helper function get_gene_tx obtain the gene_id information.  
 (3) **gene_model_height_ratio**: very important for adjusting the height of gene/transcript models.  
@@ -274,6 +279,6 @@ ggRibo(
 (21) **ribo_linewidth**: control the linewidth for Ribo-seq counts.  
 (22) rna_linewidth: control the linewidth for the grey coverage lines for RNA-seq.  
 
-## Citation: [ggRibo: a ggplot-based single-gene viewer for visualizing Ribo-seq and related omics datasets](https://www.biorxiv.org/content/10.1101/2025.01.30.635743v1)
+### Citation: [ggRibo: a ggplot-based single-gene viewer for visualizing Ribo-seq and related omics datasets](https://www.biorxiv.org/content/10.1101/2025.01.30.635743v1)
 
 
