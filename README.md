@@ -32,8 +32,8 @@ remove.packages("ggRibo")
 
 ### Mendeley data for human and Arabidopsis.
 Throughout the tutorial, we use:  
-[Arabidopsis](https://data.mendeley.com/datasets/wm6cS5zbtw/1) data either included with the package or saved in the Mendeley data site.    
-[Human](https://data.mendeley.com/datasets/m3t293k4wr/1) data are saved in the Mendeley data site.   
+Arabidopsis data either included with the package or saved in the Mendeley data site: [Link](https://data.mendeley.com/datasets/wm6cS5zbtw/1)    
+Human data are saved in the Mendeley data site: [Link](https://data.mendeley.com/datasets/m3t293k4wr/1)   
  
 
 ## Introduction
