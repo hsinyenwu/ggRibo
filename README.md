@@ -31,9 +31,10 @@ remove.packages("ggRibo")
 ```
 
 ### Mendeley data for human and Arabidopsis.
-Throughout the tutorial, we use Arabidopsis data either included with the package or saved in the Mendeley data.   
-[Arabidopsis](https://data.mendeley.com/datasets/wm6cS5zbtw/1)   
-[Human](https://data.mendeley.com/datasets/m3t293k4wr/1)   
+Throughout the tutorial, we use:  
+[Arabidopsis](https://data.mendeley.com/datasets/wm6cS5zbtw/1) data either included with the package or saved in the Mendeley data site.    
+[Human](https://data.mendeley.com/datasets/m3t293k4wr/1) data are saved in the Mendeley data site.   
+ 
 
 ## Introduction
 Ribo-seq (ribosome profiling) is a powerful technique for studying mRNA translation by deep sequencing ribosome-protected footprints. A key feature of Ribo-seq data is 3-nucleotide periodicity, which reflects the ribosome’s codon-by-codon progression during translation. This 3-nucleotide periodicity facilitates the discovery of unannotated translation events and provides insights into translational regulation. Here, we present ggRibo, an R package designed for visualizing 3-nucleotide periodicity within a genomic context. ggRibo enables visual confirmation of translated isoforms, including unannotated ones, as well as additional translation events, including upstream open reading frames (ORFs), downstream ORFs, stop codon readthrough, and correcting misannotated ORFs due to genome sequencing errors.  
