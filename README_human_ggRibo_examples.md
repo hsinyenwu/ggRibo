@@ -1,14 +1,14 @@
-# Plotting human Ribo-seq data with ggRibo
+## Plotting human Ribo-seq data with ggRibo
 Ribo-seq and RNA-seq data for embryonic stem cells (ESC) and brain tissue from [Chothani et al., 2022](https://doi.org/10.1016/j.molcel.2022.06.023) acquired from NCBI BioProjects [PRJNA756018](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA756018) and [PRJNA756023](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA756023).
 
 Ribo-seq and RNA-seq data from induced pluripotent stem cells (iPSC) and cardiomyocytes from [Chen et al., 2020](https://www.science.org/doi/10.1126/science.aay0262) acquired from NCBI BioProject [PRJNA544411](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA544411)
 
 Aligned to the GRCh38 human genome acquired from [Ensembl](https://www.ensembl.org/Homo_sapiens/Info/Index)
 
-## Mendeley data site:
+### Mendeley data site:
 ***You can find processed data for testing here: [Human Data](https://data.mendeley.com/datasets/m3t293k4wr/1)***
 
-## Example of uORF in humans
+### Example of uORF in humans
 The uORF in MRPL11 has been shown to inhibit translation of its downstream ORF ([Calvo, Pagliarini, & Mootha, 2009](https://www.pnas.org/doi/10.1073/pnas.0810916106)).
 
 ```
@@ -30,7 +30,7 @@ ggRibo(tx_id = "ENST00000310999", eORF.tx_id = "ENST00000310999", NAME = "MRPL11
 ```
 ![uORF1_MRPL11_Human_ESC_full_gene](https://github.com/user-attachments/assets/0c68b41c-f145-4988-8697-cb6ddbfaa575)
 
-## Add genome/peptide sequence
+### Add genome/peptide sequence
 ```
 fasta <- FaFile("Homo_sapiens.GRCh38.dna.primary_assembly.fa")  # set path to genome FASTA
 
@@ -39,7 +39,7 @@ ggRibo(tx_id = "ENST00000310999", eORF.tx_id = "ENST00000310999", NAME = "MRPL11
 ```
 ![uORF2_MRPL11_Human_ESC_full_with_seq](https://github.com/user-attachments/assets/72fc96fd-6e8e-489f-b6a9-3c0f4cbc6607)
 
-## Closer look at uORF (adjusting plot range)
+### Closer look at uORF (adjusting plot range)
 ```
 range <- c(66438710, 66438850)  # define a range on the chromosome
 ggRibo(tx_id = "ENST00000310999", eORF.tx_id = "ENST00000310999", NAME = "MRPL11",
@@ -48,7 +48,7 @@ ggRibo(tx_id = "ENST00000310999", eORF.tx_id = "ENST00000310999", NAME = "MRPL11
 ```
 ![uORF3_MRPL11_Human_ESC_zoom_with_seq](https://github.com/user-attachments/assets/5f151cda-291d-4d1d-a281-32b82b0bd378)
 
-## Transcript view
+### Transcript view
 Using transcript view, we can take a close look at specific isoforms.
 ```
 ggRibo_tx(tx_id="ENST00000310999", eORF.tx_id = "ENST00000310999", NAME = "MRPL11",
@@ -72,7 +72,7 @@ ggRibo_tx(tx_id = "ENST00000311672", NAME = "UQCRH")  # transcript view
 <ins>Transcript view, introns removed:</ins>  
 ![Intron_UQCRH_Human_ESC_tx](https://github.com/user-attachments/assets/6876114e-346a-4f1f-8c7b-b348c07ec2e6)
 
-## Multiple samples
+### Multiple samples
 ```
 inputs_full <- create_seq_input(
   rna_files = c("IPSC/small_merged_rna_subset.bam",
@@ -95,7 +95,7 @@ ggRibo(tx_id = "ENST00000530705", NAME = "TPT1")
 <ins>Higher translation in iPSCs:</ins>  
 ![TwoSample2_TPT1_Human](https://github.com/user-attachments/assets/1ccfea33-ddd8-423d-a9b9-a1d5dfb530e6)
 
-## Plotting subset of transcripts
+### Plotting subset of transcripts
 Many genes are annotated with a large number of isoforms.
 This can be a nuisance when plotting transcripts as the unexpressed isoforms can take up space,
 and expand the x-axis beyond the ideal range if there are distant exons.
