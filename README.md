@@ -280,6 +280,6 @@ ggRibo(
 (21) **ribo_linewidth**: control the linewidth for Ribo-seq counts.  
 (22) rna_linewidth: control the linewidth for the grey coverage lines for RNA-seq.  
 
-### Citation: [ggRibo: a ggplot-based single-gene viewer for visualizing Ribo-seq and related omics datasets](https://www.biorxiv.org/content/10.1101/2025.01.30.635743v1)
+### Citation: [A ggplot-based single-gene viewer reveals insights into the translatome and other nucleotide-resolution omics data](https://www.biorxiv.org/content/10.1101/2025.01.30.635743v2)
 
 
