@@ -4,6 +4,8 @@ We added the support for bedGraph and BigWig formats in the ggRibo package to lo
 
 ### 1. RNA-seq bam file to bedGraph and BigWig
 Here is an example for how to convert RNA-seq bam files to bedGraph and BigWig formats. In this example there are two samples. You will need samtools, bedtools and bedGraphToBigWig to run the code in linux. Also remember to change the paths for your system.  
+This example is for **"paired-end reverse-stranded libraries"**.  
+
 ***Please modify your path and file names accordingly***
 ```bash
 # Essential: Load samtools and bedtools first
