@@ -1243,7 +1243,7 @@ plotDNAandAA <- function(GeneTxInfo, plot_range = NULL, FASTA = NULL, nucleotide
     
     dna_subseq <- substr(dna_seq, codon_starts[1], codon_starts[length(codon_starts)] + 2)
     dna_string <- DNAString(dna_subseq)
-    aa_seq <- suppressWarnings(as.character(translate(dna_string, genetic.code = GENETIC_CODE, if.fuzzy.codon = "X")))
+    aa_seq <- suppressWarnings(as.character(translate(dna_string, genetic.code = GENETIC_CODE,no.init.codon = TRUE, if.fuzzy.codon = "X")))
     aa_chars <- unlist(strsplit(aa_seq, split = ""))
     
     aa_positions <- positions_seq[codon_middles]
@@ -4670,7 +4670,7 @@ plotDNAandAA_tx <- function(GeneTxInfo, plot_range = NULL, FASTA = NULL, nucleot
     if (length(codon_starts)==0) next
     codon_middles <- codon_starts+1
     dna_coding    <- substring(dna_subseq, codon_starts[1], codon_starts[length(codon_starts)]+2)
-    aa_str  <- as.character(translate(DNAString(dna_coding),genetic.code = GENETIC_CODE, if.fuzzy.codon="X"))
+    aa_str  <- as.character(translate(DNAString(dna_coding),genetic.code = GENETIC_CODE, no.init.codon = TRUE, if.fuzzy.codon="X"))
     aa_chars<- unlist(strsplit(aa_str, split=""))
     aa_positions <- sub_positions[codon_middles]
     aa_df <- data.frame(
