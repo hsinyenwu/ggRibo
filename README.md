@@ -280,6 +280,9 @@ ggRibo(
 (21) **ribo_linewidth**: control the linewidth for Ribo-seq counts.  
 (22) rna_linewidth: control the linewidth for the grey coverage lines for RNA-seq.  
 
+#### Update notes: 
+v2025.7.8 contains a minor fix for the most 5' end amino acid. In the old code, CTG or TTG is translated as Methionine. This issue is fixed in v2025.7.8.  
+
 ### Citation: [A ggplot-based single-gene viewer reveals insights into the translatome and other nucleotide-resolution omics data](https://www.biorxiv.org/content/10.1101/2025.01.30.635743v2)
 
 
