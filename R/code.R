@@ -774,13 +774,11 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
       for (eORF_idx in seq_along(eORFTxInfo$eORF.tx_id)) {
         eORF_ranges <- eORFTxInfo$xlim.eORF[[eORF_idx]]
 
-        ### NEW CODE START: Skip if the eORF doesn't overlap this isoform's exons
-        overlap_exons <- findOverlaps(eORF_ranges, exons_gr_original)
-        if (length(overlap_exons) == 0) {
-          # If no overlap with any exon of this isoform, skip plotting eORF for this isoform
+        ### Skip if the eORF doesn't overlap this isoform's exons
+        overlap_exons <- findOverlaps(eORF_ranges, exons_gr_original, type="within")
+        if (length(unique(queryHits(overlap_exons))) < length(eORF_ranges)) {
           next
         }
-        ### NEW CODE END
 
         if (length(eORF_ranges) > 0) {
           original_eORF_ranges <- eORF_ranges
@@ -4388,6 +4386,11 @@ plotGeneTxModel_tx <- function(GeneTxInfo,
   if (plot_ORF_ranges && !is.null(eORFTxInfo)) {
     for (e_idx in seq_along(eORFTxInfo$eORF.tx_id)) {
       eORF_ranges <- eORFTxInfo$xlim.eORF[[e_idx]]
+      #Check if eORF completely included in the transcript range
+      overlap_exons <- findOverlaps(eORF_ranges, exons_gr, type="within")
+      if (length(unique(queryHits(overlap_exons))) < length(eORF_ranges)) {
+        next
+      }
       if (length(eORF_ranges)==0) next
       overlaps_5prime <- length(findOverlaps(eORF_ranges, fiveUTR_gr))   > 0
       overlaps_3prime <- length(findOverlaps(eORF_ranges, threeUTR_gr))  > 0
