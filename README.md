@@ -283,6 +283,6 @@ ggRibo(
 #### Update notes: 
 v2025.7.8 contains a minor fix for the most 5' end amino acid. In the old code, CTG or TTG is translated as Methionine. This issue is fixed in v2025.7.8.  
 
-### Citation: [A ggplot-based single-gene viewer reveals insights into the translatome and other nucleotide-resolution omics data](https://www.biorxiv.org/content/10.1101/2025.01.30.635743v2)
+### Citation: [The ggRibo single-gene viewer reveals insights into translatome and other nucleotide-resolution omics data](https://genome.cshlp.org/content/early/2025/07/22/gr.280480.125.full.pdf+html)
 
 
