@@ -1415,9 +1415,6 @@ get_gene_tx <- function(gene_id = NULL, tx_id = NULL, GRangeInfo) {
       warning(paste("Transcript", tx_id, "found in multiple genes:", paste(matches$gene_id, collapse = ", "), ". Using the first one."))
     }
     gene_id <- matches$gene_id[1]
-    if (is.na(gene_id)) {
-      stop(paste("Transcript", tx_id, "is mapped to NA gene_id. Check annotation."))
-    }
     return(list(gene_id = gene_id, tx_id = tx_id))
   }
   
@@ -1432,7 +1429,6 @@ get_gene_tx <- function(gene_id = NULL, tx_id = NULL, GRangeInfo) {
     return(list(gene_id = gene_id, tx_id = tx_id))
   }
 }
-
 
 #' Plot RNA-seq coverage for a gene
 #'
@@ -3810,8 +3806,21 @@ ggRibo_tx <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
   if (!tx_id %in% tx_names) {
     stop(paste("Transcript",tx_id,"not found in gene",gene_id))
   }
-  strand_info <- as.character(strand(unlist(txByYFG)))[1]
-  chr         <- as.character(seqnames(unlist(txByYFG)))[1]
+
+  # Get strand and chr from exonsByTx if gene_id is NA or txByYFG is empty
+  if (is.na(gene_id) || length(txByYFG) == 0) {
+    exon_gr <- GRangeInfo$exonsByTx[tx_id][[1]]
+    if (length(exon_gr) == 0) {
+      stop(paste("No exons found for transcript", tx_id))
+    }
+    strand_info <- as.character(strand(exon_gr)[1])
+    chr <- as.character(seqnames(exon_gr)[1])
+    txByYFG <- GRangesList(GRanges(chr, IRanges(min(start(exon_gr)), max(end(exon_gr))), strand = strand_info, tx_name = tx_id))
+    names(txByYFG) <- "NA_gene"  # Placeholder
+  } else {
+    strand_info <- as.character(strand(unlist(txByYFG)))[1]
+    chr <- as.character(seqnames(unlist(txByYFG)))[1]
+  }
 
   # Exons
   exonByYFGtx <- GRangeInfo$exonsByTx[tx_id]
@@ -4234,7 +4243,7 @@ ggRibo_tx <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
   rel_heights = rel_heights)
   return(combined_plot)
 }
-
+                                
 #' Assign Frames in Transcript Coordinates for Main CDS
 #'
 #' Assigns frames to Ribo-seq reads (with transcript coordinate "position")
