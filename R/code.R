@@ -1415,6 +1415,9 @@ get_gene_tx <- function(gene_id = NULL, tx_id = NULL, GRangeInfo) {
       warning(paste("Transcript", tx_id, "found in multiple genes:", paste(matches$gene_id, collapse = ", "), ". Using the first one."))
     }
     gene_id <- matches$gene_id[1]
+    if (is.na(gene_id)) {
+      stop(paste("Transcript", tx_id, "is mapped to NA gene_id. Check annotation."))
+    }
     return(list(gene_id = gene_id, tx_id = tx_id))
   }
   
@@ -1429,7 +1432,6 @@ get_gene_tx <- function(gene_id = NULL, tx_id = NULL, GRangeInfo) {
     return(list(gene_id = gene_id, tx_id = tx_id))
   }
 }
-
 
 
 #' Plot RNA-seq coverage for a gene
