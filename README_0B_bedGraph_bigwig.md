@@ -132,7 +132,10 @@ do
     rm ${SAMPLE}.6col.bed ${SAMPLE}.plus.bed ${SAMPLE}.minus.bed
 done
 ```
-
+***Note on Handling Paired-End Read Overlaps in RNA-Seq Coverage Calculation***
+**Question**: In paired-end sequencing (e.g., 150 bp reads on a 200 bp fragment causing middle overlaps), does the provided script (using genomeCoverageBed without -pc) double-count coverage in the overlapping region?
+**Answer**: Yes, by default, genomeCoverageBed treats each alignment independently, so overlapping mates from a pair increment coverage twice in the overlap. This is typical for per-read coverage tracks in RNA-seq.
+**Alternative**: To count each pair as a single fragment (avoiding double-counting overlaps), add the -pc option to genomeCoverageBed. However, -pc may not fully handle spliced alignments with -split. For better precision in spliced data, consider tools like featureCounts or custom scripts.
 
 ### 3. Run the test code for example files
 ```
