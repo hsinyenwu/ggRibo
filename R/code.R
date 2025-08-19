@@ -555,7 +555,6 @@ create_seq_input <- function(rna_files = NULL, ribo_files = NULL, sample_names,
 #' @return A `ggplot` object representing the gene model.
 #' @export
 plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = NULL, plot_ORF_ranges = TRUE, plot_range = NULL, transcript_label_font_size = 10) {
-  # Load necessary libraries
   # Extract information from the GeneTxInfo object
   isoforms <- GeneTxInfo$num_isoforms
   genelim <- c(GeneTxInfo$range_left, GeneTxInfo$range_right)
@@ -585,6 +584,51 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
   # Create a mapping from isoform to its y-axis position
   isoform_y_map <- setNames(isoform_positions$y, isoform_positions$isoform)
 
+  # ---- NEW: helpers for strict eORF/isoform splice compatibility ----
+  get_isoform_introns <- function(exons_gr) {
+    if (length(exons_gr) <= 1) return(GRanges())
+    exons_sorted <- exons_gr[order(start(exons_gr))]
+    intron_starts <- end(exons_sorted)[seq_len(length(exons_sorted) - 1)] + 1L
+    intron_ends   <- start(exons_sorted)[-1L] - 1L
+    keep <- intron_ends >= intron_starts
+    if (!any(keep)) return(GRanges())
+    GRanges(
+      seqnames = seqnames(exons_sorted)[which(keep)],
+      ranges   = IRanges(start = intron_starts[keep], end = intron_ends[keep]),
+      strand   = strand(exons_sorted)[which(keep)]
+    )
+  }
+
+  eorf_splice_compatible <- function(exons_gr_isoform, eorf_gr) {
+    if (length(eorf_gr) == 0) return(FALSE)
+
+    # 1) eORF exons must all be within isoform exons
+    ov_within <- findOverlaps(eorf_gr, exons_gr_isoform, type = "within")
+    if (length(unique(queryHits(ov_within))) < length(eorf_gr)) return(FALSE)
+
+    # 2) multi-exon eORFs must use isoform’s introns at their junctions
+    if (length(eorf_gr) == 1) return(TRUE)
+
+    eorf_sorted <- eorf_gr[order(start(eorf_gr))]
+    gap_starts <- end(eorf_sorted)[seq_len(length(eorf_sorted) - 1)] + 1L
+    gap_ends   <- start(eorf_sorted)[-1L] - 1L
+    keep_gaps <- gap_ends >= gap_starts
+    if (!any(keep_gaps)) return(FALSE)  # no real genomic gap ⇒ not a normal spliced junction
+
+    eorf_gaps <- GRanges(
+      seqnames = seqnames(eorf_sorted)[which(keep_gaps)],
+      ranges   = IRanges(start = gap_starts[keep_gaps], end = gap_ends[keep_gaps]),
+      strand   = strand(eorf_sorted)[which(keep_gaps)]
+    )
+
+    iso_introns <- get_isoform_introns(exons_gr_isoform)
+    if (length(iso_introns) == 0) return(FALSE)
+
+    ov_gap <- findOverlaps(eorf_gaps, iso_introns, type = "within")
+    length(unique(queryHits(ov_gap))) == length(eorf_gaps)
+  }
+  # -------------------------------------------------------------------
+
   # Loop through each isoform to generate plotting data
   for (isoform in isoform_positions$isoform) {
     y_value <- isoform_y_map[isoform]
@@ -594,7 +638,6 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
     # Get exon ranges for this isoform
     exons_gr <- GeneTxInfo$exonByYFGtx[[isoform]]
     if (length(exons_gr) == 0) {
-      # If no exons found, print a warning and continue to next isoform
       warning(paste("Exons for isoform", isoform, "not found in exonByYFGtx"))
       next
     }
@@ -622,7 +665,6 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
       exons_gr_truncated <- pintersect(exons_gr, segment_gr)
       exons_gr_truncated <- exons_gr_truncated[width(exons_gr_truncated) > 0]
       if (length(exons_gr_truncated) == 0) {
-        # If no exons remain after truncation, skip this isoform
         next
       }
       exons_gr <- exons_gr_truncated
@@ -636,7 +678,6 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
     truncate_feature <- function(feature_gr, orig_feature_gr) {
       if (length(feature_gr) == 0) return(NULL)
 
-      # If no truncation range is given, just return original starts/ends
       if (is.null(segment_gr)) {
         df <- data.frame(
           start = start(feature_gr),
@@ -648,12 +689,10 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
         )
         return(df)
       } else {
-        # If truncation range is provided, intersect and find truncated segments
         truncated_gr <- pintersect(feature_gr, segment_gr)
         truncated_gr <- truncated_gr[width(truncated_gr) > 0]
         if (length(truncated_gr) == 0) return(NULL)
 
-        # For each truncated range, find original boundaries
         out_list <- list()
         for (i in seq_along(truncated_gr)) {
           tgr <- truncated_gr[i]
@@ -768,15 +807,14 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
         isoform_idx <- isoform_idx+1
       }
     }
-    
+
     # If eORF info is provided and plot_ORF_ranges is TRUE, include eORF features
     if (!is.null(eORFTxInfo)) {
       for (eORF_idx in seq_along(eORFTxInfo$eORF.tx_id)) {
         eORF_ranges <- eORFTxInfo$xlim.eORF[[eORF_idx]]
 
-        ### Skip if the eORF doesn't overlap this isoform's exons
-        overlap_exons <- findOverlaps(eORF_ranges, exons_gr_original, type="within")
-        if (length(unique(queryHits(overlap_exons))) < length(eORF_ranges)) {
+        # STRICT: draw eORF only if blocks are within exons AND junctions match the isoform’s introns
+        if (!eorf_splice_compatible(exons_gr_original, eORF_ranges)) {
           next
         }
 
