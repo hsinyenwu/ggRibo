@@ -4724,15 +4724,31 @@ plotGeneTxModel_tx <- function(GeneTxInfo,
     if (!is.null(cds_df)) plot_data_list[[length(plot_data_list)+1]] <- cds_df
   }
 
+  ## ---- Only changes below: presence via mapping + out-of-range note ----
+  eorf_out_of_range_ids <- character(0)
+
   if (plot_ORF_ranges && !is.null(eORFTxInfo)) {
     for (e_idx in seq_along(eORFTxInfo$eORF.tx_id)) {
       eORF_ranges <- eORFTxInfo$xlim.eORF[[e_idx]]
-      #Check if eORF completely included in the transcript range
-      overlap_exons <- findOverlaps(eORF_ranges, exons_gr, type="within")
-      if (length(unique(queryHits(overlap_exons))) < length(eORF_ranges)) {
+      if (length(eORF_ranges)==0) next
+
+      # Presence test (same strategy as plotGeneTxModel):
+      # map every genomic base of the eORF to transcript coordinates.
+      eorf_genome_pos <- unlist(lapply(seq_along(eORF_ranges), function(k) {
+        seq(start(eORF_ranges[k]), end(eORF_ranges[k]))
+      }))
+      eorf_txpos <- position_map$tx_pos[match(eorf_genome_pos, position_map$genomic_pos)]
+
+      # If any base fails to map (NA), the eORF is not present on this isoform.
+      if (length(eorf_txpos) == 0 || any(is.na(eorf_txpos))) next
+
+      # Entirely outside plotting window? note + skip drawing
+      if (max(eorf_txpos) < x_min || min(eorf_txpos) > x_max) {
+        eorf_out_of_range_ids <- unique(c(eorf_out_of_range_ids, eORFTxInfo$eORF.tx_id[e_idx]))
         next
       }
-      if (length(eORF_ranges)==0) next
+
+      # Classify eORF (as before)
       overlaps_5prime <- length(findOverlaps(eORF_ranges, fiveUTR_gr))   > 0
       overlaps_3prime <- length(findOverlaps(eORF_ranges, threeUTR_gr))  > 0
       overlaps_CDS    <- length(findOverlaps(eORF_ranges, cds_gr))       > 0
@@ -4751,22 +4767,27 @@ plotGeneTxModel_tx <- function(GeneTxInfo,
     }
   }
 
+  if (length(eorf_out_of_range_ids) > 0) {
+    message(
+      sprintf(
+        "Note: %d eORF(s) fall outside the plotted transcript range [%d, %d] and were not drawn. Isoform(s) these eORFs are tied to: %s",
+        length(eorf_out_of_range_ids), x_min, x_max,
+        paste(eorf_out_of_range_ids, collapse = ", ")
+      )
+    )
+  }
+  ## ---- End of changes ----
+
   plot_data <- do.call(rbind, plot_data_list)
   if (is.null(plot_data) || nrow(plot_data)==0) {
     stop("No features to plot within the specified range.")
   }
 
-  # Define the desired order for the legend
   desired_order <- c("5' UTR", "CDS", "3' UTR", "uORF", "ouORF", "nORF", "ORF", "odORF", "dORF")
-
-  # Get present features excluding "exon"
   present_features <- setdiff(unique(plot_data$feature), "exon")
-
-  # Order legend_features: first those in desired_order, then others
   legend_features <- c(desired_order[desired_order %in% present_features],
                        setdiff(present_features, desired_order))
 
-  # Check if any eORFs are plotted
   eorf_features <- c("uORF", "ouORF", "nORF", "ORF", "odORF", "dORF")
   has_eorfs <- any(eorf_features %in% plot_data$feature)
 
@@ -4787,16 +4808,12 @@ plotGeneTxModel_tx <- function(GeneTxInfo,
     "exon"   = "lightgrey"
   )
 
-  # Assign "unknown" to any feature not in feature_colors
   known_levels <- names(feature_colors)
   plot_data$feature <- ifelse(plot_data$feature %in% known_levels, plot_data$feature, "unknown")
-
-  # Add "unknown" to feature_colors if necessary
   if ("unknown" %in% plot_data$feature && !"unknown" %in% names(feature_colors)) {
     feature_colors <- c(feature_colors, "unknown" = "grey")
   }
 
-  # Adjust y-axis labels and limits based on whether eORFs are plotted
   if (has_eorfs) {
     y_limits <- c(0.8, 1.3)
     y_breaks <- c(y_transcript, y_eorf)
@@ -4829,7 +4846,6 @@ plotGeneTxModel_tx <- function(GeneTxInfo,
       panel.grid.minor.y = element_blank()
     )
 
-  # Add white lines for truncated starts and ends
   truncated_data <- plot_data[plot_data$start_truncated | plot_data$end_truncated, ]
   if (nrow(truncated_data) > 0) {
     start_truncated <- truncated_data[truncated_data$start_truncated, ]
