@@ -4612,11 +4612,19 @@ assign_frames_tx_eORF <- function(Ribo_data) {
   return(Ribo_data)
 }
 
-
 #' Plot Transcript Model in Exon Coordinates
 #'
 #' Creates a transcript model plot showing exons, UTRs, CDS, and optional eORFs
 #' in transcript coordinates (1..N). Features are drawn with appropriate borders.
+#'
+#' The function evaluates eORF presence using the same exon→transcript mapping used
+#' to build the model: an eORF is plotted only if all of its genomic bases map to
+#' transcript coordinates without gaps (i.e. the mapped transcript positions are
+#' perfectly contiguous), ensuring splice-junction compatibility with the selected
+#' transcript. eORFs that fail this check are considered incompatible and are not drawn.
+#' Compatible eORFs that lie completely outside \code{plot_range} are also not drawn;
+#' their transcript IDs are reported via \code{message()} so users know which isoform(s)
+#' may include them. Features clipped by \code{plot_range} are rendered with white end caps.
 #'
 #' @param GeneTxInfo A `Gene_info` object containing gene/transcript information.
 #' @param eORFTxInfo An optional `eORF_info` object.
@@ -4679,6 +4687,7 @@ plotGeneTxModel_tx <- function(GeneTxInfo,
     for (j in seq_along(feature_gr)) {
       f   <- feature_gr[j]
       fpos<- seq(start(f), end(f))
+      if (strand=="-") fpos <- rev(fpos)
       txp <- position_map$tx_pos[match(fpos, position_map$genomic_pos)]
       txp <- txp[!is.na(txp)]
       if (length(txp)==0) next
@@ -4724,41 +4733,52 @@ plotGeneTxModel_tx <- function(GeneTxInfo,
     if (!is.null(cds_df)) plot_data_list[[length(plot_data_list)+1]] <- cds_df
   }
 
-  ## ---- Only changes below: presence via mapping + out-of-range note ----
+  # Collect eORFs that are compatible but entirely outside plotting window
   eorf_out_of_range_ids <- character(0)
 
   if (plot_ORF_ranges && !is.null(eORFTxInfo)) {
     for (e_idx in seq_along(eORFTxInfo$eORF.tx_id)) {
       eORF_ranges <- eORFTxInfo$xlim.eORF[[e_idx]]
-      if (length(eORF_ranges)==0) next
+      if (length(eORF_ranges) == 0) next
 
-      # Presence test (same strategy as plotGeneTxModel):
-      # map every genomic base of the eORF to transcript coordinates.
-      eorf_genome_pos <- unlist(lapply(seq_along(eORF_ranges), function(k) {
-        seq(start(eORF_ranges[k]), end(eORF_ranges[k]))
-      }))
-      eorf_txpos <- position_map$tx_pos[match(eorf_genome_pos, position_map$genomic_pos)]
+      # Order eORF fragments along transcript direction
+      if (strand == "+") {
+        eORF_ranges <- sort(eORF_ranges, decreasing = FALSE)
+      } else {
+        eORF_ranges <- sort(eORF_ranges, decreasing = TRUE)
+      }
 
-      # If any base fails to map (NA), the eORF is not present on this isoform.
-      if (length(eorf_txpos) == 0 || any(is.na(eorf_txpos))) next
+      # ---- Splice-compatibility via mapping + contiguity (same strategy as transcript map)
+      eorf_txpos_full <- integer(0)
+      compatible <- TRUE
+      for (k in seq_along(eORF_ranges)) {
+        f <- eORF_ranges[k]
+        fpos <- seq(start(f), end(f))
+        if (strand == "-") fpos <- rev(fpos)
+        txp <- position_map$tx_pos[match(fpos, position_map$genomic_pos)]
+        if (any(is.na(txp))) { compatible <- FALSE; break }
+        eorf_txpos_full <- c(eorf_txpos_full, txp)
+      }
+      if (!compatible || length(eorf_txpos_full) == 0) next
+      if (!all(diff(eorf_txpos_full) == 1)) next  # non-contiguous in transcript coords -> junctions not compatible
 
-      # Entirely outside plotting window? note + skip drawing
-      if (max(eorf_txpos) < x_min || min(eorf_txpos) > x_max) {
+      # Entirely outside plotting range? note + skip drawing
+      if (max(eorf_txpos_full) < x_min || min(eorf_txpos_full) > x_max) {
         eorf_out_of_range_ids <- unique(c(eorf_out_of_range_ids, eORFTxInfo$eORF.tx_id[e_idx]))
         next
       }
 
-      # Classify eORF (as before)
+      # Classify eORF with respect to UTR/CDS of this transcript
       overlaps_5prime <- length(findOverlaps(eORF_ranges, fiveUTR_gr))   > 0
       overlaps_3prime <- length(findOverlaps(eORF_ranges, threeUTR_gr))  > 0
       overlaps_CDS    <- length(findOverlaps(eORF_ranges, cds_gr))       > 0
       feature_label <-
-        if (overlaps_5prime && overlaps_CDS)    "ouORF"
-        else if (overlaps_5prime)               "uORF"
+        if (overlaps_5prime && overlaps_CDS)      "ouORF"
+        else if (overlaps_5prime)                 "uORF"
         else if (overlaps_3prime && overlaps_CDS) "odORF"
-        else if (overlaps_3prime)               "dORF"
-        else if (overlaps_CDS)                  "nORF"
-        else                                    "ORF"
+        else if (overlaps_3prime)                 "dORF"
+        else if (overlaps_CDS)                    "nORF"
+        else                                      "ORF"
 
       eORF_df <- map_and_truncate(eORF_ranges, feature_label, y_eorf)
       if (!is.null(eORF_df)) {
@@ -4776,7 +4796,6 @@ plotGeneTxModel_tx <- function(GeneTxInfo,
       )
     )
   }
-  ## ---- End of changes ----
 
   plot_data <- do.call(rbind, plot_data_list)
   if (is.null(plot_data) || nrow(plot_data)==0) {
@@ -4873,7 +4892,7 @@ plotGeneTxModel_tx <- function(GeneTxInfo,
 
   return(p_gene)
 }
-
+                                                     
 #' @title Plot DNA and Amino Acid Sequences in Transcript Coordinates
 #'
 #' @description
