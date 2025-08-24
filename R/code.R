@@ -3894,17 +3894,16 @@ ggRibo_tx <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
     ext_left_pos <- seq(ext_left_start, exon_start - 1)
     if (length(ext_left_pos) > 0) {
       len_left <- length(ext_left_pos)
-      tx_pos_left <- seq(cum_len + 1 - len_left, cum_len)  # Negative tx_pos for upstream
+      tx_pos_left <- seq(cum_len + 1 - len_left, cum_len)  # Negative/0 for upstream ext
       positions <- c(positions, ext_left_pos)
       tx_positions <- c(tx_positions, tx_pos_left)
       cum_len <- cum_len
     }
   } else {
-    ext_right_start <- min(exon_start, exon_end + Extend_right)
     ext_right_pos <- seq(exon_end + 1, exon_end + Extend_right)
     if (length(ext_right_pos) > 0) {
       len_right <- length(ext_right_pos)
-      tx_pos_right <- seq(cum_len + 1 - len_right, cum_len)  # Negative tx_pos for upstream
+      tx_pos_right <- seq(cum_len + 1 - len_right, cum_len)  # Negative/0 for upstream ext (reverse strand)
       positions <- c(positions, rev(ext_right_pos))
       tx_positions <- c(tx_positions, tx_pos_right)
       cum_len <- cum_len
@@ -4134,111 +4133,125 @@ ggRibo_tx <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                  hjust = 0, vjust = 1,
                  size = 3, fontface = "bold")
 
+      # --------------------------
       # Ribo-seq + frame assignment
+      # --------------------------
       if (nrow(RiboRslt) > 0) {
-        cds_ranges <- cdsByYFGtx[[1]]
+        cds_gr <- cdsByYFGtx[[1]]
+        # Map CDS to transcript positions
         cds_tx_positions <- integer(0)
-        if (length(cds_ranges) > 0) {
-          if (strand_info == "+") {
-            cds_ranges <- sort(cds_ranges)
-          } else {
-            cds_ranges <- sort(cds_ranges, decreasing = TRUE)
-          }
-          for (cgr in seq_along(cds_ranges)) {
-            cpos <- seq(start(cds_ranges[cgr]), end(cds_ranges[cgr]))
-            if (strand_info == "-") cpos <- rev(cpos)
-            tpos <- position_map$tx_pos[match(cpos, position_map$genomic_pos)]
+        if (length(cds_gr) > 0) {
+          if (strand_info == "+") cds_gr <- sort(cds_gr) else cds_gr <- sort(cds_gr, decreasing = TRUE)
+          for (cgr in seq_along(cds_gr)) {
+            gpos <- seq(start(cds_gr[cgr]), end(cds_gr[cgr]))
+            if (strand_info == "-") gpos <- rev(gpos)
+            tpos <- position_map$tx_pos[match(gpos, position_map$genomic_pos)]
             tpos <- tpos[!is.na(tpos)]
             cds_tx_positions <- c(cds_tx_positions, tpos)
           }
+          cds_tx_positions <- unique(cds_tx_positions)
         }
 
-        # Assign frames for main CDS
-        RiboRslt$main_frame <- assign_frames_tx(RiboRslt, cds_tx_positions)$frame
-
-        # Identify main ORF positions
-        main_orf_positions <- if (length(cds_tx_positions) > 0) cds_tx_positions else integer(0)
-
-        # Identify eORF positions and determine overlaps
-        if (!is.null(eORFTxInfo)) {
-          eORF_list <- eORFTxInfo$eORF_Riboseq_list[[i]]
-          eORF_overlaps <- logical(length(eORF_list))
-          if (length(main_orf_positions) > 0) {
-            main_orf_start <- min(main_orf_positions)
-            main_orf_end <- max(main_orf_positions)
-            for (j in seq_along(eORF_list)) {
-              eORF_data <- eORF_list[[j]]
-              if (nrow(eORF_data) > 0) {
-                eORF_start <- min(eORF_data$position)
-                eORF_end <- max(eORF_data$position)
-                if (eORF_start <= main_orf_end && eORF_end >= main_orf_start) {
-                  eORF_overlaps[j] <- TRUE
-                }
-              }
-            }
+        # Local helper: map a GRanges (genomic) to transcript positions
+        map_gr_to_txpos <- function(gr) {
+          if (length(gr) == 0) return(integer(0))
+          txp_all <- integer(0)
+          gr_use <- if (strand_info == "+") sort(gr) else sort(gr, decreasing = TRUE)
+          for (k in seq_along(gr_use)) {
+            gpos <- seq(start(gr_use[k]), end(gr_use[k]))
+            if (strand_info == "-") gpos <- rev(gpos)
+            tpos <- position_map$tx_pos[match(gpos, position_map$genomic_pos)]
+            tpos <- tpos[!is.na(tpos)]
+            txp_all <- c(txp_all, tpos)
           }
-          overlapping_eORF_positions <- unique(unlist(lapply(eORF_list[eORF_overlaps], function(df) df$position)))
-          non_overlapping_eORF_positions <- unique(unlist(lapply(eORF_list[!eORF_overlaps], function(df) df$position)))
-        } else {
-          overlapping_eORF_positions <- integer(0)
-          non_overlapping_eORF_positions <- integer(0)
+          unique(txp_all)
         }
 
-        # Frame assignment based on oORF_coloring
-        RiboRslt$plot_frame <- factor(NA, levels = c(0, 1, 2))
-        if (oORF_coloring == "extend_mORF") {
-          if (length(cds_tx_positions) > 0) {
-            cds_start_tx <- min(cds_tx_positions)
-            all_positions <- seq(min(RiboRslt$position), max(RiboRslt$position))
-            extended_frame <- (all_positions - cds_start_tx) %% 3
-            frame_df <- data.frame(position = all_positions, extended_frame = factor(extended_frame, levels = c(0, 1, 2)))
-            RiboRslt <- merge(RiboRslt, frame_df, by = "position", all.x = TRUE)
-          } else {
-            RiboRslt$extended_frame <- factor(NA, levels = c(0, 1, 2))
-          }
+        # Initialize plot_frame (factor with levels 0,1,2)
+        RiboRslt$plot_frame <- factor(NA, levels = c(0,1,2))
 
-          idx_main <- RiboRslt$position %in% main_orf_positions
-          RiboRslt$plot_frame[idx_main] <- RiboRslt$main_frame[idx_main]
+        if (oORF_coloring == "extend_mORF" && length(cds_tx_positions) > 0) {
+          cds_start_tx <- min(cds_tx_positions)
 
-          idx_overlap <- RiboRslt$position %in% overlapping_eORF_positions & !idx_main
-          RiboRslt$plot_frame[idx_overlap] <- RiboRslt$extended_frame[idx_overlap]
+          # Build the "extended" set = main CDS tx positions ∪ eORF tx positions that overlap CDS (ou/odORFs)
+          extended_tx_positions <- cds_tx_positions
 
-          if (!is.null(eORFTxInfo) && length(non_overlapping_eORF_positions) > 0) {
-            for (j in which(!eORF_overlaps)) {
-              eORF_data <- eORF_list[[j]]
-              if (nrow(eORF_data) > 0) {
-                eORF_start <- min(eORF_data$position)
-                eORF_positions <- eORF_data$position
-                eORF_frame <- (eORF_positions - eORF_start) %% 3
-                eORF_frame_df <- data.frame(position = eORF_positions, eORF_frame = factor(eORF_frame, levels = c(0, 1, 2)))
-                idx_eORF <- RiboRslt$position %in% eORF_positions & is.na(RiboRslt$plot_frame)
-                if (any(idx_eORF)) {
-                  temp_df <- merge(RiboRslt[idx_eORF, ], eORF_frame_df, by = "position", all.x = TRUE)
-                  RiboRslt$plot_frame[idx_eORF] <- temp_df$eORF_frame
-                }
-              }
-            }
-          }
-        } else if (oORF_coloring == "oORF_colors") {
           if (!is.null(eORFTxInfo)) {
+            for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
+              eorf_gr <- eORFTxInfo$xlim.eORF[[j]]
+              overlaps_CDS <- length(findOverlaps(eorf_gr, cds_gr)) > 0
+              if (overlaps_CDS) {
+                eorf_txpos <- map_gr_to_txpos(eorf_gr)
+                if (length(eorf_txpos) > 0) {
+                  extended_tx_positions <- unique(c(extended_tx_positions, eorf_txpos))
+                }
+              }
+            }
+          }
+
+          # Assign main (extended) frame only within the extended set
+          if (length(extended_tx_positions) > 0) {
+            idx_ext <- RiboRslt$position %in% extended_tx_positions
+            if (any(idx_ext)) {
+              RiboRslt$plot_frame[idx_ext] <- factor((RiboRslt$position[idx_ext] - cds_start_tx) %% 3,
+                                                     levels = c(0,1,2))
+            }
+          }
+
+          # For non-overlapping eORFs (uORFs/dORFs), assign their own frame relative to eORF start (tx)
+          if (!is.null(eORFTxInfo)) {
+            for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
+              eorf_gr <- eORFTxInfo$xlim.eORF[[j]]
+              overlaps_CDS <- length(findOverlaps(eorf_gr, cds_gr)) > 0
+              if (!overlaps_CDS) {
+                eorf_txpos <- map_gr_to_txpos(eorf_gr)
+                if (length(eorf_txpos) > 0) {
+                  eorf_start_tx <- min(eorf_txpos)
+                  idx_eorf <- (RiboRslt$position %in% eorf_txpos) & is.na(RiboRslt$plot_frame)
+                  if (any(idx_eorf)) {
+                    RiboRslt$plot_frame[idx_eorf] <- factor((RiboRslt$position[idx_eorf] - eorf_start_tx) %% 3,
+                                                            levels = c(0,1,2))
+                  }
+                }
+              }
+            }
+          }
+
+        } else if (oORF_coloring == "oORF_colors") {
+          # Color only eORF reads by each eORF's own frame; others remain NA (grey)
+          if (!is.null(eORFTxInfo)) {
+            eORF_list <- eORFTxInfo$eORF_Riboseq_list[[i]]
             for (j in seq_along(eORF_list)) {
               eORF_data <- eORF_list[[j]]
               if (nrow(eORF_data) > 0) {
                 ref <- min(eORF_data$position)
-                eORF_frame <- (eORF_data$position - ref) %% 3
-                RiboRslt$plot_frame[RiboRslt$position %in% eORF_data$position] <- factor(eORF_frame, levels = c(0, 1, 2))
+                idx <- RiboRslt$position %in% eORF_data$position
+                RiboRslt$plot_frame[idx] <- factor((RiboRslt$position[idx] - ref) %% 3, levels = c(0,1,2))
               }
             }
           }
         } else {
-          stop("Invalid oORF_coloring option.")
+          # Fallback: if no CDS but user asked for extend_mORF, treat like oORF_colors
+          if (!is.null(eORFTxInfo)) {
+            eORF_list <- eORFTxInfo$eORF_Riboseq_list[[i]]
+            for (j in seq_along(eORF_list)) {
+              eORF_data <- eORF_list[[j]]
+              if (nrow(eORF_data) > 0) {
+                ref <- min(eORF_data$position)
+                idx <- RiboRslt$position %in% eORF_data$position
+                RiboRslt$plot_frame[idx] <- factor((RiboRslt$position[idx] - ref) %% 3, levels = c(0,1,2))
+              }
+            }
+          }
         }
 
+        # Height capping + scaling
         if (!is.null(Ribo_fix_height)) {
           RiboRslt$count <- pmin(RiboRslt$count, Ribo_fix_height)
         }
         RiboRslt$count_scaled <- RiboRslt$count * scale_factor
 
+        # Draw reads
         if (sample_color[i] == "color") {
           p <- p + geom_segment(
             data = RiboRslt,
@@ -4254,6 +4267,7 @@ ggRibo_tx <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
           )
         }
 
+        # Optional vertical lines for CDS start/stop (in tx coords) if enough width
         if ((x_max - x_min) >= 50 && length(cds_tx_positions) > 0) {
           cds_start_tx <- min(cds_tx_positions)
           cds_stop_tx <- max(cds_tx_positions)
@@ -4265,19 +4279,23 @@ ggRibo_tx <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
           }
         }
 
+        # Optional eORF boundary lines in tx coords
         if (!is.null(eORFTxInfo)) {
           for (j in seq_along(eORF.tx_id)) {
             if (length(eORFRangeInfo$eORFByTx[[eORF.tx_id[j]]]) > 0) {
               eorf_gr <- eORFRangeInfo$eORFByTx[[eORF.tx_id[j]]]
-              eorf_gen_start <- min(start(eorf_gr))
-              eorf_gen_stop <- max(end(eorf_gr))
-              eorf_tx_start <- position_map$tx_pos[match(eorf_gen_start, position_map$genomic_pos)]
-              eorf_tx_stop <- position_map$tx_pos[match(eorf_gen_stop, position_map$genomic_pos)]
-              if (!is.na(eorf_tx_start) && eorf_tx_start >= x_min && eorf_tx_start <= x_max) {
-                p <- p + geom_vline(xintercept = eorf_tx_start, linetype = "solid", color = "orange", alpha = 0.5)
-              }
-              if (!is.na(eorf_tx_stop) && eorf_tx_stop >= x_min && eorf_tx_stop <= x_max) {
-                p <- p + geom_vline(xintercept = eorf_tx_stop, linetype = "dashed", color = "orange", alpha = 0.5)
+              epos <- seq(min(start(eorf_gr)), max(end(eorf_gr)))
+              txpos_eorf <- position_map$tx_pos[match(epos, position_map$genomic_pos)]
+              txpos_eorf <- txpos_eorf[!is.na(txpos_eorf)]
+              if (length(txpos_eorf) > 0) {
+                eorf_tx_start <- min(txpos_eorf)
+                eorf_tx_stop  <- max(txpos_eorf)
+                if (!is.na(eorf_tx_start) && eorf_tx_start >= x_min && eorf_tx_start <= x_max) {
+                  p <- p + geom_vline(xintercept = eorf_tx_start, linetype = "solid", color = "orange", alpha = 0.5)
+                }
+                if (!is.na(eorf_tx_stop) && eorf_tx_stop >= x_min && eorf_tx_stop <= x_max) {
+                  p <- p + geom_vline(xintercept = eorf_tx_stop, linetype = "dashed", color = "orange", alpha = 0.5)
+                }
               }
             }
           }
@@ -4345,6 +4363,20 @@ ggRibo_tx <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
   return(combined_plot)
 }
 
+#' Plot Transcript Model in Exon Coordinates
+#'
+#' Creates a transcript model plot showing exons, UTRs, CDS, and optional eORFs
+#' in transcript coordinates (1..N). Features are drawn with appropriate borders.
+#'
+#' @param GeneTxInfo A `Gene_info` object containing gene/transcript information.
+#' @param eORFTxInfo An optional `eORF_info` object.
+#' @param plot_ORF_ranges Logical, whether to plot ORF ranges.
+#' @param transcript_label_font_size Numeric to control transcript label font size.
+#' @param plot_range Optional numeric vector (start, end) in transcript coordinates.
+#'
+#' @return A `ggplot` object representing the transcript model.
+#'
+#' @export
 plotGeneTxModel_tx <- function(GeneTxInfo,
                                eORFTxInfo = NULL,
                                plot_ORF_ranges = TRUE,
