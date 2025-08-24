@@ -284,7 +284,7 @@ ggRibo(
 v2025.7.8 contains a minor fix for the most 5' end amino acid. In the old code, CTG or TTG is translated as Methionine. This issue is fixed in v2025.7.8.  
 v2025.7.16 contains a minor fix for the uORF/dORF model in transcript model. Now those isoforms without the uORF/dORF in the their range will not show up in the isoforms.  
 v2025.8.7 Fix ggRibo_tx to plot isoforms without 5'UTR. Also fix the Extend parameter for ggRibo_tx. Add a note in bedGraph and bigwig file about overlapping paired-end reads.   
-v2025.8.19 Fix ggRibo and ggRibo_decom gene model. Now will not plot eORFs unless the isoform has a competable exon-intron structure. 
+v2025.8.19 Fix ggRibo and ggRibo_decom gene model. Now will not plot eORFs unless the isoform has a competable exon-intron structure. Fix ggRibo_tx coloring for oORFs (overlapping ORFs, e.g., overlapping uORF). 
 
 ### Citation: [A ggplot-based single-gene viewer reveals insights into the translatome and other nucleotide-resolution omics data](https://www.biorxiv.org/content/10.1101/2025.01.30.635743v2)
 
