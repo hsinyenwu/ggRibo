@@ -4942,6 +4942,23 @@ plotGeneTxModel_tx <- function(GeneTxInfo,
 #'   optionally labeled with base/AA letters if the region is \(\le\)201 nt.
 #'
 #' @export
+#' @title Plot DNA and Amino Acid Sequences in Transcript Coordinates
+#'
+#' @description
+#' Plots nucleotides (and their translated amino acids) for a spliced transcript
+#' within a specified transcript coordinate range, including upstream and downstream extensions.
+#' Nucleotides/AA are drawn in 5'->3' order, ignoring the genomic strand orientation for the final x-axis.
+#'
+#' @param GeneTxInfo A \code{Gene_info} object containing exons and other transcript data.
+#' @param plot_range Optional numeric \code{c(start, end)} specifying the transcript coordinate range.
+#' If \code{NULL}, plots the full spliced transcript with extensions.
+#' @param FASTA A \code{BSgenome} or \code{FaFile} object with the reference genome sequences.
+#' @param nucleotide_color_scheme Either \code{"default"} or \code{"colorblind"} for the nucleotide palette.
+#'
+#' @return A \code{ggplot2} object with tiles for the DNA bases and codons,
+#' optionally labeled with base/AA letters if the region is \(\le\)201 nt.
+#'
+#' @export
 plotDNAandAA_tx <- function(GeneTxInfo, plot_range = NULL, FASTA = NULL, nucleotide_color_scheme = "default") {
   if (is.null(FASTA)) {
     stop("FASTA must be provided as a BSgenome object.")
@@ -4949,238 +4966,286 @@ plotDNAandAA_tx <- function(GeneTxInfo, plot_range = NULL, FASTA = NULL, nucleot
   tx_id <- GeneTxInfo$tx_id
   exons_gr <- GeneTxInfo$exonByYFGtx[[tx_id]]
   strand <- GeneTxInfo$strand
+  Extend <- GeneTxInfo$Extend
   if (length(exons_gr) == 0) {
     stop(paste("No exons found for transcript", tx_id))
   }
-
-  # Sort exons
-  if (strand=="+") {
-    exons_gr <- sort(exons_gr, decreasing=FALSE)
+  # Handle Extend parameter as a vector
+  if (length(Extend) == 1) {
+    Extend_left <- Extend
+    Extend_right <- Extend
+  } else if (length(Extend) == 2) {
+    Extend_left <- Extend[1]
+    Extend_right <- Extend[2]
   } else {
-    exons_gr <- sort(exons_gr, decreasing=TRUE)
+    stop("Extend must be a numeric value or a vector of two numeric values.")
   }
-
-  # Build spliced transcript
-  positions   <- integer(0)
-  tx_positions<- integer(0)
-  cum_len     <- 0
-  exon_seqs   <- character(length(exons_gr))
-
+  # Sort exons
+  if (strand == "+") {
+    exons_gr <- sort(exons_gr, decreasing = FALSE)
+  } else {
+    exons_gr <- sort(exons_gr, decreasing = TRUE)
+  }
+  # Build transcript coordinate map with extensions
+  positions <- integer(0)
+  tx_positions <- integer(0)
+  cum_len <- 0
+  exon_seqs <- character(length(exons_gr))
+  # Add upstream extension
+  exon_start <- min(start(exons_gr))
+  exon_end <- max(end(exons_gr))
+  chr <- as.character(seqnames(exons_gr)[1])
+  chrom_length <- seqlengths(FASTA)[chr]
+  if (is.null(chrom_length) || is.na(chrom_length)) {
+    stop(paste("Chromosome", chr, "not found in FASTA"))
+  }
+  if (strand == "+") {
+    ext_left_start <- max(1, exon_start - Extend_left)
+    ext_left_pos <- seq(ext_left_start, exon_start - 1)
+    if (length(ext_left_pos) > 0) {
+      len_left <- length(ext_left_pos)
+      tx_pos_left <- seq(cum_len + 1 - len_left, cum_len)
+      positions <- c(positions, ext_left_pos)
+      tx_positions <- c(tx_positions, tx_pos_left)
+      ext_left_rng <- GRanges(seqnames = chr, ranges = IRanges(ext_left_start, exon_start - 1), strand = "+")
+      ext_left_seq <- getSeq(FASTA, ext_left_rng)
+      exon_seqs <- c(as.character(ext_left_seq), exon_seqs)
+      cum_len <- cum_len
+    }
+  } else {
+    ext_right_pos <- seq(exon_end + 1, min(exon_end + Extend_right, chrom_length))
+    if (length(ext_right_pos) > 0) {
+      len_right <- length(ext_right_pos)
+      tx_pos_right <- seq(cum_len + 1 - len_right, cum_len)
+      positions <- c(positions, rev(ext_right_pos))
+      tx_positions <- c(tx_positions, tx_pos_right)
+      ext_right_rng <- GRanges(seqnames = chr, ranges = IRanges(exon_end + 1, min(exon_end + Extend_right, chrom_length)), strand = "+")
+      ext_right_seq <- getSeq(FASTA, ext_right_rng)
+      exon_seqs <- c(as.character(reverseComplement(ext_right_seq)), exon_seqs)
+      cum_len <- cum_len
+    }
+  }
+  # Add exon regions
   for (i in seq_along(exons_gr)) {
     e <- exons_gr[i]
-    e_rng <- GRanges(seqnames=seqnames(e),
-                     ranges=IRanges(start(e),end(e)),
-                     strand=strand(e))
+    e_rng <- GRanges(seqnames = seqnames(e), ranges = IRanges(start(e), end(e)), strand = "+")
     exon_dna <- getSeq(FASTA, e_rng)
-    exon_str <- paste0(exon_dna, collapse="")
+    exon_str <- as.character(if (strand == "-") reverseComplement(exon_dna) else exon_dna)
     exon_len <- nchar(exon_str)
-    pos_vec  <- seq(start(e), end(e))
-    if (strand=="-") {
-      pos_vec <- rev(pos_vec)
-    }
-    tx_vec <- seq(cum_len+1, cum_len+exon_len)
-    positions   <- c(positions, pos_vec)
-    tx_positions<- c(tx_positions, tx_vec)
-    cum_len     <- cum_len+exon_len
-    exon_seqs[i]<- exon_str
+    pos_vec <- seq(start(e), end(e))
+    if (strand == "-") pos_vec <- rev(pos_vec)
+    tx_vec <- seq(cum_len + 1, cum_len + exon_len)
+    positions <- c(positions, pos_vec)
+    tx_positions <- c(tx_positions, tx_vec)
+    cum_len <- cum_len + exon_len
+    exon_seqs[i + (strand == "+" && length(ext_left_pos) > 0 || strand == "-" && length(ext_right_pos) > 0)] <- exon_str
   }
-
-  full_tx_dna <- paste0(exon_seqs, collapse="")
-  tx_length   <- nchar(full_tx_dna)
-
+  # Add downstream extension
+  if (strand == "+") {
+    ext_right_pos <- seq(exon_end + 1, min(exon_end + Extend_right, chrom_length))
+    if (length(ext_right_pos) > 0) {
+      len_right <- length(ext_right_pos)
+      tx_pos_right <- seq(cum_len + 1, cum_len + len_right)
+      positions <- c(positions, ext_right_pos)
+      tx_positions <- c(tx_positions, tx_pos_right)
+      ext_right_rng <- GRanges(seqnames = chr, ranges = IRanges(exon_end + 1, min(exon_end + Extend_right, chrom_length)), strand = "+")
+      ext_right_seq <- getSeq(FASTA, ext_right_rng)
+      exon_seqs <- c(exon_seqs, as.character(ext_right_seq))
+      cum_len <- cum_len + len_right
+    }
+  } else {
+    ext_left_start <- max(1, exon_start - Extend_left)
+    ext_left_pos <- seq(ext_left_start, exon_start - 1)
+    if (length(ext_left_pos) > 0) {
+      len_left <- length(ext_left_pos)
+      tx_pos_left <- seq(cum_len + 1, cum_len + len_left)
+      positions <- c(positions, rev(ext_left_pos))
+      tx_positions <- c(tx_positions, tx_pos_left)
+      ext_left_rng <- GRanges(seqnames = chr, ranges = IRanges(ext_left_start, exon_start - 1), strand = "+")
+      ext_left_seq <- getSeq(FASTA, ext_left_rng)
+      exon_seqs <- c(exon_seqs, as.character(reverseComplement(ext_left_seq)))
+      cum_len <- cum_len + len_left
+    }
+  }
+  position_map <- data.frame(genomic_pos = positions, tx_pos = tx_positions)
+  full_tx_dna <- paste0(exon_seqs, collapse = "")
+  tx_length <- nchar(full_tx_dna)
   if (!is.null(plot_range)) {
     plot_range <- sort(plot_range)
-    plot_range[1] <- max(plot_range[1],1)
-    plot_range[2] <- min(plot_range[2],tx_length)
+    plot_range[1] <- max(plot_range[1], min(tx_positions))
+    plot_range[2] <- min(plot_range[2], max(tx_positions))
   } else {
-    plot_range <- c(1, tx_length)
+    plot_range <- c(min(tx_positions), max(tx_positions))
   }
-
   region_length <- plot_range[2] - plot_range[1] + 1
-  suppress_labels <- (region_length>201)
-  long_range_flag <- (region_length>201)
-
-  dna_subseq <- substring(full_tx_dna, plot_range[1], plot_range[2])
+  suppress_labels <- (region_length > 201)
+  long_range_flag <- (region_length > 201)
+  dna_subseq <- substring(full_tx_dna, plot_range[1] - min(tx_positions) + 1, plot_range[2] - min(tx_positions) + 1)
   sub_positions <- seq(plot_range[1], plot_range[2])
-  dna_chars <- unlist(strsplit(dna_subseq, split=""))
-
+  dna_chars <- unlist(strsplit(dna_subseq, split = ""))
   dna_df <- data.frame(
-    position   = sub_positions,
+    position = sub_positions,
     nucleotide = dna_chars,
-    stringsAsFactors=FALSE,
-    row.names=NULL
+    stringsAsFactors = FALSE,
+    row.names = NULL
   )
-
   # Color scheme
-  if (tolower(nucleotide_color_scheme)=="colorblind") {
+  if (tolower(nucleotide_color_scheme) == "colorblind") {
     nucleotide_colors <- c(
-      "A"="#009E73",
-      "T"="#D55E00",
-      "C"="#0072B2",
-      "G"="#F0E442",
-      "N"="grey"
+      "A" = "#009E73",
+      "T" = "#D55E00",
+      "C" = "#0072B2",
+      "G" = "#F0E442",
+      "N" = "grey"
     )
   } else {
     nucleotide_colors <- c(
-      "A"="#00FF00",
-      "T"="#FF0200",
-      "C"="#4747FF",
-      "G"="#FFA503",
-      "N"="grey"
+      "A" = "#00FF00",
+      "T" = "#FF0200",
+      "C" = "#4747FF",
+      "G" = "#FFA503",
+      "N" = "grey"
     )
   }
   dna_df$fill_value <- dna_df$nucleotide
-
-  font_size  <- max(min((region_length/length(dna_chars))*1.2,5),2)*1.3
-  aa_font_sz <- font_size *1.3
-
-  # Figure out main CDS
+  font_size <- max(min((region_length / length(dna_chars)) * 1.2, 5), 2) * 1.3
+  aa_font_sz <- font_size * 1.3
+  # Figure out main CDS in transcript coordinates
   cds_gr <- GeneTxInfo$cdsByYFGtx[[tx_id]]
   cds_positions <- integer(0)
-  if (length(cds_gr)>0) {
-    if (strand=="+") {
-      cds_gr <- sort(cds_gr, decreasing=FALSE)
+  if (length(cds_gr) > 0) {
+    if (strand == "+") {
+      cds_gr <- sort(cds_gr, decreasing = FALSE)
     } else {
-      cds_gr <- sort(cds_gr, decreasing=TRUE)
+      cds_gr <- sort(cds_gr, decreasing = TRUE)
     }
     for (cgr in seq_along(cds_gr)) {
       cpos <- seq(start(cds_gr[cgr]), end(cds_gr[cgr]))
-      if (strand=="-") cpos <- rev(cpos)
-      txp <- tx_positions[positions %in% cpos]
+      if (strand == "-") cpos <- rev(cpos)
+      txp <- position_map$tx_pos[match(cpos, position_map$genomic_pos)]
+      txp <- txp[!is.na(txp)]
       cds_positions <- c(cds_positions, txp)
     }
   }
-  if (length(cds_positions)>0) {
-    cds_start_tx   <- min(cds_positions)
-    annotated_frame<- ((cds_start_tx -1) %% 3)+1
+  if (length(cds_positions) > 0) {
+    cds_start_tx <- min(cds_positions)
+    annotated_frame <- ((cds_start_tx - min(tx_positions)) %% 3) + 1
   } else {
-    annotated_frame<- 1
+    annotated_frame <- 1
   }
-  annotated_frame_zb <- as.integer(annotated_frame-1)
-  if (is.na(annotated_frame_zb) || annotated_frame_zb<0 || annotated_frame_zb>2) {
+  annotated_frame_zb <- as.integer(annotated_frame - 1)
+  if (is.na(annotated_frame_zb) || annotated_frame_zb < 0 || annotated_frame_zb > 2) {
     annotated_frame_zb <- 0
   }
-
-  frames <- c(0,1,2)
+  frames <- c(0, 1, 2)
   other_frames <- frames[frames != annotated_frame_zb]
-  frame_order  <- c(annotated_frame_zb, sort(other_frames))
+  frame_order <- c(annotated_frame_zb, sort(other_frames))
   if (long_range_flag) {
-    frame_y_positions <- c(0.8,0.6,0.4)
+    frame_y_positions <- c(0.8, 0.6, 0.4)
   } else {
-    frame_y_positions <- c(0.6,0.4,0.2)
+    frame_y_positions <- c(0.6, 0.4, 0.2)
   }
   names(frame_y_positions) <- frame_order
-  frame_labels <- c("Annotated","+1","+2")
+  frame_labels <- c("Annotated", "+1", "+2")
   names(frame_labels) <- frame_order
-
   # Translate in each frame
   dna_len <- nchar(dna_subseq)
   aa_list <- list()
   for (frame in frames) {
-    codon_starts <- seq(frame+1, dna_len-2, by=3)
-    if (length(codon_starts)==0) next
-    codon_middles <- codon_starts+1
-    dna_coding    <- substring(dna_subseq, codon_starts[1], codon_starts[length(codon_starts)]+2)
-    aa_str  <- as.character(translate(DNAString(dna_coding),genetic.code = GENETIC_CODE, no.init.codon = TRUE, if.fuzzy.codon="X"))
-    aa_chars<- unlist(strsplit(aa_str, split=""))
+    codon_starts <- seq(frame + 1, dna_len - 2, by = 3)
+    if (length(codon_starts) == 0) next
+    codon_middles <- codon_starts + 1
+    dna_coding <- substring(dna_subseq, codon_starts[1], codon_starts[length(codon_starts)] + 2)
+    aa_str <- as.character(translate(DNAString(dna_coding), genetic.code = GENETIC_CODE, no.init.codon = TRUE, if.fuzzy.codon = "X"))
+    aa_chars <- unlist(strsplit(aa_str, split = ""))
     aa_positions <- sub_positions[codon_middles]
     aa_df <- data.frame(
-      position   = aa_positions,
+      position = aa_positions,
       amino_acid = aa_chars,
-      y          = frame_y_positions[as.character(frame)],
-      frame      = frame,
-      stringsAsFactors=FALSE,
-      row.names=NULL
+      y = frame_y_positions[as.character(frame)],
+      frame = frame,
+      stringsAsFactors = FALSE,
+      row.names = NULL
     )
-    aa_list[[frame+1]] <- aa_df
+    aa_list[[frame + 1]] <- aa_df
   }
   aa_df_combined <- do.call(rbind, aa_list)
   if (is.null(aa_df_combined)) {
-    aa_df_combined <- data.frame(position=integer(0), amino_acid=character(0),
-                                 y=numeric(0), frame=integer(0),
-                                 stringsAsFactors=FALSE, row.names=NULL)
+    aa_df_combined <- data.frame(position = integer(0), amino_acid = character(0),
+                                 y = numeric(0), frame = integer(0),
+                                 stringsAsFactors = FALSE, row.names = NULL)
   }
   aa_df_combined$frame_label <- frame_labels[as.character(aa_df_combined$frame)]
-  aa_df_combined$fill_value  <- aa_df_combined$frame_label
-  aa_df_combined$fill_value[aa_df_combined$amino_acid=="M"] <- "Start"
-  aa_df_combined$fill_value[aa_df_combined$amino_acid=="*"] <- "Stop"
-
+  aa_df_combined$fill_value <- aa_df_combined$frame_label
+  aa_df_combined$fill_value[aa_df_combined$amino_acid == "M"] <- "Start"
+  aa_df_combined$fill_value[aa_df_combined$amino_acid == "*"] <- "Stop"
+  frame_colors <- c("Annotated" = "#F1F1F1", "+1" = "#E6E6E6", "+2" = "#C9C9C9")
+  fill_colors <- c(nucleotide_colors, "Start" = "green", "Stop" = "red", frame_colors)
   p <- ggplot()
-
   if (!long_range_flag) {
     p <- p + geom_tile(
-      data=dna_df,
-      aes(x=position, y=0.8, fill=fill_value),
-      width=1, height=0.2, color="darkgrey", linewidth=0.2,
-      show.legend=FALSE, na.rm=TRUE
+      data = dna_df,
+      aes(x = position, y = 0.8, fill = fill_value),
+      width = 1, height = 0.2, color = "darkgrey", linewidth = 0.2,
+      show.legend = FALSE, na.rm = TRUE
     )
     if (!suppress_labels) {
       p <- p + geom_text(
-        data=dna_df,
-        aes(x=position, y=0.8, label=nucleotide),
-        size=font_size, fontface="plain", color="black",
-        show.legend=FALSE, na.rm=TRUE
+        data = dna_df,
+        aes(x = position, y = 0.8, label = nucleotide),
+        size = font_size, fontface = "plain", color = "black",
+        show.legend = FALSE, na.rm = TRUE
       )
     }
   }
-
-  aa_ss <- subset(aa_df_combined, fill_value %in% c("Start","Stop"))
-  aa_rg <- subset(aa_df_combined, !fill_value %in% c("Start","Stop"))
-
+  aa_ss <- subset(aa_df_combined, fill_value %in% c("Start", "Stop"))
+  aa_rg <- subset(aa_df_combined, !fill_value %in% c("Start", "Stop"))
   p <- p +
     geom_tile(
-      data=aa_rg,
-      aes(x=position, y=y, fill=fill_value),
-      width=3, height=0.2,
-      color=ifelse(long_range_flag,NA,"darkgrey"),
-      linewidth=0.2, show.legend=TRUE, na.rm=TRUE
+      data = aa_rg,
+      aes(x = position, y = y, fill = fill_value),
+      width = 3, height = 0.2,
+      color = ifelse(long_range_flag, NA, "darkgrey"),
+      linewidth = 0.2, show.legend = TRUE, na.rm = TRUE
     ) +
     geom_tile(
-      data=aa_ss,
-      aes(x=position, y=y, fill=fill_value),
-      width=3, height=0.2,
-      color=ifelse(long_range_flag,NA,"darkgrey"),
-      linewidth=0.5, show.legend=TRUE, na.rm=TRUE
+      data = aa_ss,
+      aes(x = position, y = y, fill = fill_value),
+      width = 3, height = 0.2,
+      color = ifelse(long_range_flag, NA, "darkgrey"),
+      linewidth = 0.5, show.legend = TRUE, na.rm = TRUE
     )
-
   if (!suppress_labels) {
     p <- p + geom_text(
-      data=aa_df_combined,
-      aes(x=position, y=y, label=amino_acid),
-      size=aa_font_sz, fontface="plain", color="black",
-      show.legend=FALSE, na.rm=TRUE
+      data = aa_df_combined,
+      aes(x = position, y = y, label = amino_acid),
+      size = aa_font_sz, fontface = "plain", color = "black",
+      show.legend = FALSE, na.rm = TRUE
     )
   }
-
-  frame_colors <- c("Annotated"="#F1F1F1", "+1"="#E6E6E6", "+2"="#C9C9C9")
-  fill_colors  <- c(nucleotide_colors, "Start"="green","Stop"="red", frame_colors)
-
-  # Condition for breaks
-  possible_breaks <- intersect(unique(aa_df_combined$fill_value), c("Start","Stop"))
-  if (length(possible_breaks)==0) {
+  possible_breaks <- intersect(unique(aa_df_combined$fill_value), c("Start", "Stop"))
+  if (length(possible_breaks) == 0) {
     p <- p + scale_fill_manual(
-      name=NULL, values=fill_colors,
-      na.value="grey",
-      guide=guide_legend(override.aes=list(colour=NA)),
-      breaks=NULL
+      name = NULL, values = fill_colors,
+      na.value = "grey",
+      guide = guide_legend(override.aes = list(colour = NA)),
+      breaks = NULL
     )
   } else {
     p <- p + scale_fill_manual(
-      name=NULL, values=fill_colors,
-      na.value="grey",
-      guide=guide_legend(override.aes=list(colour=NA)),
-      breaks=possible_breaks
+      name = NULL, values = fill_colors,
+      na.value = "grey",
+      guide = guide_legend(override.aes = list(colour = NA)),
+      breaks = possible_breaks
     )
   }
-
-  p <- p + scale_x_continuous(limits=c(plot_range[1], plot_range[2])) +
+  p <- p + scale_x_continuous(limits = c(plot_range[1], plot_range[2])) +
     theme_void() +
-    theme(plot.margin=unit(c(-1,0.2,-0.5,0.2),"lines"))
-
+    theme(plot.margin = unit(c(-1, 0.2, -0.5, 0.2), "lines"))
   if (long_range_flag) {
-    p <- p + scale_y_continuous(limits=c(0.2,1))
+    p <- p + scale_y_continuous(limits = c(0.2, 1))
   } else {
-    p <- p + scale_y_continuous(limits=c(0,1))
+    p <- p + scale_y_continuous(limits = c(0, 1))
   }
   return(p)
 }
