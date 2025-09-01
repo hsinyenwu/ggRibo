@@ -194,6 +194,16 @@ ggRibo(tx_id="AT4G21910.1",
 ggRibo(tx_id="AT4G21910.2",
        Y_scale="each",Extend=c(400,50),
        NAME = "MATE efflux family protein")
+
+ggRibo_decom(tx_id="AT4G21910.2",
+       Y_scale="each",Extend=c(400,50),
+       NAME = "MATE efflux family protein")
+
+ggRibo_tx(tx_id="AT4G21910.2",
+       Y_scale="each",Extend=c(400,50),
+       NAME = "MATE efflux family protein")
+
+
 ```
 
 
