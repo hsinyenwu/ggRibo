@@ -94,7 +94,7 @@ install.packages(setdiff(cran_pkgs, rownames(installed.packages())))
 ```
 #Install ggRibo
 library(devtools)
-install_github("hsinyenwu/ggRibo@v2025.8.24")
+install_github("hsinyenwu/ggRibo@v2025.9.24")
 ```
 
 ### Load RNA-seq, Ribo-seq and annotation files  
