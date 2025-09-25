@@ -492,19 +492,29 @@ get_Riboseq_data <- function(Riboseq_sample, gene_range, strand_info) {
 #' @param rna_paired Character vector, "paired" or "single" for BAM files.
 #' @return List with RNAseq and Riboseq inputs for ggRNA/ggRibo.
 create_seq_input <- function(rna_files = NULL, ribo_files = NULL, sample_names,
-                            rna_types = NULL, ribo_types = NULL, include_rna = TRUE,
-                            rna_paired = rep("paired", length(sample_names))) {
-  if (length(sample_names) != length(rna_files) && include_rna) {
+                             rna_types = NULL, ribo_types = NULL, include_rna = NULL,
+                             rna_paired = rep("paired", length(sample_names))) {
+  # ---- NEW: auto-detect include_rna based on rna_files presence ----
+  if (is.null(include_rna)) {
+    include_rna <- !is.null(rna_files) && length(rna_files) > 0
+  }
+  if (isTRUE(include_rna) && (is.null(rna_files) || length(rna_files) == 0)) {
+    include_rna <- FALSE
+  }
+  # ------------------------------------------------------------------
+
+  # Only enforce rna_files length if RNA is actually included and rna_files provided
+  if (isTRUE(include_rna) && !is.null(rna_files) && length(sample_names) != length(rna_files)) {
     stop("Number of RNA-seq files must match sample_names when include_rna is TRUE")
   }
-  if (length(sample_names) != length(ribo_files) && !is.null(ribo_files)) {
+  if (!is.null(ribo_files) && length(sample_names) != length(ribo_files)) {
     stop("Number of Ribo-seq files must match sample_names")
   }
 
   RNAseq <- list()
   Riboseq <- list()
 
-  # Detect file type based on extension
+  # Detect file type based on extension (explicit namespace to avoid ambiguity)
   detect_file_type <- function(file) {
     if (is.list(file) && all(c("plus", "minus") %in% names(file))) {
       ext <- tolower(tools::file_ext(file$plus))
@@ -519,8 +529,8 @@ create_seq_input <- function(rna_files = NULL, ribo_files = NULL, sample_names,
     return("tabular") # Default for ribo_files if not bam/bigwig/bedgraph
   }
 
-  # Process RNA-seq inputs
-  if (include_rna && !is.null(rna_files)) {
+  # Process RNA-seq inputs (only if include_rna is TRUE and rna_files provided)
+  if (isTRUE(include_rna) && !is.null(rna_files)) {
     if (is.null(rna_types)) {
       rna_types <- sapply(rna_files, detect_file_type)
     }
@@ -549,7 +559,7 @@ create_seq_input <- function(rna_files = NULL, ribo_files = NULL, sample_names,
     }
     for (i in seq_along(ribo_files)) {
       if (ribo_types[i] == "tabular") {
-        df <- read.delim(ribo_files[[i]], header = FALSE, stringsAsFactors = FALSE, sep = "\t")
+        df <- utils::read.delim(ribo_files[[i]], header = FALSE, stringsAsFactors = FALSE, sep = "\t")
         colnames(df) <- c("count", "chr", "position", "strand")
         Riboseq[[i]] <- list(type = "tabular", data = df)
       } else {
@@ -557,11 +567,12 @@ create_seq_input <- function(rna_files = NULL, ribo_files = NULL, sample_names,
       }
     }
   }
-  RNAseqBamPairorSingle= rna_paired
+
+  RNAseqBamPairorSingle <- rna_paired
   assign("RNAseqBamPairorSingle", RNAseqBamPairorSingle, envir = .GlobalEnv)
   assign("Samples", sample_names, envir = .GlobalEnv)
 
-  return(list(RNAseq = if (include_rna) RNAseq else NULL, Riboseq = Riboseq))
+  return(list(RNAseq = if (isTRUE(include_rna)) RNAseq else NULL, Riboseq = Riboseq))
 }
 
 #' Plot Gene Transcript Model
