@@ -25,11 +25,11 @@ to use for the nucleotides. Defaults to \code{"default"}. If set to
 C=blue, G=yellow). Non‐canonical bases (N) remain grey.}
 }
 \value{
-A \code{ggplot2} object representing the DNA (tiles + letters if \(\le\)201nt) and amino acids (colored tiles always, letters if \(\le\)201nt).
+A \code{ggplot2} object representing the DNA (tiles + letters if 201nt) and amino acids (colored tiles always, letters if 201nt).
 }
 \description{
-Generates a plot showing DNA nucleotides (if the region is \(\le\)201 bases)
+Generates a plot showing DNA nucleotides (if the region is 201 bases)
 and amino acids (always as colored tiles). The AA letters themselves are only shown if
-\(\le\)201 bases. If over 201 bases, we still color the AA tiles (e.g., start/stop codons),
+201 bases. If over 201 bases, we still color the AA tiles (e.g., start/stop codons),
 but omit the text labels to avoid overprinting.
 }
