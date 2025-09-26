@@ -1061,18 +1061,26 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
     p_gene <- p_gene + scale_x_continuous(limits = c(min(genelim) - 0.5, max(genelim) + 0.5))
   }
 
-  labels <- sapply(isoform_positions$isoform, function(x) {
-    if (x == tx_id) paste0("bold('", x, "')") else paste0("'", x, "'")
-  })
-  labels <- parse(text = labels)
+  # Keep only isoforms that actually have plotted features
+isoforms_plotted <- unique(plot_data$isoform)
+axis_df <- isoform_positions[isoform_positions$isoform %in% isoforms_plotted, , drop = FALSE]
 
-  padding <- 0.1
-  p_gene <- p_gene + scale_y_continuous(
-    breaks = isoform_positions$y,
-    labels = labels,
-    limits = c(min(isoform_positions$y) - padding,
-               max(isoform_positions$y) + padding)
-  )
+# Safety check
+if (nrow(axis_df) == 0) {
+  stop("Nothing to label on the y-axis (no isoforms had features within the selected range).")
+}
+
+# Build plotmath expressions without parse(); bold the main transcript
+label_expr <- as.expression(lapply(axis_df$isoform, function(x) {
+  if (x == tx_id) bquote(bold(.(x))) else bquote(.(x))
+}))
+
+padding <- 0.1
+p_gene <- p_gene + scale_y_continuous(
+  breaks = axis_df$y,
+  labels = label_expr,
+  limits = c(min(axis_df$y) - padding, max(axis_df$y) + padding)
+)
 
   return(p_gene)
 }
