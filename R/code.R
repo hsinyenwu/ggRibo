@@ -1129,7 +1129,6 @@ plotGeneTxModel <- function(GeneTxInfo = GeneTxInfo, eORFTxInfo = NULL, XLIM = N
 #'   to use for the nucleotides. Defaults to \code{"default"}. If set to
 #'   \code{"colorblind"}, a color‐blind friendly palette is used (A=green, T=vermillion,
 #'   C=blue, G=yellow). Non‐canonical bases (N) remain grey.
-#' @export
 
 plotDNAandAA <- function(GeneTxInfo, plot_range = NULL, FASTA = NULL, nucleotide_color_scheme = "default") {
   # Check if FASTA is provided
