@@ -24,6 +24,11 @@ ggRNA(
   gene_model_height_ratio = NULL,
   RNA_fix_height = NULL,
   transcript_label_font_size = 10,
+  gene_model_coord_font_size = 8.8,
+  axis_label_font_size = 8,
+  axis_title_font_size = 10,
+  sample_label_font_size = 3,
+  title_font_size = 5,
   plot_genomic_direction = FALSE,
   selected_isoforms = NULL,
   nucleotide_color_scheme = "default",
@@ -68,6 +73,16 @@ ggRNA(
 \item{RNA_fix_height}{Numeric to fix the max RNA-seq coverage height. Default is \code{NULL}.}
 
 \item{transcript_label_font_size}{Numeric controlling the font size of the transcript ID labels in the gene model plot.}
+
+\item{gene_model_coord_font_size}{Numeric font size for X-axis genomic coordinate labels in the gene model panel. Default is 8.8.}
+
+\item{axis_label_font_size}{Numeric controlling axis tick label size in coverage panels. Default is 11.}
+
+\item{axis_title_font_size}{Numeric controlling axis title size (e.g., y-axis titles). Default is 10.}
+
+\item{sample_label_font_size}{Numeric controlling the size of sample name annotations in panels. Default is 3.}
+
+\item{title_font_size}{Numeric controlling the size of the top title text. Default is 5.}
 
 \item{plot_genomic_direction}{Logical indicating whether to plot an arrow showing genomic direction. Default is FALSE.}
 

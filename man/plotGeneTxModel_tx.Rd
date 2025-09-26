@@ -9,7 +9,8 @@ plotGeneTxModel_tx(
   eORFTxInfo = NULL,
   plot_ORF_ranges = TRUE,
   transcript_label_font_size = 10,
-  plot_range = NULL
+  plot_range = NULL,
+  gene_model_coord_font_size = 8.8
 )
 }
 \arguments{
@@ -22,6 +23,9 @@ plotGeneTxModel_tx(
 \item{transcript_label_font_size}{Numeric to control transcript label font size.}
 
 \item{plot_range}{Optional numeric vector (start, end) in transcript coordinates.}
+
+\item{gene_model_coord_font_size}{Optional numeric to control the X-axis transcript coordinate
+label font size in the model panel. Default is 8.}
 }
 \value{
 A \code{ggplot} object representing the transcript model.

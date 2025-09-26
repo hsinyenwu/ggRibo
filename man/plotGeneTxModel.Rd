@@ -10,7 +10,8 @@ plotGeneTxModel(
   XLIM = NULL,
   plot_ORF_ranges = TRUE,
   plot_range = NULL,
-  transcript_label_font_size = 10
+  transcript_label_font_size = 10,
+  gene_model_coord_font_size = 8.8
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ plotGeneTxModel(
 \item{plot_range}{An optional numeric vector specifying the genomic range to plot (start and end positions).}
 
 \item{transcript_label_font_size}{Optional numeric value to control the font size of the transcript ID labels.}
+
+\item{gene_model_coord_font_size}{Optional numeric value to control the font size of the X-axis genomic coordinate labels in the gene model panel. Default is 8.8.}
 }
 \value{
 A \code{ggplot} object representing the gene model.

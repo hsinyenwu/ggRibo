@@ -33,12 +33,17 @@ ggRibo(
   dna_aa_height_ratio = 0.5,
   gene_model_height_ratio = NULL,
   transcript_label_font_size = 10,
+  gene_model_coord_font_size = 8.8,
   plot_genomic_direction = FALSE,
   data_types = rep("Ribo-seq", length(SampleNames)),
   selected_isoforms = NULL,
   nucleotide_color_scheme = "default",
   ribo_linewidth = 0.5,
-  rna_linewidth = 0.5
+  rna_linewidth = 0.5,
+  axis_label_font_size = 11,
+  axis_title_font_size = 10,
+  sample_label_font_size = 3,
+  title_font_size = 5
 )
 }
 \arguments{
@@ -98,6 +103,8 @@ ggRibo(
 
 \item{transcript_label_font_size}{Numeric for transcript label font size.}
 
+\item{gene_model_coord_font_size}{Numeric font size for X-axis genomic coordinate labels in the gene model panel. Default is 8.8.}
+
 \item{plot_genomic_direction}{Logical whether to plot the genomic direction arrow. Default is FALSE.}
 
 \item{data_types}{Vector of sample data type names for each sample (e.g., "Ribo-seq").}
@@ -109,6 +116,14 @@ ggRibo(
 \item{ribo_linewidth}{Numeric value to control the thickness of Ribo-seq read count lines. Default is \code{0.5}.}
 
 \item{rna_linewidth}{Numeric value to control the thickness of RNA-seq step lines. Default is \code{0.5}.}
+
+\item{axis_label_font_size}{Numeric controlling axis tick label size in coverage panels. Default is 11.}
+
+\item{axis_title_font_size}{Numeric controlling axis title size (e.g., y-axis titles). Default is 10.}
+
+\item{sample_label_font_size}{Numeric controlling the size of sample name annotations in panels. Default is 3.}
+
+\item{title_font_size}{Numeric controlling the size of the top title text. Default is 5.}
 }
 \value{
 A combined ggplot object displaying RNA-seq coverage, Ribo-seq data, gene models, and optional sequences.

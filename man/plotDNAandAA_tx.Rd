@@ -15,7 +15,7 @@ plotDNAandAA_tx(
 \item{GeneTxInfo}{A \code{Gene_info} object containing exons and other transcript data.}
 
 \item{plot_range}{Optional numeric \code{c(start, end)} specifying the transcript coordinate range.
-If \code{NULL}, plots the full spliced transcript.}
+If \code{NULL}, plots the full spliced transcript with extensions.}
 
 \item{FASTA}{A \code{BSgenome} or \code{FaFile} object with the reference genome sequences.}
 
@@ -24,9 +24,16 @@ If \code{NULL}, plots the full spliced transcript.}
 \value{
 A \code{ggplot2} object with tiles for the DNA bases and codons,
 optionally labeled with base/AA letters if the region is \(\le\)201 nt.
+
+A \code{ggplot2} object with tiles for the DNA bases and codons,
+optionally labeled with base/AA letters if the region is \(\le\)201 nt.
 }
 \description{
 Plots nucleotides (and their translated amino acids) for a spliced transcript
 within a specified transcript coordinate range. Nucleotides/AA are drawn in
 5'->3' order, ignoring the genomic strand orientation for the final x-axis.
+
+Plots nucleotides (and their translated amino acids) for a spliced transcript
+within a specified transcript coordinate range, including upstream and downstream extensions.
+Nucleotides/AA are drawn in 5'->3' order, ignoring the genomic strand orientation for the final x-axis.
 }

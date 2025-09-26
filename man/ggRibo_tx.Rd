@@ -8,7 +8,7 @@ ggRibo_tx(
   gene_id = NULL,
   tx_id = NULL,
   eORF.tx_id = NULL,
-  eORFRangeInfo = eORF_Range,
+  eORFRangeInfo = NULL,
   Extend = 100,
   NAME = "",
   RNAcoverline = "grey",
@@ -29,15 +29,20 @@ ggRibo_tx(
   show_seq = FALSE,
   FASTA = NULL,
   dna_aa_height_ratio = 0.5,
-  gene_model_height_ratio = 1.3,
+  gene_model_height_ratio = 1.5,
   transcript_label_font_size = 10,
+  gene_model_coord_font_size = 8.8,
   plot_genomic_direction = FALSE,
   data_types = rep("Ribo-seq", length(SampleNames)),
   plot_range = NULL,
   nucleotide_color_scheme = "default",
   oORF_coloring = "extend_mORF",
   ribo_linewidth = 0.5,
-  rna_linewidth = 0.5
+  rna_linewidth = 0.5,
+  axis_label_font_size = 11,
+  axis_title_font_size = 10,
+  sample_label_font_size = 3,
+  title_font_size = 5
 )
 }
 \arguments{
@@ -93,6 +98,8 @@ ggRibo_tx(
 
 \item{transcript_label_font_size}{Numeric controlling transcript label font size in the gene model. Default is \code{10}.}
 
+\item{gene_model_coord_font_size}{Numeric font size for X-axis genomic coordinate labels in the gene model panel. Default is 8.8.}
+
 \item{plot_genomic_direction}{If \code{TRUE}, attempts to draw an arrow for the genomic direction in coverage plots.}
 
 \item{data_types}{Vector describing the type of each sample (e.g. \code{"Ribo-seq"} or \code{"RNA-seq"}). Must match \code{SampleNames} length.}
@@ -106,6 +113,14 @@ ggRibo_tx(
 \item{ribo_linewidth}{Numeric value to control the thickness of Ribo-seq read count lines. Default is \code{0.5}.}
 
 \item{rna_linewidth}{Numeric value to control the thickness of RNA-seq step lines. Default is \code{0.5}.}
+
+\item{axis_label_font_size}{Numeric controlling axis tick label size in coverage panels. Default is 11.}
+
+\item{axis_title_font_size}{Numeric controlling axis title size (e.g., y-axis titles). Default is 10.}
+
+\item{sample_label_font_size}{Numeric controlling the size of sample name annotations in panels. Default is 3.}
+
+\item{title_font_size}{Numeric controlling the size of the top title text. Default is 5.}
 }
 \value{
 A combined \code{ggplot} object displaying RNA-seq coverage, Ribo-seq coverage, optional eORFs, a transcript model,

@@ -35,6 +35,7 @@ ggRibo_decom(
   dna_aa_height_ratio = 0.5,
   gene_model_height_ratio = NULL,
   transcript_label_font_size = 10,
+  gene_model_coord_font_size = 8.8,
   plot_genomic_direction = FALSE,
   data_types = "Ribo-seq",
   plot_unassigned_reads = TRUE,
@@ -42,7 +43,11 @@ ggRibo_decom(
   frame_logic = NULL,
   nth_sample = 1,
   ribo_linewidth = 0.5,
-  rna_linewidth = 0.5
+  rna_linewidth = 0.5,
+  axis_label_font_size = 11,
+  axis_title_font_size = 10,
+  sample_label_font_size = 3,
+  title_font_size = 5
 )
 }
 \arguments{
@@ -102,6 +107,8 @@ ggRibo_decom(
 
 \item{transcript_label_font_size}{Numeric. Font size for transcript ID labels in gene model. Defaults to 10.}
 
+\item{gene_model_coord_font_size}{Numeric font size for X-axis genomic coordinate labels in the gene model panel. Default is 8.8.}
+
 \item{plot_genomic_direction}{Logical. If TRUE, draws an arrow indicating genomic direction on the top plot. Defaults to FALSE.}
 
 \item{data_types}{Character vector. Describes data type(s) for samples (e.g., "Ribo-seq"). Must match SampleNames length.}
@@ -121,6 +128,14 @@ Defaults to "tx_start" if no ORF is annotated, otherwise "CDS_start".
 \item{ribo_linewidth}{Numeric value to control the thickness of Ribo-seq read count lines. Default is \code{0.5}.}
 
 \item{rna_linewidth}{Numeric value to control the thickness of RNA-seq step lines. Default is \code{0.5}.}
+
+\item{axis_label_font_size}{Numeric controlling axis tick label size in coverage panels. Default is 11.}
+
+\item{axis_title_font_size}{Numeric controlling axis title size (e.g., y-axis titles). Default is 10.}
+
+\item{sample_label_font_size}{Numeric controlling the size of in-panel labels (e.g., "Frame 0/1/2"). Default is 3.}
+
+\item{title_font_size}{Numeric controlling the size of the top title text. Default is 5.}
 }
 \value{
 A combined ggplot object with RNA-Seq coverage, three frame-specific Ribo-Seq plots, gene model, and optionally DNA/AA sequences.

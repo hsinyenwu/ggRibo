@@ -10,7 +10,7 @@ create_seq_input(
   sample_names,
   rna_types = NULL,
   ribo_types = NULL,
-  include_rna = TRUE,
+  include_rna = NULL,
   rna_paired = rep("paired", length(sample_names))
 )
 }
