@@ -1869,7 +1869,7 @@ ggRNA <- function(gene_id = NULL, tx_id = NULL, Extend = 100, NAME = "",
     plot_ORF_ranges = plot_ORF_ranges,
     plot_range = plot_range,
     transcript_label_font_size = transcript_label_font_size,
-    coordinate_font_size = gene_model_coord_font_size
+    gene_model_coord_font_size = gene_model_coord_font_size
   )
 
   num_transcripts <- length(tx_names)
