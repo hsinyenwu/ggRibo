@@ -3164,7 +3164,7 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                          show_seq = FALSE,
                          FASTA = NULL,
                          dna_aa_height_ratio = 0.5,
-                         gene_model_height_ratio = 0.8,
+                         gene_model_height_ratio = NULL,
                          transcript_label_font_size = 10,
                          gene_model_coord_font_size = 8.8,
                          plot_genomic_direction = FALSE,
@@ -3572,7 +3572,7 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
         main_orf_stop <- if (GeneTxInfo$strand=="+") GeneTxInfo$cds_right else GeneTxInfo$cds_left
         x_min <- min(x_limits); x_max <- max(x_limits)
         if (!is.na(main_orf_start) && main_orf_start>=x_min && main_orf_start<=x_max) p <- p + geom_vline(xintercept=main_orf_start, linetype="dashed", color="black")
-        if (!is.na(main_orf_stop) && main_orf_stop>=x_min && main_orf_stop<=x_max)   p <- p + geom_vline(xintercept=main_orf_stop, linetype="dashed", color="darkgrey")
+        if (!is.na(main_orf_stop) && main_orf_stop>=x_min && main_orf_stop<=x_max)   p <- p + geom_vline(xintercept=main_orf_stop,  linetype="dashed", color="darkgrey")
         if (fExtend>0) {
           fExtend_start <- if(GeneTxInfo$strand=="+") main_orf_start - fExtend else main_orf_start + fExtend
           if (!is.na(fExtend_start) && fExtend_start>=x_min && fExtend_start<=x_max) p <- p + geom_vline(xintercept=fExtend_start, linetype="dashed", color="blue")
@@ -3866,7 +3866,7 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
     frame2_data <- RiboRslt[RiboRslt$frame=="2", ]
     na_data <- RiboRslt[is.na(RiboRslt$frame),]
 
-    # helper for Ribo-only frame panel
+    # helper for Ribo-only frame panel  ---- MINIMAL FIX APPLIED HERE ----
     make_frame_plot_ribo_only <- function(Ribo_df, frame_color, y_limits, GeneTxInfo, eORFTxInfo) {
       p <- ggplot() + theme_bw() +
         theme(
@@ -3890,6 +3890,22 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
         x_limits <- c(GeneTxInfo$range_left,GeneTxInfo$range_right)
       }
       p <- p + xlab("")
+
+      # ---- NEW: add dashed main-ORF start/stop guides in Ribo-only path ----
+      tx_id_local <- GeneTxInfo$tx_id
+      main_has_cds_local <- length(GeneTxInfo$xlimCds[[tx_id_local]]) > 0
+      if (main_has_cds_local) {
+        x_min <- min(x_limits); x_max <- max(x_limits)
+        main_orf_start <- if (GeneTxInfo$strand == "+") GeneTxInfo$cds_left else GeneTxInfo$cds_right
+        main_orf_stop  <- if (GeneTxInfo$strand == "+") GeneTxInfo$cds_right else GeneTxInfo$cds_left
+        if (!is.na(main_orf_start) && main_orf_start >= x_min && main_orf_start <= x_max) {
+          p <- p + geom_vline(xintercept = main_orf_start, linetype = "dashed", color = "black")
+        }
+        if (!is.na(main_orf_stop) && main_orf_stop >= x_min && main_orf_stop <= x_max) {
+          p <- p + geom_vline(xintercept = main_orf_stop,  linetype = "dashed", color = "darkgrey")
+        }
+      }
+      # ----------------------------------------------------------------------
 
       if (plot_unassigned_reads && nrow(na_data)>0) {
         p <- p + geom_segment(data=na_data, aes(x=position, xend=position, y=0, yend=count), color="grey", linewidth=ribo_linewidth, na.rm=TRUE)
@@ -3969,7 +3985,6 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
     return(combined_plot)
   }
 }
-
 
 #' Plot RNA-seq and Ribo-seq Coverage in Transcript Coordinates
 #'
