@@ -54,7 +54,7 @@ gtf_import <- function(annotation, format = "gtf", dataSource = "", organism = "
     tx_to_gene = tx_to_gene
   )
   assign("Txome_Range", Txome_Range, envir = .GlobalEnv)
-}
+} 
 
 
 # Function to import eORF annotation and create an eORF_Range_info object
@@ -2692,15 +2692,21 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
 
             RiboRslt <- assign_frames_extended(RiboRslt, extended_cds_ranges, GeneTxInfo$strand, cds_ranges)
 
-            # --- FIX: ensure u/dORF reads get frames (RNA-present, extend_mORF) ---
+            # --- FIX (guarded): frame non-overlapping eORF reads so they aren't grey (RNA present path) ---
             if (!is.null(eORFTxInfo)) {
               for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
                 eORF_ranges <- eORFTxInfo$xlim.eORF[[j]]
-                if (length(findOverlaps(eORF_ranges, cds_ranges)) == 0) {
-                  eorf_pos <- unlist(lapply(seq_along(eORF_ranges), function(k) seq(start(eORF_ranges[k]), end(eORF_ranges[k]))))
-                  idx <- is.na(RiboRslt$frame) & (RiboRslt$position %in% eorf_pos)
-                  if (any(idx)) {
-                    tmp <- assign_frames(RiboRslt[idx, , drop = FALSE], eORF_ranges, GeneTxInfo$strand)
+                if (length(eORF_ranges) == 0) next
+                if (length(findOverlaps(eORF_ranges, cds_ranges)) > 0) next
+                if (!any(as.character(seqnames(eORF_ranges)) == GeneTxInfo$chr)) next
+
+                eorf_pos <- unlist(lapply(seq_along(eORF_ranges), function(k) seq(start(eORF_ranges[k]), end(eORF_ranges[k]))))
+                if (length(eorf_pos) == 0) next
+                idx <- is.na(RiboRslt$frame) & (RiboRslt$position %in% eorf_pos)
+                n_idx <- sum(idx, na.rm = TRUE)
+                if (n_idx > 0) {
+                  tmp <- assign_frames(RiboRslt[idx, , drop = FALSE], eORF_ranges, GeneTxInfo$strand)
+                  if (!is.null(tmp$frame) && length(tmp$frame) == n_idx) {
                     RiboRslt$frame[idx] <- tmp$frame
                   }
                 }
@@ -2999,15 +3005,21 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
             }
             Ribo_main <- assign_frames_extended(Ribo_main, extended_cds_ranges, GeneTxInfo$strand, cds_ranges)
 
-            # --- FIX: ensure u/dORF reads get frames (Ribo-only, extend_mORF) ---
+            # --- FIX (guarded): frame non-overlapping eORF reads so they aren't grey (Ribo-only path) ---
             if (!is.null(eORFTxInfo)) {
               for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
                 eORF_ranges <- eORFTxInfo$xlim.eORF[[j]]
-                if (length(findOverlaps(eORF_ranges, cds_ranges)) == 0) {
-                  eorf_pos <- unlist(lapply(seq_along(eORF_ranges), function(k) seq(start(eORF_ranges[k]), end(eORF_ranges[k]))))
-                  idx <- is.na(Ribo_main$frame) & (Ribo_main$position %in% eorf_pos)
-                  if (any(idx)) {
-                    tmp <- assign_frames(Ribo_main[idx, , drop = FALSE], eORF_ranges, GeneTxInfo$strand)
+                if (length(eORF_ranges) == 0) next
+                if (length(findOverlaps(eORF_ranges, cds_ranges)) > 0) next
+                if (!any(as.character(seqnames(eORF_ranges)) == GeneTxInfo$chr)) next
+
+                eorf_pos <- unlist(lapply(seq_along(eORF_ranges), function(k) seq(start(eORF_ranges[k]), end(eORF_ranges[k]))))
+                if (length(eorf_pos) == 0) next
+                idx <- is.na(Ribo_main$frame) & (Ribo_main$position %in% eorf_pos)
+                n_idx <- sum(idx, na.rm = TRUE)
+                if (n_idx > 0) {
+                  tmp <- assign_frames(Ribo_main[idx, , drop = FALSE], eORF_ranges, GeneTxInfo$strand)
+                  if (!is.null(tmp$frame) && length(tmp$frame) == n_idx) {
                     Ribo_main$frame[idx] <- tmp$frame
                   }
                 }
@@ -3131,6 +3143,8 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
   )
   return(combined_plot)
 }
+
+
 
 #' ggRibo_decom creates a combined visualization of RNA-Seq coverage and frame-specific Ribo-Seq counts for a specified gene and transcript.
 #' It generates three separate plots corresponding to the three reading frames (0, 1, and 2) of Ribo-Seq data, optionally including reads
