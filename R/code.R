@@ -2609,7 +2609,7 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                   eORF_Riboseq <- eORF_Riboseq_list[[i]][[j]]
                   if (nrow(eORF_Riboseq)>0) {
                     if (!is.null(Ribo_fix_height)) {
-                      eORF_Riboseq$count <- pmin(eORF_Riboseq$count,Ribo_fix_height)
+                      eORF_Riboseq$count <- pmin(eORF_Riboseq$count, Ribo_fix_height)
                     }
                     eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
                     p <- p + geom_segment(data=eORF_Riboseq,
@@ -2691,6 +2691,22 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
             }
 
             RiboRslt <- assign_frames_extended(RiboRslt, extended_cds_ranges, GeneTxInfo$strand, cds_ranges)
+
+            # --- FIX: ensure u/dORF reads get frames (RNA-present, extend_mORF) ---
+            if (!is.null(eORFTxInfo)) {
+              for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
+                eORF_ranges <- eORFTxInfo$xlim.eORF[[j]]
+                if (length(findOverlaps(eORF_ranges, cds_ranges)) == 0) {
+                  eorf_pos <- unlist(lapply(seq_along(eORF_ranges), function(k) seq(start(eORF_ranges[k]), end(eORF_ranges[k]))))
+                  idx <- is.na(RiboRslt$frame) & (RiboRslt$position %in% eorf_pos)
+                  if (any(idx)) {
+                    tmp <- assign_frames(RiboRslt[idx, , drop = FALSE], eORF_ranges, GeneTxInfo$strand)
+                    RiboRslt$frame[idx] <- tmp$frame
+                  }
+                }
+              }
+            }
+            # --- END FIX ---
 
             if (!is.null(Ribo_fix_height)) {
               RiboRslt$count <- pmin(RiboRslt$count,Ribo_fix_height)
@@ -2982,6 +2998,23 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
               }
             }
             Ribo_main <- assign_frames_extended(Ribo_main, extended_cds_ranges, GeneTxInfo$strand, cds_ranges)
+
+            # --- FIX: ensure u/dORF reads get frames (Ribo-only, extend_mORF) ---
+            if (!is.null(eORFTxInfo)) {
+              for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
+                eORF_ranges <- eORFTxInfo$xlim.eORF[[j]]
+                if (length(findOverlaps(eORF_ranges, cds_ranges)) == 0) {
+                  eorf_pos <- unlist(lapply(seq_along(eORF_ranges), function(k) seq(start(eORF_ranges[k]), end(eORF_ranges[k]))))
+                  idx <- is.na(Ribo_main$frame) & (Ribo_main$position %in% eorf_pos)
+                  if (any(idx)) {
+                    tmp <- assign_frames(Ribo_main[idx, , drop = FALSE], eORF_ranges, GeneTxInfo$strand)
+                    Ribo_main$frame[idx] <- tmp$frame
+                  }
+                }
+              }
+            }
+            # --- END FIX ---
+
           } else {
             Ribo_main <- assign_frames(Ribo_main, cds_ranges, GeneTxInfo$strand)
           }
@@ -3098,7 +3131,6 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
   )
   return(combined_plot)
 }
-
 
 #' ggRibo_decom creates a combined visualization of RNA-Seq coverage and frame-specific Ribo-Seq counts for a specified gene and transcript.
 #' It generates three separate plots corresponding to the three reading frames (0, 1, and 2) of Ribo-Seq data, optionally including reads
