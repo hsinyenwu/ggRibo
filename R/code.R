@@ -2228,11 +2228,22 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
     eORF_right <- sapply(xlim.eORF,function(gr) max(end(gr)))
 
     if (length(Riboseq_list)>0) {
+      # select eORF reads by true overlap (not min..max)
       eORF_Riboseq_list <- lapply(seq_along(Riboseq_list), function(i) {
+        ribo_i <- Riboseq_list[[i]]
+        if (nrow(ribo_i) == 0) {
+          return(lapply(seq_along(xlim.eORF), function(e_idx) ribo_i[0, ]))
+        }
+        ribo_gr <- GenomicRanges::GRanges(
+          seqnames = ribo_i$chr,
+          ranges   = IRanges::IRanges(ribo_i$position, ribo_i$position),
+          strand   = ribo_i$strand
+        )
         lapply(seq_along(xlim.eORF), function(e_idx) {
           eORF_gr <- xlim.eORF[[e_idx]]
-          Riboseq_list[[i]][Riboseq_list[[i]]$position >= min(start(eORF_gr)) &
-                              Riboseq_list[[i]]$position <= max(end(eORF_gr)),]
+          if (length(eORF_gr) == 0) return(ribo_i[0, ])
+          hits <- GenomicRanges::findOverlaps(ribo_gr, eORF_gr, type = "within")
+          if (length(hits) == 0) ribo_i[0, ] else ribo_i[unique(S4Vectors::queryHits(hits)), ]
         })
       })
     } else {
@@ -2339,30 +2350,28 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
         RiboRslt <- data.frame()
       }
 
+      # -----------------------------
+      # PRIMARY (LEFT) = RNA coverage
+      # SECONDARY (RIGHT) = Ribo count
+      # -----------------------------
       if (!is.null(Ribo_fix_height)) {
-        current_max_P <- if (nrow(RiboRslt)>0) max(RiboRslt$count, na.rm=TRUE) else 0
-        y_limits <- c(0, current_max_P*1.1 + (current_max_P==0))
         current_max_Y <- if (nrow(RNAseq_df)>0) max(RNAseq_df$count, na.rm=TRUE) else 0
-        scale_factor_RNA <- if (current_max_Y > 0) current_max_P / current_max_Y else 1
+        y_limits <- c(0, current_max_Y*1.1 + (current_max_Y==0))
+        current_max_P <- if (nrow(RiboRslt)>0) max(RiboRslt$count, na.rm=TRUE) else 0
+        scale_factor_Ribo <- if (current_max_P > 0) current_max_Y / current_max_P else 1
       } else if (Y_scale=="all") {
-        current_max_P <- max_P_global
-        y_limits <- c(0, current_max_P*1.1 + (current_max_P==0))
         current_max_Y <- max_Y_global
-        scale_factor_RNA <- if (current_max_Y > 0) current_max_P / current_max_Y else 1
+        y_limits <- c(0, current_max_Y*1.1 + (current_max_Y==0))
+        current_max_P <- max_P_global
+        scale_factor_Ribo <- if (current_max_P > 0) current_max_Y / current_max_P else 1
       } else if (Y_scale=="each") {
-        current_max_P <- if (nrow(RiboRslt)>0) max(RiboRslt$count, na.rm=TRUE) else 0
-        y_limits <- c(0, current_max_P*1.1 + (current_max_P==0))
         current_max_Y <- if (nrow(RNAseq_df)>0) max(RNAseq_df$count, na.rm=TRUE) else 0
-        scale_factor_RNA <- if (current_max_Y > 0) current_max_P / current_max_Y else 1
+        y_limits <- c(0, current_max_Y*1.1 + (current_max_Y==0))
+        current_max_P <- if (nrow(RiboRslt)>0) max(RiboRslt$count, na.rm=TRUE) else 0
+        scale_factor_Ribo <- if (current_max_P > 0) current_max_Y / current_max_P else 1
       }
 
-      RNAseq_df$count_scaled <- RNAseq_df$count * scale_factor_RNA
-      if (nrow(RiboRslt)>0) {
-        RiboRslt$count_scaled <- RiboRslt$count
-      }
-
-      sample_color_i <- sample_color[i]
-
+      # RNA stays unscaled on primary axis
       RNAseq_df_line <- RNAseq_df
       if (GeneTxInfo$strand == "+") {
         RNAseq_df_line$position <- RNAseq_df_line$position - 0.5
@@ -2370,9 +2379,19 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
         RNAseq_df_line$position <- RNAseq_df_line$position + 0.5
       }
 
+      # Scale Ribo to RNA axis
+      if (nrow(RiboRslt)>0) {
+        if (!is.null(Ribo_fix_height)) {
+          RiboRslt$count <- pmin(RiboRslt$count, Ribo_fix_height)
+        }
+        RiboRslt$count_scaled <- RiboRslt$count * scale_factor_Ribo
+      }
+
+      sample_color_i <- sample_color[i]
+
       p <- ggplot() +
-        geom_col(data=RNAseq_df, aes(x=position, y=count_scaled), fill=RNAbackground[i], color=RNAbackground[i], na.rm=TRUE) +
-        geom_step(data=RNAseq_df_line, aes(x=position, y=count_scaled), linewidth =rna_linewidth, color=RNAcoverline, na.rm=TRUE) +
+        geom_col(data=RNAseq_df, aes(x=position, y=count), fill=RNAbackground[i], color=RNAbackground[i], na.rm=TRUE) +
+        geom_step(data=RNAseq_df_line, aes(x=position, y=count), linewidth =rna_linewidth, color=RNAcoverline, na.rm=TRUE) +
         theme_bw() +
         theme(
           axis.text.x=element_blank(),
@@ -2483,10 +2502,8 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
 
           if (!is.null(Ribo_fix_height)) {
             RiboRslt$count <- pmin(RiboRslt$count, Ribo_fix_height)
-            RiboRslt$count_scaled <- RiboRslt$count
-          } else {
-            RiboRslt$count_scaled <- RiboRslt$count
           }
+          RiboRslt$count_scaled <- RiboRslt$count * scale_factor_Ribo
 
           if (sample_color_i=="color") {
             p <- p + geom_segment(data=RiboRslt, aes(x=position, xend=position, y=0, yend=count_scaled, color=frame), linewidth=ribo_linewidth)
@@ -2532,7 +2549,7 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
             if (!is.null(Ribo_fix_height)) {
               Ribo_main$count <- pmin(Ribo_main$count, Ribo_fix_height)
             }
-            Ribo_main$count_scaled <- Ribo_main$count
+            Ribo_main$count_scaled <- Ribo_main$count * scale_factor_Ribo
 
             if (sample_color_i == "color") {
               p <- p + geom_segment(data=Ribo_main[Ribo_main$region_type=='non_overlapping',],
@@ -2548,7 +2565,7 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                     if (!is.null(Ribo_fix_height)) {
                       eORF_Riboseq$count <- pmin(eORF_Riboseq$count, Ribo_fix_height)
                     }
-                    eORF_Riboseq$count_scaled <- eORF_Riboseq$count
+                    eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
                     eORF_Riboseq <- assign_frames(eORF_Riboseq, eORF_ranges, GeneTxInfo$strand)
                     p <- p + geom_segment(data=eORF_Riboseq,
                                           aes(x=position, xend=position, y=0, yend=count_scaled, color=frame), linewidth=ribo_linewidth)
@@ -2566,7 +2583,7 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                     if (!is.null(Ribo_fix_height)) {
                       eORF_Riboseq$count <- pmin(eORF_Riboseq$count, Ribo_fix_height)
                     }
-                    eORF_Riboseq$count_scaled <- eORF_Riboseq$count
+                    eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
                     p <- p + geom_segment(data=eORF_Riboseq,
                                           aes(x=position, xend=position, y=0, yend=count_scaled), color=sample_color_i, linewidth=ribo_linewidth)
                   }
@@ -2585,7 +2602,7 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
             if (!is.null(Ribo_fix_height)) {
               Ribo_main$count <- pmin(Ribo_main$count,Ribo_fix_height)
             }
-            Ribo_main$count_scaled <- Ribo_main$count
+            Ribo_main$count_scaled <- Ribo_main$count * scale_factor_Ribo
 
             if (sample_color_i=="color") {
               p <- p +
@@ -2600,7 +2617,7 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                     if (!is.null(Ribo_fix_height)) {
                       eORF_Riboseq$count <- pmin(eORF_Riboseq$count,Ribo_fix_height)
                     }
-                    eORF_Riboseq$count_scaled <- eORF_Riboseq$count
+                    eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
                     eORF_Riboseq <- assign_frames(eORF_Riboseq, eORF_ranges, GeneTxInfo$strand)
 
                     p <- p +
@@ -2623,7 +2640,7 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                     if (!is.null(Ribo_fix_height)) {
                       eORF_Riboseq$count <- pmin(eORF_Riboseq$count,Ribo_fix_height)
                     }
-                    eORF_Riboseq$count_scaled <- eORF_Riboseq$count
+                    eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
                     p <- p +
                       geom_segment(data=eORF_Riboseq,
                                    aes(x=position,xend=position,y=0,yend=count_scaled),color=sample_color_i, linewidth=ribo_linewidth)
@@ -2650,7 +2667,7 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
             if (!is.null(Ribo_fix_height)) {
               RiboRslt$count <- pmin(RiboRslt$count,Ribo_fix_height)
             }
-            RiboRslt$count_scaled <- RiboRslt$count
+            RiboRslt$count_scaled <- RiboRslt$count * scale_factor_Ribo
 
             if (sample_color_i=="color") {
               p <- p +
@@ -2679,12 +2696,12 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                     }
                   }
 
-                  if ((length(overlaps_CDS)==0 && overlaps_fiveUTR) | (length(overlaps_CDS)==0 && overlaps_threeUTR)) {
+                  if (length(overlaps_CDS)==0) {
                     if (nrow(eORF_Riboseq)>0) {
                       if (!is.null(Ribo_fix_height)) {
                         eORF_Riboseq$count <- pmin(eORF_Riboseq$count,Ribo_fix_height)
                       }
-                      eORF_Riboseq$count_scaled <- eORF_Riboseq$count
+                      eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
                       eORF_Riboseq <- assign_frames(eORF_Riboseq, eORF_ranges, GeneTxInfo$strand)
 
                       p <- p +
@@ -2706,11 +2723,10 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                   eORF_Riboseq <- eORFTxInfo$eORF_Riboseq_list[[i]][[j]]
                   if (nrow(eORF_Riboseq)>0) {
                     if (!is.null(Ribo_fix_height)) {
-                      eORF_Riboseq$count <- pmin(eORF_Riboseq$count,Ribo_fix_height)
+                      eORF_Riboseq$count <- pmin(eORF_Riboseq$count, Ribo_fix_height)
                     }
-                    eORF_Riboseq$count_scaled <- eORF_Riboseq$count
-                    p <- p +
-                      geom_segment(data=eORF_Riboseq,
+                    eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
+                    p <- p + geom_segment(data=eORF_Riboseq,
                                    aes(x=position,xend=position,y=0,yend=count_scaled),color=sample_color_i, linewidth=ribo_linewidth)
                   }
                 }
@@ -2724,7 +2740,7 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
             if (!is.null(Ribo_fix_height)) {
               Ribo_main$count <- pmin(Ribo_main$count,Ribo_fix_height)
             }
-            Ribo_main$count_scaled <- Ribo_main$count
+            Ribo_main$count_scaled <- Ribo_main$count * scale_factor_Ribo
 
             if (sample_color_i=="color") {
               p <- p +
@@ -2739,7 +2755,7 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                     if (!is.null(Ribo_fix_height)) {
                       eORF_Riboseq$count <- pmin(eORF_Riboseq$count,Ribo_fix_height)
                     }
-                    eORF_Riboseq$count_scaled <- eORF_Riboseq$count
+                    eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
                     eORF_Riboseq <- assign_frames(eORF_Riboseq, eORF_ranges, GeneTxInfo$strand)
                     p <- p +
                       geom_segment(data=eORF_Riboseq,
@@ -2761,7 +2777,7 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                     if (!is.null(Ribo_fix_height)) {
                       eORF_Riboseq$count <- pmin(eORF_Riboseq$count,Ribo_fix_height)
                     }
-                    eORF_Riboseq$count_scaled <- eORF_Riboseq$count
+                    eORF_Riboseq$count_scaled <- eORF_Riboseq$count * scale_factor_Ribo
                     p <- p +
                       geom_segment(data=eORF_Riboseq,
                                    aes(x=position,xend=position,y=0,yend=count_scaled),color=sample_color_i, linewidth=ribo_linewidth)
@@ -2773,10 +2789,11 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
         }
       }
 
+      # Final y-axis: primary RNA, secondary Ribo
       p <- p + scale_y_continuous(
         limits=y_limits,
-        name=paste0(data_types[i], "\n count"),
-        sec.axis=sec_axis(~ . / scale_factor_RNA, name = "RNA-seq \ncoverage")
+        name="RNA-seq \ncoverage",
+        sec.axis=sec_axis(~ . / scale_factor_Ribo, name = paste0(data_types[i], "\n count"))
       )
 
       p <- p + xlab("")
@@ -2886,7 +2903,7 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
         main_orf_stop  <- if (GeneTxInfo$strand=="+") GeneTxInfo$cds_right else GeneTxInfo$cds_left
         x_min <- min(x_limits); x_max <- max(x_limits)
         if (!is.na(main_orf_start) && main_orf_start>=x_min && main_orf_start<=x_max) p <- p + geom_vline(xintercept=main_orf_start, linetype="dashed", color="black")
-        if (!is.na(main_orf_stop)  && main_orf_stop >=x_min && main_orf_stop <=x_max) p <- p + geom_vline(xintercept=main_orf_stop,  linetype="dashed", color="darkgrey")
+        if (!is.na(main_orf_stop) && main_orf_stop >=x_min && main_orf_stop <=x_max) p <- p + geom_vline(xintercept=main_orf_stop,  linetype="dashed", color="darkgrey")
         if (fExtend>0) {
           fExtend_start <- if(GeneTxInfo$strand=="+") main_orf_start - fExtend else main_orf_start + fExtend
           if (!is.na(fExtend_start) && fExtend_start>=x_min && fExtend_start<=x_max) p <- p + geom_vline(xintercept=fExtend_start, linetype="dashed", color="blue")
@@ -2944,7 +2961,7 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                   if (!is.null(threeUTR_ranges) && length(threeUTR_ranges)>0) {
                     if (length(findOverlaps(eORF_ranges, threeUTR_ranges))>0) overlaps_threeUTR <- TRUE
                   }
-                  if ((length(overlaps_CDS)==0 && overlaps_fiveUTR) | (length(overlaps_CDS)==0 && overlaps_threeUTR)) {
+                  if (length(overlaps_CDS)==0) {
                     if (nrow(eORF_Riboseq)>0) {
                       if (!is.null(Ribo_fix_height)) eORF_Riboseq$count <- pmin(eORF_Riboseq$count, Ribo_fix_height)
                       eORF_Riboseq <- assign_frames(eORF_Riboseq, eORF_ranges, GeneTxInfo$strand)
