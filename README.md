@@ -286,6 +286,7 @@ v2025.7.16 contains a minor fix for the uORF/dORF model in transcript model. Now
 v2025.8.7 Fix ggRibo_tx to plot isoforms without 5'UTR. Also fix the Extend parameter for ggRibo_tx. Add a note in bedGraph and bigwig file about overlapping paired-end reads.   
 v2025.8.19 Fix ggRibo and ggRibo_decom gene model. Now will not plot eORFs unless the isoform has a competable exon-intron structure. Fix ggRibo_tx coloring for oORFs (overlapping ORFs, e.g., overlapping uORF).  
 v2025.8.24 Fix ggRibo_tx DNA/AA plot scalling by fixing plotDNAandAA_tx. Increase the ggRibo_tx gene model ration to 1.5.
+c2025.11.12 Fix ggRibo y-axis labels.  
 
 ### Citation: [A ggplot-based single-gene viewer reveals insights into the translatome and other nucleotide-resolution omics data](https://www.biorxiv.org/content/10.1101/2025.01.30.635743v2)
 
