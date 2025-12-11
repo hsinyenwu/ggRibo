@@ -6,7 +6,7 @@ Ribo-seq and RNA-seq data from induced pluripotent stem cells (iPSC) and cardiom
 Aligned to the GRCh38 human genome acquired from [Ensembl](https://www.ensembl.org/Homo_sapiens/Info/Index)
 
 ### Mendeley data site:
-***You can find processed data for testing here: [Human Data](https://data.mendeley.com/datasets/m3t293k4wr/1)***. Includes Ribo-seq P-sites and RNA-seq BAM files from samples described above, as well as the Ensembl Human GRCh38 genome FASTA and GFF3, a sample uORF GFF3, and a directory for installing a Human Ensembl GRCh38 BSgenome library.
+***You can find processed data for testing here: [Human Data](https://data.mendeley.com/datasets/m3t293k4wr/2)***. Includes Ribo-seq P-sites and RNA-seq BAM files from samples described above, as well as the Ensembl Human GRCh38 genome FASTA and GFF3, a sample uORF GFF3, and a directory for installing a Human Ensembl GRCh38 BSgenome library.
 
 ### Example of uORF in humans
 The uORF in MRPL11 has been shown to inhibit translation of its downstream ORF ([Calvo, Pagliarini, & Mootha, 2009](https://www.pnas.org/doi/10.1073/pnas.0810916106)).
@@ -173,4 +173,5 @@ ggRibo(tx_id = "ENST00000310999.11", eORF.tx_id = "ENST00000310999", NAME = "MRP
 ggRibo_tx(tx_id="ENST00000310999.11", eORF.tx_id = "ENST00000310999", NAME = "MRPL11",
           FASTA = BSgenome.Hsapiens.UCSC.hg38, show_seq = T)  # transcript view
 ```
+
 
