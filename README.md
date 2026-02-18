@@ -20,7 +20,6 @@
 (5) **Only tx_id is needed for plotting.** In the old version, you need to provide both gene_id and tx_id. For the latest versoin, you can also only provide gene_id, and the ggRibo functions will plot with the first transcript id after sorted.     
 (6) New parameters: ribo_linewidth (adjust Ribo-seq linewidth) and rna_linewidth (adjust RNA-seq coverage linewidth) for all plotting functions.   
 (7) New tutorial for ***[Multiomics Visualization](https://github.com/hsinyenwu/ggRibo/blob/v2025.6.2/README_multiomics.md).***  
-(8) For human data or large genomes, please use BSgenome object instead of FASTA file when loading the DNA sequences.
 
 Due to the intensive changes, we encourage the users to install the latest version of ggRibo.
 ```
@@ -193,6 +192,8 @@ ggRibo(tx_id="AT3G02470.1",
 Download annotation and data files from [here](https://data.mendeley.com/datasets/89j7snbm2r/2):  
 (1) GTF (Araport11+CTRL_20181206.gtf)  
 (2) FASTA (TAIR10_chr_all_2.fas) #you can also use a BSGenome object 
+**For human data or large genomes, please use BSgenome object instead of FASTA file when loading the DNA sequences.
+**
 (3) RNA bam file (RNA_CTRL_merged.bam)   
 (4) Ribo file (CTRL_expressed_P_sites_sort_count)
 
