@@ -6,7 +6,7 @@ Ribo-seq and RNA-seq data from induced pluripotent stem cells (iPSC) and cardiom
 Aligned to the GRCh38 human genome acquired from [Ensembl](https://www.ensembl.org/Homo_sapiens/Info/Index)
 
 ### Mendeley data site:
-***You can find processed data for testing here: [Human Data](https://data.mendeley.com/datasets/m3t293k4wr/1)***
+***You can find processed data for testing here: [Human Data](https://data.mendeley.com/datasets/m3t293k4wr/2)***. Includes Ribo-seq P-sites and RNA-seq BAM files from samples described above, as well as the Ensembl Human GRCh38 genome FASTA and GFF3, a sample uORF GFF3, and a directory for installing a Human Ensembl GRCh38 BSgenome library.
 
 ### Example of uORF in humans
 The uORF in MRPL11 has been shown to inhibit translation of its downstream ORF ([Calvo, Pagliarini, & Mootha, 2009](https://www.pnas.org/doi/10.1073/pnas.0810916106)).
@@ -131,9 +131,21 @@ ggRibo(tx_id = "ENST00000399808", NAME = "IFITM3",
 ![IsoSubset_IFITM3_human_subset](https://github.com/user-attachments/assets/538eff8c-fc20-46e4-9cff-cad0e6bef376)
 
 ## Using BSgenome
-BSgenome packages can also be used to plot DNA/peptide sequences. BSgenomes are available for the UCSC and NCBI human genome/annotation, so if you plan to use BSgenome, it is best to align to UCSC or NCBI genome versions.
+BSgenome packages can also be used to plot DNA/peptide sequences. BSgenomes are available through Bioconductor for the [UCSC hg38](https://www.bioconductor.org/packages/release/data/annotation/html/BSgenome.Hsapiens.UCSC.hg38.html) and [NCBI GRCh38](https://bioconductor.org/packages/release/data/annotation/html/BSgenome.Hsapiens.NCBI.GRCh38.html) genomes.
+
+##### Human Ensembl GRCh38 BSgenome library
+For some users (particularly **<ins>Windows users or those with limited RAM</ins>**), it may be *required* to use a BSgenome library instead of a FASTA file when using show_seq = TRUE due to limitations of 32-bit integers and the size of the human genome. To allow users to still use the aligned data we provide on Mendeley Data, we have provided a directory that can be used to install a BSgenome library for the Homo sapiens Ensembl GRCh38 genome. To install the library, first download the "BSgenome.Hsapiens.Ensembl.GRCh38" directory from Mendeley Data, then run the following in R:
 ```
-library(BSgenome.Hsapiens.UCSC.hg38)  # Load UCSC BSgenome package
+devtools::install("./BSgenome.Hsapiens.Ensembl.GRCh38")
+```
+The BSgenome.Hsapiens.Ensembl.GRCh38 library should then be available for use.
+
+To use a BSgenome instead of FASTA file, the user must load the library, then provide the library name in place of a FASTA file in the ggRibo function:
+
+```
+library(BSgenome.Hsapiens.UCSC.hg38)  # Load UCSC BSgenome library
+# library(BSgenome.Hsapiens.Ensembl.GRCh38)  # Load Ensembl BSgenome library
+# library(BSgenome.Hsapiens.NCBI.GRCh38)  # Load NCBI BSgenome library
 
 gtf_path <- "hg38.knownGene_ucsc.gtf"
 gtf_import(annotation = gtf_path, format = "gtf", organism = "Homo sapiens")  # Load UCSC annotation
@@ -161,3 +173,5 @@ ggRibo(tx_id = "ENST00000310999.11", eORF.tx_id = "ENST00000310999", NAME = "MRP
 ggRibo_tx(tx_id="ENST00000310999.11", eORF.tx_id = "ENST00000310999", NAME = "MRPL11",
           FASTA = BSgenome.Hsapiens.UCSC.hg38, show_seq = T)  # transcript view
 ```
+
+
