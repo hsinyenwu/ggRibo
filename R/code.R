@@ -1481,6 +1481,43 @@ get_gene_tx <- function(gene_id = NULL, tx_id = NULL, GRangeInfo) {
 #'
 #' @return A combined ggplot object displaying RNA-seq coverage, gene models, and optionally genomic sequences.
 #' @export
+#' Plot RNA-seq coverage for a gene
+#'
+#' The `ggRNA` function creates a plot displaying RNA-seq coverage for a specified gene and transcript.
+#' It optionally includes genomic sequences (DNA and amino acids) and gene models (exons, UTRs, CDS).
+#' This function is simpler than `ggRibo` and `ggRibo_decom` as it focuses solely on RNA-seq coverage.
+#'
+#' @param gene_id Character string specifying the gene ID of interest.
+#' @param tx_id Character string specifying the transcript ID to be used as the main isoform.
+#' @param Extend Numeric value specifying how many base pairs to extend the plot beyond the gene range. Default is 100.
+#' @param NAME Optional. A character string for an additional name/title to display in the plot.
+#' @param RNAcoverline Color for the RNA-seq coverage line. Default is "grey".
+#' @param RNAbackground Color for the RNA-seq coverage background bars. Default is "#FEFEAE".
+#' @param RNAseq A list where each element is either a character string (BAM file path) or a list with type ("bam", "bigwig", "bedgraph") and data (file for BAM, plus/minus for bigwig/bedgraph).
+#' @param SampleNames Vector of sample names corresponding to the RNAseq data.
+#' @param GRangeInfo A genomic range information object (e.g., `Txome_Range`) containing annotations.
+#' @param RNAseqBamPaired A vector indicating whether each RNA-seq BAM file is paired-end ("paired") or single-end ("single"), used only if RNAseq contains BAM paths.
+#' @param Y_scale Character string, either "all" or "each", specifying how to scale the Y-axis for RNA-seq coverage. Default is "all".
+#' @param RNA_fix_height Numeric to fix the max RNA-seq coverage height. Default is \code{NULL}.
+#' @param plot_ORF_ranges Logical indicating whether to plot ORF ranges in the gene model. Default is FALSE.
+#' @param plot_range Optional numeric vector of length two specifying a custom genomic range to plot.
+#' @param show_seq Logical indicating whether to display the DNA and amino acid sequences. Default is FALSE.
+#' @param FASTA A `BSgenome` object containing genomic sequences (required if show_seq=TRUE).
+#' @param plot_genomic_direction Logical indicating whether to plot an arrow showing genomic direction. Default is FALSE.
+#' @param dna_aa_height_ratio Numeric value to adjust the height of the DNA and amino acid sequence plot. Default is 0.5.
+#' @param gene_model_height_ratio Numeric value to adjust the height of the gene model plot. If NULL, it is auto-calculated.
+#' @param transcript_label_font_size Numeric controlling the font size of the transcript ID labels in the gene model plot.
+#' @param gene_model_coord_font_size Numeric font size for X-axis genomic coordinate labels in the gene model panel. Default is 8.8.
+#' @param selected_isoforms Optional vector of transcript IDs to plot. If provided, only these isoforms (and `tx_id`) will be shown.
+#' @param nucleotide_color_scheme If "default", uses bright colors for the nucleotides in plotDNAandAA. If "colorblind", uses a color‐blind friendly palette.
+#' @param rna_linewidth Numeric value to control the thickness of RNA-seq step lines. Default is \code{0.5}.
+#' @param axis_label_font_size Numeric controlling axis tick label size in coverage panels. Default is 11.
+#' @param axis_title_font_size Numeric controlling axis title size (e.g., y-axis titles). Default is 10.
+#' @param sample_label_font_size Numeric controlling the size of sample name annotations in panels. Default is 3.
+#' @param title_font_size Numeric controlling the size of the top title text. Default is 5.
+#'
+#' @return A combined ggplot object displaying RNA-seq coverage, gene models, and optionally genomic sequences.
+#' @export
 ggRNA <- function(gene_id = NULL, tx_id = NULL, Extend = 100, NAME = "",
                   RNAcoverline = "grey", RNAbackground = "#FEFEAE",
                   RNAseq = inputs_full$RNAseq,
@@ -1701,9 +1738,17 @@ ggRNA <- function(gene_id = NULL, tx_id = NULL, Extend = 100, NAME = "",
       RNAseq_df <- RNAseq_df[!is.na(RNAseq_df$count), ]
       RNAseq_df$isoform <- tx_id
 
-      # Determine scaling based on Y_scale
-      current_max_Y <- if (Y_scale=="all") max_Y_global else max(RNAseq_counts, na.rm=TRUE)
-      y_limits <- c(0,current_max_Y*1.1)
+      # Determine scaling based on Y_scale and RNA_fix_height
+      if (!is.null(RNA_fix_height)) {
+        current_max_Y <- RNA_fix_height
+        y_limits <- c(0, RNA_fix_height)
+      } else if (!is.null(Y_scale) && Y_scale == "all") {
+        current_max_Y <- max_Y_global
+        y_limits <- c(0, current_max_Y * 1.1 + (current_max_Y == 0))
+      } else {
+        current_max_Y <- max(RNAseq_counts, na.rm = TRUE)
+        y_limits <- c(0, current_max_Y * 1.1 + (current_max_Y == 0))
+      }
 
       # Start plotting
       p <- ggplot() +
@@ -1940,6 +1985,55 @@ ggRNA <- function(gene_id = NULL, tx_id = NULL, Extend = 100, NAME = "",
   return(combined_plot)
 }
 
+
+#' Plot RNA-seq and Ribo-seq coverage for a gene
+#'
+#' The `ggRibo` function creates a comprehensive plot displaying RNA-seq coverage and Ribo-seq read counts
+#' for a specified gene and transcript. It includes options for displaying extended ORFs (eORFs), genomic sequences,
+#' and gene models, and can scale data according to various parameters.
+#'
+#' @param gene_id Character string specifying the gene ID of interest.
+#' @param tx_id Character string specifying the transcript ID to be used as the main isoform.
+#' @param eORF.tx_id Optional. Vector of eORF transcript IDs to include in the plot.
+#' @param eORFRangeInfo Optional. eORF range information, e.g., an object like `eORF_Range`.
+#' @param Extend Numeric value specifying the number of base pairs to extend the plot beyond the gene range. Default is 100.
+#' @param NAME Optional. Character string for an additional name or title to display in the plot.
+#' @param RNAcoverline Color for the RNA-seq coverage line. Default is "grey".
+#' @param RNAbackground Color for the RNA-seq coverage background. Default is "#FEFEAE".
+#' @param fExtend Numeric value specifying the number of nucleotides to extend the frame assignment into the 5' UTR. Default is 0.
+#' @param tExtend Numeric value specifying the number of nucleotides to extend the frame assignment into the 3' UTR. Default is 0.
+#' @param RNAseq List where each element is either a character string (BAM file path) or a list with type ("bam", "bigwig", "bedgraph") and data (file for BAM, plus/minus for bigwig/bedgraph).
+#' @param Riboseq List where each element is either a data frame (tabular data) or a list with type ("tabular", "bigwig", "bedgraph") and data.
+#' @param SampleNames Vector of sample names corresponding to the RNAseq and Riboseq data.
+#' @param GRangeInfo Genomic range information, typically an object like `Txome_Range`.
+#' @param RNAseqBamPaired Vector indicating whether each RNA-seq BAM file is paired-end ("paired") or single-end ("single"), used only if RNAseq contains BAM paths.
+#' @param Y_scale Character string, either "all" or "each", specifying how to scale the Y-axis for RNA-seq coverage. Default is "all".
+#' @param Ribo_fix_height Numeric value to fix the maximum height of Ribo-seq counts in the plot.
+#' @param RNA_fix_height Numeric to fix the max RNA-seq coverage height. Default is \code{NULL}.
+#' @param plot_ORF_ranges Logical indicating whether to plot ORF ranges in the gene model. Default is FALSE.
+#' @param oORF_coloring Character string specifying coloring method for overlapping ORFs ("oORF_colors" or "extend_mORF").
+#' @param frame_colors Named vector of colors for the reading frames (0,1,2). Default is c("0"="#FF0000", "1"="#3366FF", "2"="#009900").
+#' @param plot_range Optional numeric vector specifying a custom genomic range to plot.
+#' @param sample_color Vector specifying colors for each sample or "color" to use default coloring.
+#' @param show_seq Logical indicating whether to display the DNA and amino acid sequence. Default is FALSE.
+#' @param FASTA A `BSgenome` object with genomic sequences.
+#' @param plot_genomic_direction Logical whether to plot the genomic direction arrow. Default is FALSE.
+#' @param dna_aa_height_ratio Numeric value adjusting DNA/AA plot height. Default is 0.5.
+#' @param gene_model_height_ratio Numeric value adjusting gene model plot height or NULL to auto-adjust.
+#' @param transcript_label_font_size Numeric for transcript label font size.
+#' @param gene_model_coord_font_size Numeric font size for X-axis genomic coordinate labels in the gene model panel. Default is 8.8.
+#' @param data_types Vector of sample data type names for each sample (e.g., "Ribo-seq").
+#' @param selected_isoforms Optional vector of transcript IDs to plot. If provided, only these isoforms plus `tx_id` are shown.
+#' @param nucleotide_color_scheme If "default", uses bright colors for the nucleotides in plotDNAandAA. If "colorblind", uses a color‐blind friendly palette.
+#' @param ribo_linewidth Numeric value to control the thickness of Ribo-seq read count lines. Default is \code{0.5}.
+#' @param rna_linewidth Numeric value to control the thickness of RNA-seq step lines. Default is \code{0.5}.
+#' @param axis_label_font_size Numeric controlling axis tick label size in coverage panels. Default is 11.
+#' @param axis_title_font_size Numeric controlling axis title size (e.g., y-axis titles). Default is 10.
+#' @param sample_label_font_size Numeric controlling the size of sample name annotations in panels. Default is 3.
+#' @param title_font_size Numeric controlling the size of the top title text. Default is 5.
+#'
+#' @return A combined ggplot object displaying RNA-seq coverage, Ribo-seq data, gene models, and optional sequences.
+#' @export
 
 #' Plot RNA-seq and Ribo-seq coverage for a gene
 #'
@@ -2340,30 +2434,34 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
         RiboRslt <- data.frame()
       }
 
-      # ---- CHANGED: compute scale on RNA (left axis), scale Ribo to RNA ----
-      if (!is.null(Ribo_fix_height)) {
-        current_max_Y <- if (nrow(RNAseq_df)>0) max(RNAseq_df$count, na.rm=TRUE) else 0
-        y_limits <- c(0, current_max_Y*1.1 + (current_max_Y==0))
-        scale_factor_Ribo <- if (current_max_Y == 0) 1 else current_max_Y / Ribo_fix_height
-      } else if (Y_scale=="all") {
-        current_max_Y <- max_Y_global
-        y_limits <- c(0, current_max_Y*1.1 + (current_max_Y==0))
-        current_max_P <- max_P_global
-        scale_factor_Ribo <- if (current_max_P > 0) current_max_Y / current_max_P else 1
-      } else if (Y_scale=="each") {
-        current_max_Y <- if (nrow(RNAseq_df)>0) max(RNAseq_df$count, na.rm=TRUE) else 0
-        current_max_P <- if (nrow(RiboRslt)>0) max(RiboRslt$count, na.rm=TRUE) else 0
-        y_limits <- c(0, current_max_Y*1.1 + (current_max_Y==0))
-        scale_factor_Ribo <- if (current_max_P > 0) current_max_Y / current_max_P else 1
-      }
-      # -----------------------------------------------------------
+      # 1. Determine base_max_Y (determines the left axis scale and provides the baseline for right axis mapping)
+      current_max_Y_data <- if (nrow(RNAseq_df)>0) max(RNAseq_df$count, na.rm=TRUE) else 0
 
-      # ---- CHANGED: RNA stays unscaled on left; Ribo scaled to left ----
+      if (!is.null(RNA_fix_height)) {
+        base_max_Y <- RNA_fix_height
+        y_limits <- c(0, RNA_fix_height)
+      } else if (!is.null(Y_scale) && Y_scale == "all") {
+        base_max_Y <- max_Y_global
+        y_limits <- c(0, base_max_Y * 1.1 + (base_max_Y == 0))
+      } else {
+        base_max_Y <- current_max_Y_data
+        y_limits <- c(0, base_max_Y * 1.1 + (base_max_Y == 0))
+      }
+
+      # 2. Determine Ribo scaling based on the established base_max_Y
+      if (!is.null(Ribo_fix_height)) {
+        scale_factor_Ribo <- if (base_max_Y == 0) 1 else base_max_Y / Ribo_fix_height
+      } else if (!is.null(Y_scale) && Y_scale == "all") {
+        scale_factor_Ribo <- if (max_P_global > 0) base_max_Y / max_P_global else 1
+      } else {
+        current_max_P_data <- if (nrow(RiboRslt)>0) max(RiboRslt$count, na.rm=TRUE) else 0
+        scale_factor_Ribo <- if (current_max_P_data > 0) base_max_Y / current_max_P_data else 1
+      }
+
       RNAseq_df$count_scaled <- RNAseq_df$count
       if (nrow(RiboRslt)>0) {
         RiboRslt$count_scaled <- RiboRslt$count * scale_factor_Ribo
       }
-      # -----------------------------------------------------------
 
       sample_color_i <- sample_color[i]
 
@@ -2775,13 +2873,11 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
         }
       }
 
-      # ---- CHANGED: left axis RNA; right axis Ribo (matches ggRibo_decom) ----
       p <- p + scale_y_continuous(
         limits=y_limits,
         name="RNA-seq \ncoverage",
         sec.axis=sec_axis(~ . / scale_factor_Ribo, name = paste0(data_types[i], "\n count"))
       )
-      # ------------------------------------------------------------------------
 
       p <- p + xlab("")
 
@@ -3150,6 +3246,57 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
 #' @return A combined ggplot object with RNA-Seq coverage, three frame-specific Ribo-Seq plots, gene model, and optionally DNA/AA sequences.
 #'
 #' @export
+#' ggRibo_decom creates a combined visualization of RNA-Seq coverage and frame-specific Ribo-Seq counts for a specified gene and transcript.
+#' It generates three separate plots corresponding to the three reading frames (0, 1, and 2) of Ribo-Seq data, optionally including reads
+#' that do not fall within any annotated ORF regions. It can also display extended ORFs (eORFs), genomic sequences, and gene models.
+#'
+#' @param gene_id Character. The identifier for the gene of interest.
+#' @param tx_id Character. The transcript identifier within the gene for which the main ORF is annotated.
+#' @param eORF.tx_id Character vector, optional. Transcript identifiers for extended ORFs (eORFs) associated with the gene.
+#' @param eORFRangeInfo List, optional. Contains eORF range information. Required if eORF.tx_id is specified.
+#' @param Extend Numeric or numeric vector of length 2. Extends the plotting range upstream and downstream of the gene. Defaults to 100.
+#' @param NAME Character. An optional label or title.
+#' @param RNAcoverline Character. Color for the RNA-Seq coverage line. Defaults to "grey".
+#' @param RNAbackground Character or vector of length equal to number of samples. Fill color for RNA-Seq coverage bars. Defaults to "#FEFEAE".
+#' @param fExtend Numeric. Extends the ORF upstream by this many bases. Defaults to 0.
+#' @param tExtend Numeric. Extends the ORF downstream by this many bases. Defaults to 0.
+#' @param RNAseq List. List of RNA-Seq input descriptors (BAM file paths or named lists with plus/minus for bigWig/bedGraph).
+#' @param Riboseq List. List of Ribo-Seq input descriptors (tabular data frames or named lists with plus/minus for bigWig/bedGraph).
+#' @param SampleNames Character vector. Names corresponding to the samples.
+#' @param GRangeInfo List. Genomic range information such as transcripts, exons, CDS, etc.
+#' @param RNAseqBamPaired Character vector. Indicates if each RNA-Seq BAM is paired-end ("paired") or single-end ("single").
+#' @param Y_scale Character. Either "all" or "each", controlling the Y-axis scaling for RNA-seq coverage. Defaults to "all".
+#' @param Ribo_fix_height Numeric, optional. Caps Ribo-Seq counts at a fixed height, ignoring Y_scale.
+#' @param RNA_fix_height Numeric to fix the max RNA-seq coverage height. Default is \code{NULL}.
+#' @param plot_ORF_ranges Logical. If TRUE, highlights annotated ORF ranges on the gene model. Defaults to FALSE.
+#' @param oORF_coloring Character, optional. Method for coloring overlapping ORFs. "oORF_colors" or "extend_mORF".
+#' @param frame_colors Named character vector. Colors for frames 0, 1, and 2. Defaults provided.
+#' @param plot_range Numeric vector of length 2, optional. Custom genomic range to plot.
+#' @param sample_color Character. If "color", uses frame-specific colors. Otherwise, uses a single color for Ribo reads.
+#' @param show_seq Logical. If TRUE, displays DNA and AA sequences below the coverage plots. Defaults to FALSE.
+#' @param FASTA Optional. Path to a FASTA file or BSgenome object with genomic sequences.
+#' @param dna_aa_height_ratio Numeric. Adjusts DNA/AA plot height relative to gene model height. Defaults to 0.5.
+#' @param gene_model_height_ratio Numeric, optional. Adjusts gene model plot height. If NULL, auto-scales.
+#' @param transcript_label_font_size Numeric. Font size for transcript ID labels in gene model. Defaults to 10.
+#' @param gene_model_coord_font_size Numeric font size for X-axis genomic coordinate labels in the gene model panel. Default is 8.8.
+#' @param plot_genomic_direction Logical. If TRUE, draws an arrow indicating genomic direction on the top plot. Defaults to FALSE.
+#' @param data_types Character vector. Describes data type(s) for samples (e.g., "Ribo-seq"). Must match SampleNames length.
+#' @param plot_unassigned_reads Logical. If TRUE, plots Ribo-Seq reads not assigned to any ORF as grey segments.
+#' @param selected_isoforms Optional. Vector of transcript IDs to plot. If specified, only these isoforms and tx_id are shown.
+#' @param frame_logic Character. Determines how reading frames are assigned:
+#'   - "tx_start": Frame 0 starts at the beginning of the transcript.
+#'   - "CDS_start": Frame 0 starts at the annotated ORF start.
+#'   - "CDS_extend": Frame 0 starts at the annotated ORF start and extends to both sides.
+#'   Defaults to "tx_start" if no ORF is annotated, otherwise "CDS_start".
+#' @param ribo_linewidth Numeric value to control the thickness of Ribo-seq read count lines. Default is \code{0.5}.
+#' @param rna_linewidth Numeric value to control the thickness of RNA-seq step lines. Default is \code{0.5}.
+#' @param axis_label_font_size Numeric controlling axis tick label size in coverage panels. Default is 11.
+#' @param axis_title_font_size Numeric controlling axis title size (e.g., y-axis titles). Default is 10.
+#' @param sample_label_font_size Numeric controlling the size of in-panel labels (e.g., "Frame 0/1/2"). Default is 3.
+#' @param title_font_size Numeric controlling the size of the top title text. Default is 5.
+#' @return A combined ggplot object with RNA-Seq coverage, three frame-specific Ribo-Seq plots, gene model, and optionally DNA/AA sequences.
+#'
+#' @export
 ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                          eORFRangeInfo = NULL, Extend = 100, NAME = "",
                          RNAcoverline = "grey", RNAbackground = "#FEFEAE",
@@ -3188,24 +3335,20 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                          title_font_size = 5
 ) {
 
-  # Validate Y_scale
   if (!(Y_scale %in% c("all", "each"))) {
     stop("Invalid Y_scale value. Please choose either 'all' or 'each'.")
   }
 
-  # Ensure RNAbackground is correct length
   if (length(RNAbackground) == 1) {
     RNAbackground <- rep(RNAbackground, length(SampleNames))
   } else if (length(RNAbackground) != length(SampleNames)) {
     stop("RNAbackground must be either a single color or match the length of 'Samples'.")
   }
 
-  # Check GRangeInfo provided
   if (is.null(GRangeInfo)) {
     stop("GRangeInfo (e.g., Txome_Range) must be provided.")
   }
 
-  # Obtain gene_id and/or tx_id
   gene_tx <- get_gene_tx(gene_id, tx_id, GRangeInfo)
   gene_id <- gene_tx$gene_id
   tx_id <- gene_tx$tx_id
@@ -3226,7 +3369,6 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
     }
   }
 
-  # Get transcripts for the gene
   txByYFG <- GRangeInfo$txByGene[gene_id]
   if (length(txByYFG) == 0 || length(txByYFG[[1]]) == 0) {
     stop(paste("No transcripts found for gene ID", gene_id))
@@ -3238,12 +3380,10 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
   }
   tx_names <- txByYFG[[1]]$tx_name
 
-  # Filter isoforms if selected_isoforms given
   if (!is.null(selected_isoforms)) {
     tx_names <- intersect(tx_names, selected_isoforms)
   }
 
-  # Ensure main transcript included
   if (!tx_id %in% tx_names) {
     tx_names <- c(tx_id, tx_names)
   }
@@ -3270,11 +3410,9 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
   strand_info <- as.character(strand(unlist(txByYFG)))[1]
   chr <- as.character(seqnames(unlist(txByYFG)))[1]
 
-  # Order transcripts: main first, others sorted
   other_tx_names <- setdiff(tx_names, tx_id)
   tx_names <- c(tx_id, sort(other_tx_names))
 
-  # Extract CDS and exon info
   cdsByYFGtx_all <- GRangeInfo$cdsByTx
   cdsByYFGtx <- cdsByYFGtx_all[intersect(tx_names, names(cdsByYFGtx_all))]
   for (nct in tx_names) {
@@ -3291,7 +3429,6 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
     }
   }
 
-  # Build xlimCds list
   xlimCds <- list()
   for (i in seq_along(tx_names)) {
     cds <- cdsByYFGtx[[tx_names[i]]]
@@ -3309,13 +3446,11 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
   isoforms_w_5UTR <- tx_names[tx_names %in% names(GRangeInfo$fiveUTR)]
   fiveUTRByYFGtx <- GRangeInfo$fiveUTR[isoforms_w_5UTR]
 
-  # Make a subset of the gene transcripts corresponding to the final tx_names
   txByYFG_subset <- txByYFG[[1]][ txByYFG[[1]]$tx_name %in% tx_names ]
   if (length(txByYFG_subset) == 0) {
     stop("No transcripts left after applying selected_isoforms in ggRibo_decom().")
   }
 
-  # Determine plotting region
   if (!is.null(plot_range)) {
     plot_range <- sort(plot_range)
     range_left <- plot_range[1]
@@ -3346,7 +3481,6 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
     gene_ranges <- GRanges(seqnames=chr, ranges=IRanges(range_left, range_right), strand=strand_info)
   }
 
-  # Process Riboseq data
   Riboseq_list <- list()
   if (!is.null(Riboseq)) {
     Riboseq_list[[1]] <- get_Riboseq_data(Riboseq[[1]], gene_ranges, strand_info)
@@ -3426,10 +3560,8 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
     eORFTxInfo <- NULL
   }
 
-  # Determine if transcript has annotated ORF
   has_annotated_ORF <- length(main_cds) > 0
 
-  # Set default frame_logic if not provided
   if (is.null(frame_logic)) {
     frame_logic <- if (has_annotated_ORF) "CDS_start" else "tx_start"
   } else {
@@ -3443,7 +3575,6 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
     }
   }
 
-  # Process RNAseq coverage
   RNAseq_list <- list()
   if (!is.null(RNAseq)) {
     RNAseq_list[[1]] <- get_RNAseq_coverage(RNAseq[[1]], GeneTxInfo$generangesplus, strand_info)
@@ -3502,26 +3633,29 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
       RiboRslt <- data.frame()
     }
 
-    # Determine scaling
-    if (!is.null(Ribo_fix_height)) {
-      current_max_Y <- max(RNAseq_counts,na.rm=TRUE)
-      scale_factor_Ribo <- if (current_max_Y==0) 1 else current_max_Y / Ribo_fix_height
-      y_limits <- c(0, current_max_Y*1.1)
-    } else if (Y_scale=="all") {
-      current_max_Y <- max_Y_global
-      current_max_P <- max_P_global
-      scale_factor_Ribo <- if (current_max_P>0) max_Y_global / max_P_global else 1
-      y_limits <- c(0,current_max_Y*1.1)
-    } else if (Y_scale=="each") {
-      current_max_Y <- max(RNAseq_counts, na.rm=TRUE)
-      if (length(RiboRslt)>0 && nrow(RiboRslt)>0) {
-        current_max_P <- max(RiboRslt$count,na.rm=TRUE)
-        scale_factor_Ribo <- if (current_max_P>0) current_max_Y / current_max_P else 1
-      } else {
-        scale_factor_Ribo <-1
-      }
-      y_limits <- c(0,current_max_Y*1.1)
-    }
+        # 1. Determine base_max_Y (determines the left axis scale and provides the baseline for right axis mapping)
+        current_max_Y_data <- if (nrow(RNAseq_df)>0) max(RNAseq_df$count, na.rm=TRUE) else 0
+
+        if (!is.null(RNA_fix_height)) {
+          base_max_Y <- RNA_fix_height
+          y_limits <- c(0, RNA_fix_height)
+        } else if (!is.null(Y_scale) && Y_scale == "all") {
+          base_max_Y <- max_Y_global
+          y_limits <- c(0, base_max_Y * 1.1 + (base_max_Y == 0))
+        } else {
+          base_max_Y <- current_max_Y_data
+          y_limits <- c(0, base_max_Y * 1.1 + (base_max_Y == 0))
+        }
+
+        # 2. Determine Ribo scaling based on the established base_max_Y
+        if (!is.null(Ribo_fix_height)) {
+          scale_factor_Ribo <- if (base_max_Y == 0) 1 else base_max_Y / Ribo_fix_height
+        } else if (!is.null(Y_scale) && Y_scale == "all") {
+          scale_factor_Ribo <- if (max_P_global > 0) base_max_Y / max_P_global else 1
+        } else {
+          current_max_P_data <- if (nrow(RiboRslt)>0) max(RiboRslt$count, na.rm=TRUE) else 0
+          scale_factor_Ribo <- if (current_max_P_data > 0) base_max_Y / current_max_P_data else 1
+        }
 
     if (length(RiboRslt)>0 && !is.null(scale_factor_Ribo)) {
       RiboRslt$count_scaled <- RiboRslt$count*scale_factor_Ribo
@@ -3538,7 +3672,6 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
     cds_ranges <- GeneTxInfo$cdsByYFGtx[[tx_id]]
     exons <- GeneTxInfo$exonByYFGtx[[tx_id]]
 
-    # Helper to create frame-specific plots
     make_frame_plot <- function(RNAseq_df, Ribo_df, frame_color, frame_label, y_limits, scale_factor_Ribo, GeneTxInfo, main_has_cds, eORFTxInfo, fExtend, tExtend, na_data, plot_unassigned) {
       RNAseq_df_line <- RNAseq_df
       if (GeneTxInfo$strand == "+") {
@@ -3619,7 +3752,6 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
       return(p)
     }
 
-    # Assign frames based on frame_logic
     cds_ranges <- GeneTxInfo$cdsByYFGtx[[tx_id]]
     exons <- GeneTxInfo$exonByYFGtx[[tx_id]]
     if (frame_logic == "tx_start" || (!has_annotated_ORF && frame_logic %in% c("CDS_start", "CDS_extend"))) {
@@ -3687,18 +3819,15 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
       RiboRslt$count_scaled <- RiboRslt$count * scale_factor_Ribo
     }
 
-    # Split reads by frame
     frame0_data <- RiboRslt[RiboRslt$frame=="0", ]
     frame1_data <- RiboRslt[RiboRslt$frame=="1", ]
     frame2_data <- RiboRslt[RiboRslt$frame=="2", ]
     na_data <- RiboRslt[is.na(RiboRslt$frame),]
 
-    # Create three separate frame plots
     p0 <- make_frame_plot(RNAseq_df, frame0_data, frame_colors["0"], "Frame0", y_limits, scale_factor_Ribo, GeneTxInfo, main_has_cds, eORFTxInfo, fExtend, tExtend, na_data, plot_unassigned_reads)
     p1 <- make_frame_plot(RNAseq_df, frame1_data, frame_colors["1"], "Frame1", y_limits, scale_factor_Ribo, GeneTxInfo, main_has_cds, eORFTxInfo, fExtend, tExtend, na_data, plot_unassigned_reads)
     p2 <- make_frame_plot(RNAseq_df, frame2_data, frame_colors["2"], "Frame2", y_limits, scale_factor_Ribo, GeneTxInfo, main_has_cds, eORFTxInfo, fExtend, tExtend, na_data, plot_unassigned_reads)
 
-    # Annotate frame labels
     delta_x <- 0
     x_label <- if (GeneTxInfo$strand=="-") {
       GeneTxInfo$range_right - delta_x
@@ -3725,7 +3854,6 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
 
     p2 <- p2 + theme(plot.margin=grid::unit(c(0,0.2,-0.8,0.2),"lines"))
 
-    # Add genomic direction arrow on first plot if requested
     if (plot_genomic_direction == TRUE) {
       x_min <- min(x_limits)
       x_max <- max(x_limits)
@@ -3746,7 +3874,6 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
       }
     }
 
-    # If show_seq = TRUE and FASTA provided, plot DNA/AA below
     if (show_seq && !is.null(FASTA)) {
       dna_aa_plot <- plotDNAandAA(
         GeneTxInfo=GeneTxInfo,
@@ -3757,7 +3884,6 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
       dna_aa_plot <- NULL
     }
 
-    # Plot gene model at bottom
     gene_model_plot <- plotGeneTxModel(
       GeneTxInfo = GeneTxInfo,
       eORFTxInfo = eORFTxInfo,
@@ -3779,11 +3905,9 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
       dna_aa_height <-0
     }
 
-    # Define spacer plot and height
     spacer_plot <- ggplot() + theme_void()
     spacer_height <- 0.03
 
-    # Update total height and rel_heights
     total_height_units <- title_height + (3 * frame_plot_height) + spacer_height + dna_aa_height + gene_model_height
     rel_heights <- c(
       title_height,
@@ -3804,7 +3928,6 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                hjust=0.5,vjust=0.5,
                fontface="italic",size=title_font_size)
 
-    # Combine all: title, 3 frame plots, optional DNA/AA, gene model
     combined_plot <- cowplot::plot_grid(
       title_plot,
       p0,
@@ -3824,16 +3947,13 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
 
     return(combined_plot)
   } else {
-    # --------- Ribo-only decomposed panels (no RNA) ----------
     if (length(Riboseq_list) == 0) stop("No RNA-seq data provided and no Riboseq data found.")
     RiboRslt <- Riboseq_list[[1]]
 
-    # y-limits for Ribo-only
     if (!is.null(Ribo_fix_height) && nrow(RiboRslt)>0) RiboRslt$count <- pmin(RiboRslt$count, Ribo_fix_height)
     current_max_P <- if (nrow(RiboRslt)>0) max(RiboRslt$count, na.rm=TRUE) else 0
     y_limits <- c(0, (current_max_P*1.1) + (current_max_P==0))
 
-    # frame assignment (same logic)
     cds_ranges <- GeneTxInfo$cdsByYFGtx[[tx_id]]
     exons <- GeneTxInfo$exonByYFGtx[[tx_id]]
     if (frame_logic == "tx_start" || (!has_annotated_ORF && frame_logic %in% c("CDS_start", "CDS_extend"))) {
@@ -3873,7 +3993,6 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
     frame2_data <- RiboRslt[RiboRslt$frame=="2", ]
     na_data <- RiboRslt[is.na(RiboRslt$frame),]
 
-    # helper for Ribo-only frame panel  ---- MINIMAL FIX APPLIED HERE ----
     make_frame_plot_ribo_only <- function(Ribo_df, frame_color, y_limits, GeneTxInfo, eORFTxInfo) {
       p <- ggplot() + theme_bw() +
         theme(
@@ -3898,7 +4017,6 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
       }
       p <- p + xlab("")
 
-      # ---- NEW: add dashed main-ORF start/stop guides in Ribo-only path ----
       tx_id_local <- GeneTxInfo$tx_id
       main_has_cds_local <- length(GeneTxInfo$xlimCds[[tx_id_local]]) > 0
       if (main_has_cds_local) {
@@ -3912,7 +4030,6 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
           p <- p + geom_vline(xintercept = main_orf_stop,  linetype = "dashed", color = "darkgrey")
         }
       }
-      # ----------------------------------------------------------------------
 
       if (plot_unassigned_reads && nrow(na_data)>0) {
         p <- p + geom_segment(data=na_data, aes(x=position, xend=position, y=0, yend=count), color="grey", linewidth=ribo_linewidth, na.rm=TRUE)
@@ -3921,7 +4038,6 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
         p <- p + geom_segment(data=Ribo_df, aes(x=position, xend=position, y=0, yend=count), color=frame_color, linewidth=ribo_linewidth, na.rm=TRUE)
       }
 
-      # eORF guides
       if (!is.null(eORFTxInfo)) {
         x_min <- min(x_limits); x_max <- max(x_limits)
         for (j in seq_along(eORFTxInfo$eORF.tx_id)) {
@@ -3942,7 +4058,6 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
     p1 <- make_frame_plot_ribo_only(frame1_data, frame_colors["1"], y_limits, GeneTxInfo, eORFTxInfo)
     p2 <- make_frame_plot_ribo_only(frame2_data, frame_colors["2"], y_limits, GeneTxInfo, eORFTxInfo)
 
-    # labels & optional arrow
     delta_x <- 0
     x_label <- if (GeneTxInfo$strand=="-") GeneTxInfo$range_right - delta_x else GeneTxInfo$range_left + delta_x
     y_label <- y_limits[2] * 0.9
@@ -3959,7 +4074,6 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
       }
     }
 
-    # dna/aa & gene model
     dna_aa_plot <- if (show_seq && !is.null(FASTA)) plotDNAandAA(GeneTxInfo=GeneTxInfo, plot_range=plot_range, FASTA=FASTA) else NULL
     gene_model_plot <- plotGeneTxModel(
       GeneTxInfo = GeneTxInfo,
@@ -3993,6 +4107,55 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
   }
 }
 
+#' Plot RNA-seq and Ribo-seq Coverage in Transcript Coordinates
+#'
+#' This function plots RNA-seq coverage and frame-specific Ribo-seq read counts
+#' for a specified transcript in *transcript* coordinates (exon-spliced).
+#' It optionally plots eORFs, genomic sequences, and a transcript model.
+#'
+#' @param gene_id Character string specifying the gene ID of interest.
+#' @param tx_id Character string specifying the transcript ID to plot.
+#' @param eORF.tx_id Optional. Vector of eORF transcript IDs to include in the plot.
+#' @param eORFRangeInfo Optional. An object (e.g., \code{eORF_Range}) providing eORF ranges. If \code{NULL}, eORFs won't be plotted.
+#' @param Extend Number of bases to extend the plotting region beyond the transcript. Default is \code{100}.
+#' @param NAME Optional. Additional name or title for the plot.
+#' @param RNAcoverline Color for the RNA-seq coverage step line. Default is \code{"grey"}.
+#' @param RNAbackground Fill color for RNA-seq coverage bars. Default is \code{"#FEFEAE"}.
+#' @param fExtend Number of nucleotides to extend into 5' UTR for frame assignment. Default is \code{0}.
+#' @param tExtend Number of nucleotides to extend into 3' UTR for frame assignment. Default is \code{0}.
+#' @param RNAseq A list describing RNA-seq input(s). Each entry can be a file path or coverage descriptor.
+#' @param Riboseq A list describing Ribo-seq input(s). Each entry can be a file path or coverage descriptor.
+#' @param SampleNames Vector of sample names. Must match \code{RNAseq} and/or \code{Riboseq} length.
+#' @param GRangeInfo A \code{Txome_Range}-like object containing genome/transcript annotations.
+#' @param RNAseqBamPaired Vector indicating pairing for BAM (e.g. \code{"paired"} or \code{"single"}). Not used for bigWig.
+#' @param Y_scale Either \code{"all"} or \code{"each"}, controlling y-scaling across samples. Default is \code{"all"}.
+#' @param Ribo_fix_height Numeric to fix the max Ribo-seq coverage height. Default is \code{NULL}.
+#' @param RNA_fix_height Numeric to fix the max RNA-seq coverage height. Default is \code{NULL}.
+#' @param plot_ORF_ranges Logical; if \code{TRUE}, attempt to plot eORFs in the gene model. Default is \code{TRUE}.
+#' @param frame_colors Named vector of colors for reading frames 0,1,2.
+#' @param sample_color Either \code{"color"} or a vector of colors for each sample, controlling how Ribo-seq reads are drawn.
+#' @param show_seq Logical; if \code{TRUE}, also plot the transcript DNA/AA via \code{plotDNAandAA_tx}. Default is \code{FALSE}.
+#' @param FASTA A \code{BSgenome} object with the reference sequences. Needed if \code{show_seq=TRUE}.
+#' @param dna_aa_height_ratio Numeric adjusting the vertical space for DNA/AA. Default is \code{0.5}.
+#' @param gene_model_height_ratio Numeric adjusting the height of the transcript model. Default is \code{1.3}.
+#' @param transcript_label_font_size Numeric controlling transcript label font size in the gene model. Default is \code{10}.
+#' @param gene_model_coord_font_size Numeric font size for X-axis genomic coordinate labels in the gene model panel. Default is 8.8.
+#' @param plot_genomic_direction If \code{TRUE}, attempts to draw an arrow for the genomic direction in coverage plots.
+#' @param data_types Vector describing the type of each sample (e.g. \code{"Ribo-seq"} or \code{"RNA-seq"}). Must match \code{SampleNames} length.
+#' @param plot_range Optional numeric \code{c(start,end)} specifying the transcript coordinate range to plot.
+#' @param nucleotide_color_scheme If \code{"colorblind"}, uses a color-blind-friendly palette for nucleotides in DNA/AA. Otherwise uses \code{"default"}.
+#' @param oORF_coloring Coloring scheme for overlapping ORFs: \code{"extend_mORF"} (use main CDS frame for overlapping eORFs) or \code{"oORF_colors"} (use eORF-specific frames). Default is \code{"extend_mORF"}.
+#' @param ribo_linewidth Numeric value to control the thickness of Ribo-seq read count lines. Default is \code{0.5}.
+#' @param rna_linewidth Numeric value to control the thickness of RNA-seq step lines. Default is \code{0.5}.
+#' @param axis_label_font_size Numeric controlling axis tick label size in coverage panels. Default is 11.
+#' @param axis_title_font_size Numeric controlling axis title size (e.g., y-axis titles). Default is 10.
+#' @param sample_label_font_size Numeric controlling the size of sample name annotations in panels. Default is 3.
+#' @param title_font_size Numeric controlling the size of the top title text. Default is 5.
+#'
+#' @return A combined \code{ggplot} object displaying RNA-seq coverage, Ribo-seq coverage, optional eORFs, a transcript model,
+#'   and (if requested) the spliced DNA/AA sequences, all in transcript coordinates.
+#'
+#' @export
 #' Plot RNA-seq and Ribo-seq Coverage in Transcript Coordinates
 #'
 #' This function plots RNA-seq coverage and frame-specific Ribo-seq read counts
@@ -4346,24 +4509,29 @@ ggRibo_tx <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
       RNAseq_df <- data.frame(position = df_cov$tx_pos, count = df_cov$count)
       RiboRslt <- Riboseq_list[[i]]
 
-      # Y-scaling
-      if (Y_scale == "each") {
-        current_max_Y <- if (nrow(RNAseq_df) > 0) max(RNAseq_df$count, na.rm = TRUE) else 0
-        current_max_Ribo <- if (nrow(RiboRslt) > 0) max(RiboRslt$count, na.rm = TRUE) else 0
-        scale_factor <- if (current_max_Ribo > 0) current_max_Y / current_max_Ribo else 1
-        y_limits <- c(0, current_max_Y * 1.1)
+      all_rna_max <- max(unlist(lapply(RNAseq_list, function(xx) max(xx$count, na.rm = TRUE))), na.rm = TRUE)
+      all_ribo_max <- max(unlist(lapply(Riboseq_list, function(xx) if (nrow(xx) > 0) max(xx$count, na.rm = TRUE) else 0)), na.rm = TRUE)
+
+      # 1. Determine base_max_Y (left axis)
+      if (!is.null(RNA_fix_height)) {
+        base_max_Y <- RNA_fix_height
+        y_limits <- c(0, RNA_fix_height)
+      } else if (!is.null(Y_scale) && Y_scale == "all") {
+        base_max_Y <- all_rna_max
+        y_limits <- c(0, base_max_Y * 1.1 + (base_max_Y == 0))
       } else {
-        all_rna_max <- max(unlist(lapply(RNAseq_list, function(xx) max(xx$count, na.rm = TRUE))), na.rm = TRUE)
-        all_ribo_max <- max(unlist(lapply(Riboseq_list, function(xx) if (nrow(xx) > 0) max(xx$count, na.rm = TRUE) else 0)), na.rm = TRUE)
-        scale_factor <- if (all_ribo_max > 0) all_rna_max / all_ribo_max else 1
-        y_limits <- c(0, all_rna_max * 1.1)
+        base_max_Y <- if (nrow(RNAseq_df) > 0) max(RNAseq_df$count, na.rm = TRUE) else 0
+        y_limits <- c(0, base_max_Y * 1.1 + (base_max_Y == 0))
       }
+
+      # 2. Determine scale_factor (right axis)
       if (!is.null(Ribo_fix_height)) {
-        scale_factor <- if (nrow(RiboRslt) > 0) {
-          cmY <- if (nrow(RNAseq_df) > 0) max(RNAseq_df$count, na.rm = TRUE) else 1
-          cmY / Ribo_fix_height
-        } else 1
-        y_limits <- c(0, if (nrow(RNAseq_df) > 0) max(RNAseq_df$count, na.rm = TRUE) * 1.1 else 1)
+        scale_factor <- if (base_max_Y == 0) 1 else base_max_Y / Ribo_fix_height
+      } else if (!is.null(Y_scale) && Y_scale == "all") {
+        scale_factor <- if (all_ribo_max > 0) base_max_Y / all_ribo_max else 1
+      } else {
+        current_max_Ribo <- if (nrow(RiboRslt) > 0) max(RiboRslt$count, na.rm = TRUE) else 0
+        scale_factor <- if (current_max_Ribo > 0) base_max_Y / current_max_Ribo else 1
       }
 
       y_label <- y_limits[2] * 0.90
