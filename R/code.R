@@ -4199,15 +4199,6 @@ ggRibo_tx <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
     })
   }
 
-  max_Y_global <- 0
-  if (!is.null(RNAseq) && length(RNAseq_list)>0) {
-    max_Y_global <- max(unlist(lapply(RNAseq_list, function(xx) max(xx$count, na.rm = TRUE))), na.rm = TRUE)
-  }
-  max_P_global <- 0
-  if (!is.null(Riboseq) && length(Riboseq_list)>0) {
-    max_P_global <- max(unlist(lapply(Riboseq_list, function(xx) if (nrow(xx) > 0) max(xx$count, na.rm = TRUE) else 0)), na.rm = TRUE)
-  }
-
   # Gene_info object
   cdsByYFGtx <- GRangeInfo$cdsByTx[tx_id]
   xlimCds <- list(if (length(cdsByYFGtx) > 0) cdsByYFGtx[[1]] else GRanges())
@@ -4290,25 +4281,29 @@ ggRibo_tx <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
       RNAseq_df <- data.frame(position = df_cov$tx_pos, count = df_cov$count)
       RiboRslt <- Riboseq_list[[i]]
 
-      current_max_Y_data <- if (nrow(RNAseq_df)>0 && sum(!is.na(RNAseq_df$count))>0) max(RNAseq_df$count, na.rm=TRUE) else 0
+      all_rna_max <- max(unlist(lapply(RNAseq_list, function(xx) max(xx$count, na.rm = TRUE))), na.rm = TRUE)
+      all_ribo_max <- max(unlist(lapply(Riboseq_list, function(xx) if (nrow(xx) > 0) max(xx$count, na.rm = TRUE) else 0)), na.rm = TRUE)
+
+      # 1. Determine base_max_Y (left axis)
       if (!is.null(RNA_fix_height)) {
         base_max_Y <- RNA_fix_height
         y_limits <- c(0, RNA_fix_height)
-      } else if (Y_scale == "all") {
-        base_max_Y <- max_Y_global
+      } else if (!is.null(Y_scale) && Y_scale == "all") {
+        base_max_Y <- all_rna_max
         y_limits <- c(0, base_max_Y * 1.1 + (base_max_Y == 0))
       } else {
-        base_max_Y <- current_max_Y_data
+        base_max_Y <- if (nrow(RNAseq_df) > 0) max(RNAseq_df$count, na.rm = TRUE) else 0
         y_limits <- c(0, base_max_Y * 1.1 + (base_max_Y == 0))
       }
 
-      current_max_P_data <- if (nrow(RiboRslt)>0 && sum(!is.na(RiboRslt$count))>0) max(RiboRslt$count, na.rm=TRUE) else 0
+      # 2. Determine scale_factor (right axis)
       if (!is.null(Ribo_fix_height)) {
         scale_factor <- if (base_max_Y == 0) 1 else base_max_Y / Ribo_fix_height
-      } else if (Y_scale == "all") {
-        scale_factor <- if (max_P_global > 0) base_max_Y / max_P_global else 1
+      } else if (!is.null(Y_scale) && Y_scale == "all") {
+        scale_factor <- if (all_ribo_max > 0) base_max_Y / all_ribo_max else 1
       } else {
-        scale_factor <- if (current_max_P_data > 0) base_max_Y / current_max_P_data else 1
+        current_max_Ribo <- if (nrow(RiboRslt) > 0) max(RiboRslt$count, na.rm = TRUE) else 0
+        scale_factor <- if (current_max_Ribo > 0) base_max_Y / current_max_Ribo else 1
       }
 
       y_label <- y_limits[2] * 0.90
@@ -4512,20 +4507,13 @@ ggRibo_tx <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
     # --------- Ribo-only panels (no RNA) in transcript coordinates ----------
     for (i in seq_along(Riboseq)) {
       RiboRslt <- Riboseq_list[[i]]
-
+      current_max_Ribo <- if (nrow(RiboRslt) > 0) max(RiboRslt$count, na.rm = TRUE) else 0
       if (!is.null(Ribo_fix_height) && nrow(RiboRslt)>0) {
         RiboRslt$count <- pmin(RiboRslt$count, Ribo_fix_height)
-      }
-      current_max_P_data <- if (nrow(RiboRslt)>0 && sum(!is.na(RiboRslt$count))>0) max(RiboRslt$count, na.rm=TRUE) else 0
-
-      if (!is.null(Ribo_fix_height)) {
-        y_limits <- c(0, Ribo_fix_height)
-      } else if (Y_scale == "all") {
-        y_limits <- c(0, max_P_global * 1.1 + (max_P_global == 0))
-      } else {
-        y_limits <- c(0, current_max_P_data * 1.1 + (current_max_P_data == 0))
+        current_max_Ribo <- if (nrow(RiboRslt) > 0) max(RiboRslt$count, na.rm = TRUE) else 0
       }
       scale_factor <- 1
+      y_limits <- c(0, (current_max_Ribo*1.1) + (current_max_Ribo==0))
       y_label <- y_limits[2] * 0.90
 
       p <- ggplot() +
@@ -4608,7 +4596,122 @@ ggRibo_tx <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                   }
                   unique(txp_all)
                 }
-                if (length(txp) > 0
+                if (length(txp) > 0) {
+                  eorf_start_tx <- min(txp)
+                  idx <- (RiboRslt$position %in% txp) & is.na(RiboRslt$plot_frame)
+                  if (any(idx)) RiboRslt$plot_frame[idx] <- factor((RiboRslt$position[idx] - eorf_start_tx) %% 3, levels=c(0,1,2))
+                }
+              }
+            }
+          }
+        } else if (oORF_coloring == "oORF_colors") {
+          if (!is.null(eORFTxInfo)) {
+            eORF_list <- eORFTxInfo$eORF_Riboseq_list[[i]]
+            for (j in seq_along(eORF_list)) {
+              eORF_data <- eORF_list[[j]]
+              if (nrow(eORF_data) > 0) {
+                ref <- min(eORF_data$position)
+                idx <- RiboRslt$position %in% eORF_data$position
+                RiboRslt$plot_frame[idx] <- factor((RiboRslt$position[idx] - ref) %% 3, levels = c(0,1,2))
+              }
+            }
+          }
+        }
+
+        # draw
+        if (sample_color[i] == "color") {
+          p <- p + geom_segment(data = RiboRslt, aes(x = position, xend = position, y = 0, yend = count, color = plot_frame),
+                                linewidth = ribo_linewidth, na.rm = TRUE) +
+            scale_color_manual(values = frame_colors, na.value = "grey", drop = FALSE)
+        } else {
+          p <- p + geom_segment(data = RiboRslt, aes(x = position, xend = position, y = 0, yend = count),
+                                color = sample_color[i], linewidth = ribo_linewidth, na.rm = TRUE)
+        }
+
+        # ORF/eORF guides in tx coords (optional)
+        if ((x_max - x_min) >= 50 && length(cds_tx_positions) > 0) {
+          cds_start_tx <- min(cds_tx_positions); cds_stop_tx <- max(cds_tx_positions)
+          if (cds_start_tx >= x_min && cds_start_tx <= x_max) p <- p + geom_vline(xintercept = cds_start_tx, linetype = "dashed", color = "black", alpha = 0.5)
+          if (cds_stop_tx  >= x_min && cds_stop_tx  <= x_max) p <- p + geom_vline(xintercept = cds_stop_tx,  linetype = "dashed", color = "darkgrey", alpha = 0.5)
+        }
+        if (!is.null(eORFTxInfo)) {
+          for (j in seq_along(eORF.tx_id)) {
+            if (length(eORFRangeInfo$eORFByTx[[eORF.tx_id[j]]]) > 0) {
+              eorf_gr <- eORFRangeInfo$eORFByTx[[eORF.tx_id[j]]]
+              epos <- seq(min(start(eorf_gr)), max(end(eorf_gr)))
+              txpos_eorf <- position_map$tx_pos[match(epos, position_map$genomic_pos)]
+              txpos_eorf <- txpos_eorf[!is.na(txpos_eorf)]
+              if (length(txpos_eorf) > 0) {
+                eorf_tx_start <- min(txpos_eorf); eorf_tx_stop  <- max(txpos_eorf)
+                if (eorf_tx_start >= x_min && eorf_tx_start <= x_max) p <- p + geom_vline(xintercept = eorf_tx_start, linetype = "solid", color = "orange", alpha = 0.5)
+                if (eorf_tx_stop  >= x_min && eorf_tx_stop  <= x_max) p <- p + geom_vline(xintercept = eorf_tx_stop,  linetype = "dashed", color = "orange", alpha = 0.5)
+              }
+            }
+          }
+        }
+      }
+      plot_list[[i]] <- ggplotGrob(p)
+    }
+  }
+
+  # Gene model
+  gene_model_plot <- plotGeneTxModel_tx(
+    GeneTxInfo = GeneTxInfo,
+    eORFTxInfo = if (exists("eORFTxInfo")) eORFTxInfo else NULL,
+    plot_ORF_ranges = plot_ORF_ranges,
+    transcript_label_font_size = transcript_label_font_size,
+    gene_model_coord_font_size=gene_model_coord_font_size,
+    plot_range = c(x_min, x_max)
+  )
+
+  # Optional DNA/AA
+  dna_aa_plot <- NULL
+  if (show_seq && !is.null(FASTA)) {
+    dna_aa_plot <- plotDNAandAA_tx(
+      GeneTxInfo = GeneTxInfo,
+      plot_range = c(x_min, x_max),
+      FASTA = FASTA,
+      nucleotide_color_scheme = nucleotide_color_scheme
+    )
+  }
+
+  # Combine
+  title_height <- 0.2
+  rna_ribo_height <- 0.8
+  num_samples <- if (!is.null(RNAseq)) length(RNAseq) else if (!is.null(Riboseq)) length(Riboseq) else 0
+  gene_model_height <- gene_model_height_ratio * (0.3 + 0.1 * num_samples)
+  if (!is.null(dna_aa_plot)) {
+    gene_model_height <- gene_model_height * 1.1
+  }
+  if (!is.null(eORF.tx_id)) {
+    gene_model_height <- gene_model_height * 1.1
+  }
+  dna_aa_height <- if (!is.null(dna_aa_plot)) dna_aa_height_ratio else 0
+  spacer_height <- if (!is.null(dna_aa_plot)) 0.03 else 0
+
+  total_height <- title_height + (num_samples * rna_ribo_height) + spacer_height + dna_aa_height + gene_model_height
+  rel_heights <- c(title_height,
+                   rep(rna_ribo_height, num_samples),
+                   spacer_height,
+                   dna_aa_height,
+                   gene_model_height) / total_height
+
+  title_plot <- ggplot() + theme_void() +
+    annotate("text", x = 0.5, y = 0.5, label = paste(if (is.na(gene_id)) "NA_gene" else gene_id, NAME),
+             hjust = 0.5, vjust = 0.5, fontface = "italic", size = title_font_size)
+
+  spacer_plot <- if (!is.null(dna_aa_plot)) ggplot() + theme_void() else NULL
+
+  combined_plot <- cowplot::plot_grid(
+    title_plot,
+    plotlist = c(plot_list, list(spacer_plot), list(dna_aa_plot), list(gene_model_plot)),
+    ncol = 1,
+    align = "v",
+    axis = "lr",
+    rel_heights = rel_heights
+  )
+  return(combined_plot)
+}
 
 
 #' Plot Transcript Model in Exon Coordinates
