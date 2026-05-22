@@ -20,6 +20,7 @@
 (5) **Only tx_id is needed for plotting.** In the old version, you need to provide both gene_id and tx_id. For the latest versoin, you can also only provide gene_id, and the ggRibo functions will plot with the first transcript id after sorted.     
 (6) New parameters: ribo_linewidth (adjust Ribo-seq linewidth) and rna_linewidth (adjust RNA-seq coverage linewidth) for all plotting functions.   
 (7) New tutorial for ***[Multiomics Visualization](https://github.com/hsinyenwu/ggRibo/blob/v2025.6.2/README_multiomics.md).***  
+(8) Update GenomicFeatures::makeTxDbFromGFF to txdbmaker::makeTxDbFromGFF()
 
 Due to the intensive changes, we encourage the users to install the latest version of ggRibo.
 ```
