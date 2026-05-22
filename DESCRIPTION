@@ -1,7 +1,7 @@
 Package: ggRibo
 Type: Package
 Title: ggRibo: Ribo-seq periodicity and other single-nucleotide resolution visualizer
-Version: 0.3.9
+Version: 0.3.9.1
 Author: Larry Wu
 Maintainer: The package maintainer <larrywu@msu.edu>
 Description: This package provides tools for visualizing translated ORFs from Ribo-seq results, particularly focusing on open reading frames. The ggRibo function allows analyzing RNA-seq and Ribo-seq coverage in the genomic context. The ggRibo function also helps visualizing other single-nucleotide resolution (SNR) data together with Ribo-seq data.
