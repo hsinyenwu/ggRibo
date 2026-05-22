@@ -93,8 +93,8 @@ install.packages(setdiff(cran_pkgs, rownames(installed.packages())))
 (2) Install the latest ggRibo.
 ```
 #Install ggRibo
-library(devtools)
-install_github("hsinyenwu/ggRibo@v2026.02.25")
+install.packages("pak")
+pak::pak("hsinyenwu/ggRibo@v2026.02.25")
 ```
 
 ### Load RNA-seq, Ribo-seq and annotation files  
