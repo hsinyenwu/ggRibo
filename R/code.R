@@ -17,9 +17,8 @@
 #' @param organism Optional organism name.
 #' @return A \code{Range_info} object stored in the global environment as \code{Txome_Range}.
 gtf_import <- function(annotation, format = "gtf", dataSource = "", organism = "") {
-  # Use the canonical GenomicFeatures helper (the previous 'txdbmaker::' call causes errors)
   txdb <- suppressWarnings(
-    GenomicFeatures::makeTxDbFromGFF(
+    txdbmaker::makeTxDbFromGFF(
       file = annotation,
       format = format,
       dataSource = dataSource,
@@ -68,9 +67,8 @@ gtf_import <- function(annotation, format = "gtf", dataSource = "", organism = "
 #' @param organism Optional organism name.
 #' @return An \code{eORF_Range_info} object stored in the global environment as \code{eORF_Range}.
 eORF_import <- function(annotation, format = "gtf", dataSource = "", organism = "") {
-  # Use the canonical GenomicFeatures helper
   txdb <- suppressWarnings(
-    GenomicFeatures::makeTxDbFromGFF(
+    txdbmaker::makeTxDbFromGFF(
       file = annotation,
       format = format,
       dataSource = dataSource,
