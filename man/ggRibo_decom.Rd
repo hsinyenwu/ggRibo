@@ -29,6 +29,7 @@ ggRibo_decom(
   oORF_coloring = NULL,
   frame_colors = c(`0` = "#FF0000", `1` = "#3366FF", `2` = "#009900"),
   plot_range = NULL,
+  eORF_zoom_in = NULL,
   sample_color = "color",
   show_seq = FALSE,
   FASTA = NULL,
@@ -94,6 +95,12 @@ ggRibo_decom(
 \item{frame_colors}{Named character vector. Colors for frames 0, 1, and 2. Defaults provided.}
 
 \item{plot_range}{Numeric vector of length 2, optional. Custom genomic range to plot.}
+
+\item{eORF_zoom_in}{Integer or \code{NULL}. When set to an integer and an \code{eORF.tx_id}
+is supplied, the plotting window is restricted to the eORF span extended by
+\code{eORF_zoom_in} nucleotides on each side (in genomic coordinates), instead of the
+full gene range. Default is \code{NULL} (no zooming; the full gene range is shown).
+An explicit \code{plot_range} takes precedence over \code{eORF_zoom_in}.}
 
 \item{sample_color}{Character. If "color", uses frame-specific colors. Otherwise, uses a single color for Ribo reads.}
 
