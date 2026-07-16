@@ -20,8 +20,8 @@
 (5) **Only tx_id is needed for plotting.** In the old version, you need to provide both gene_id and tx_id. For the latest versoin, you can also only provide gene_id, and the ggRibo functions will plot with the first transcript id after sorted.     
 (6) New parameters: ribo_linewidth (adjust Ribo-seq linewidth) and rna_linewidth (adjust RNA-seq coverage linewidth) for all plotting functions.   
 (7) New tutorial for ***[Multiomics Visualization](https://github.com/hsinyenwu/ggRibo/blob/v2025.6.2/README_multiomics.md).***  
-(8) Update GenomicFeatures::makeTxDbFromGFF to txdbmaker::makeTxDbFromGFF()
-(9) New parameter: **eORF_zoom_in** (integer, default 20) for ggRibo and ggRibo_tx. When an eORF is provided (eORF.tx_id), the plot zooms to the eORF range extended by eORF_zoom_in nucleotides on each side. 
+(8) Update GenomicFeatures::makeTxDbFromGFF to txdbmaker::makeTxDbFromGFF()  
+(9) New parameter: **eORF_zoom_in** (integer; default NULL) for ggRibo and ggRibo_tx. When an eORF is provided (eORF.tx_id), set eORF_zoom_in to an integer to zoom the plot to the eORF range extended by that many nucleotides on each side; the default NULL shows the full range.  
 
 Due to the intensive changes, we encourage the users to install the latest version of ggRibo.
 ```
@@ -282,6 +282,7 @@ ggRibo(
 (20) RNA_fix_height: limit the height of Ribo-seq to a value for all RNA-seq plots.  
 (21) **ribo_linewidth**: control the linewidth for Ribo-seq counts.  
 (22) rna_linewidth: control the linewidth for the grey coverage lines for RNA-seq.  
+(23) **eORF_zoom_in** (integer or NULL; default NULL): set to an integer to zoom the plot to the eORF range extended by that many nucleotides on each side (requires eORF.tx_id), instead of the full gene range (ggRibo) or the full transcript range (ggRibo_tx). The default NULL shows the full range; an explicit plot_range takes precedence.  
 
 #### Update notes: 
 v2025.7.8 contains a minor fix for the most 5' end amino acid. In the old code, CTG or TTG is translated as Methionine. This issue is fixed in v2025.7.8.  
