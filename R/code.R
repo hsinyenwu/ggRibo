@@ -1971,6 +1971,12 @@ ggRNA <- function(gene_id = NULL, tx_id = NULL, Extend = 100, NAME = "",
 #' @param oORF_coloring Character string specifying coloring method for overlapping ORFs ("oORF_colors" or "extend_mORF").
 #' @param frame_colors Named vector of colors for the reading frames (0,1,2). Default is c("0"="#FF0000", "1"="#3366FF", "2"="#009900").
 #' @param plot_range Optional numeric vector specifying a custom genomic range to plot.
+#' @param eORF_zoom_in Integer. When an \code{eORF.tx_id} is supplied, the plotting window is
+#'   restricted to the eORF span extended by \code{eORF_zoom_in} nucleotides on each side
+#'   (in genomic coordinates), instead of the full gene range. For example, an eORF
+#'   spanning 1000-1059 with \code{eORF_zoom_in = 30} yields a plot range of 970-1089.
+#'   Default is 20. Set to \code{NULL} to disable zooming and use the full gene range.
+#'   An explicit \code{plot_range} takes precedence over \code{eORF_zoom_in}.
 #' @param sample_color Vector specifying colors for each sample or "color" to use default coloring.
 #' @param show_seq Logical indicating whether to display the DNA and amino acid sequence. Default is FALSE.
 #' @param FASTA A `BSgenome` object with genomic sequences.
@@ -2008,6 +2014,7 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                    oORF_coloring = "extend_mORF",
                    frame_colors = c("0"="#FF0000", "1"="#3366FF", "2"="#009900"),
                    plot_range = NULL,
+                   eORF_zoom_in = 20,
                    sample_color = rep("color", length(Riboseq)),
                    show_seq = FALSE,
                    FASTA = NULL,
@@ -2031,6 +2038,12 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
   }
   if (!(Y_scale %in% c("all", "each"))) {
     stop("Invalid Y_scale value. Please choose either 'all' or 'each'.")
+  }
+  if (!is.null(eORF_zoom_in)) {
+    if (!is.numeric(eORF_zoom_in) || length(eORF_zoom_in) != 1 || is.na(eORF_zoom_in) || eORF_zoom_in < 0) {
+      stop("eORF_zoom_in must be a single non-negative integer, or NULL to disable zooming.")
+    }
+    eORF_zoom_in <- as.integer(round(eORF_zoom_in))
   }
   if (length(RNAbackground) == 1) {
     RNAbackground <- rep(RNAbackground, length(SampleNames))
@@ -2141,6 +2154,18 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
     plot_range <- sort(plot_range)
     range_left <- plot_range[1]
     range_right <- plot_range[2]
+    gene_ranges <- GRanges(seqnames=chr,
+                           ranges=IRanges(range_left, range_right),
+                           strand=strand_info)
+  } else if (!is.null(eORF_zoom_in) && !is.null(eORF.tx_id) && !is.null(eORFRangeInfo)) {
+    # eORF_zoom_in: restrict the plotting window to the eORF span extended by
+    # `eORF_zoom_in` nucleotides on each side (genomic coordinates), instead of the
+    # full gene range. An explicit `plot_range` still takes precedence.
+    zoom_eORF <- eORFRangeInfo$eORFByTx[eORF.tx_id]
+    zoom_left  <- min(sapply(zoom_eORF, function(gr) min(start(gr))))
+    zoom_right <- max(sapply(zoom_eORF, function(gr) max(end(gr))))
+    range_left  <- zoom_left  - eORF_zoom_in
+    range_right <- zoom_right + eORF_zoom_in
     gene_ranges <- GRanges(seqnames=chr,
                            ranges=IRanges(range_left, range_right),
                            strand=strand_info)
@@ -3962,6 +3987,11 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
 #' @param plot_genomic_direction If \code{TRUE}, attempts to draw an arrow for the genomic direction in coverage plots.
 #' @param data_types Vector describing the type of each sample (e.g. \code{"Ribo-seq"} or \code{"RNA-seq"}). Must match \code{SampleNames} length.
 #' @param plot_range Optional numeric \code{c(start,end)} specifying the transcript coordinate range to plot.
+#' @param eORF_zoom_in Integer. When an \code{eORF.tx_id} is supplied, the plotting window is
+#'   restricted to the eORF span (mapped into transcript coordinates) extended by
+#'   \code{eORF_zoom_in} nucleotides on each side, instead of the full transcript range.
+#'   Default is 20. Set to \code{NULL} to disable zooming and use the full transcript
+#'   range. An explicit \code{plot_range} takes precedence over \code{eORF_zoom_in}.
 #' @param nucleotide_color_scheme If \code{"colorblind"}, uses a color-blind-friendly palette for nucleotides in DNA/AA. Otherwise uses \code{"default"}.
 #' @param oORF_coloring Coloring scheme for overlapping ORFs: \code{"extend_mORF"} (use main CDS frame for overlapping eORFs) or \code{"oORF_colors"} (use eORF-specific frames). Default is \code{"extend_mORF"}.
 #' @param ribo_linewidth Numeric value to control the thickness of Ribo-seq read count lines. Default is \code{0.5}.
@@ -3999,6 +4029,7 @@ ggRibo_tx <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                       plot_genomic_direction = FALSE,
                       data_types = rep("Ribo-seq", length(SampleNames)),
                       plot_range = NULL,
+                      eORF_zoom_in = 20,
                       nucleotide_color_scheme = "default",
                       oORF_coloring = "extend_mORF",
                       ribo_linewidth = 0.5,
@@ -4017,6 +4048,12 @@ ggRibo_tx <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
   }
   if (!(Y_scale %in% c("all","each"))) {
     stop("Y_scale must be 'all' or 'each'.")
+  }
+  if (!is.null(eORF_zoom_in)) {
+    if (!is.numeric(eORF_zoom_in) || length(eORF_zoom_in) != 1 || is.na(eORF_zoom_in) || eORF_zoom_in < 0) {
+      stop("eORF_zoom_in must be a single non-negative integer, or NULL to disable zooming.")
+    }
+    eORF_zoom_in <- as.integer(round(eORF_zoom_in))
   }
   if (length(RNAbackground) == 1) {
     RNAbackground <- rep(RNAbackground, length(SampleNames))
@@ -4147,6 +4184,27 @@ ggRibo_tx <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
   if (!is.null(plot_range)) {
     x_min <- plot_range[1]
     x_max <- plot_range[2]
+  } else if (!is.null(eORF_zoom_in) && !is.null(eORF.tx_id) && !is.null(eORFRangeInfo)) {
+    # eORF_zoom_in: restrict the transcript plotting window to the eORF span (mapped
+    # into transcript coordinates) extended by `eORF_zoom_in` nucleotides on each
+    # side, instead of the full transcript range. `plot_range` takes precedence.
+    valid_eORF_ids <- intersect(eORF.tx_id, names(eORFRangeInfo$eORFByTx))
+    zoom_txpos <- integer(0)
+    if (length(valid_eORF_ids) > 0) {
+      zoom_eORF <- eORFRangeInfo$eORFByTx[valid_eORF_ids]
+      zoom_txpos <- unlist(lapply(zoom_eORF, function(gr) {
+        epos <- seq(min(start(gr)), max(end(gr)))
+        position_map$tx_pos[match(epos, position_map$genomic_pos)]
+      }))
+      zoom_txpos <- zoom_txpos[!is.na(zoom_txpos)]
+    }
+    if (length(zoom_txpos) > 0) {
+      x_min <- min(zoom_txpos) - eORF_zoom_in
+      x_max <- max(zoom_txpos) + eORF_zoom_in
+    } else {
+      x_min <- min(tx_positions)
+      x_max <- max(tx_positions)
+    }
   } else {
     x_min <- min(tx_positions)
     x_max <- max(tx_positions)
