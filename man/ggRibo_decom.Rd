@@ -118,12 +118,10 @@ ggRibo_decom(
 \item{selected_isoforms}{Optional. Vector of transcript IDs to plot. If specified, only these isoforms and tx_id are shown.}
 
 \item{frame_logic}{Character. Determines how reading frames are assigned:
-\itemize{
-\item "tx_start": Frame 0 starts at the beginning of the transcript.
-\item "CDS_start": Frame 0 starts at the annotated ORF start.
-\item "CDS_extend": Frame 0 starts at the annotated ORF start and extends to both sides.
-Defaults to "tx_start" if no ORF is annotated, otherwise "CDS_start".
-}}
+- "tx_start": Frame 0 starts at the beginning of the transcript.
+- "CDS_start": Frame 0 starts at the annotated ORF start.
+- "CDS_extend": Frame 0 starts at the annotated ORF start and extends to both sides.
+Defaults to "tx_start" if no ORF is annotated, otherwise "CDS_start".}
 
 \item{ribo_linewidth}{Numeric value to control the thickness of Ribo-seq read count lines. Default is \code{0.5}.}
 

@@ -23,7 +23,7 @@ If \code{NULL}, plots the full spliced transcript with extensions.}
 }
 \value{
 A \code{ggplot2} object with tiles for the DNA bases and codons,
-optionally labeled with base/AA letters if the region is 201 nt.
+  optionally labeled with base/AA letters if the region is 201 nt.
 
 A \code{ggplot2} object with tiles for the DNA bases and codons,
 optionally labeled with base/AA letters if the region is 201 nt.

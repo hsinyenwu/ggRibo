@@ -52,7 +52,7 @@ ggRNA(
 
 \item{SampleNames}{Vector of sample names corresponding to the RNAseq data.}
 
-\item{GRangeInfo}{A genomic range information object (e.g., \code{Txome_Range}) containing annotations.}
+\item{GRangeInfo}{A genomic range information object (e.g., `Txome_Range`) containing annotations.}
 
 \item{RNAseqBamPaired}{A vector indicating whether each RNA-seq BAM file is paired-end ("paired") or single-end ("single"), used only if RNAseq contains BAM paths.}
 
@@ -64,7 +64,7 @@ ggRNA(
 
 \item{show_seq}{Logical indicating whether to display the DNA and amino acid sequences. Default is FALSE.}
 
-\item{FASTA}{A \code{BSgenome} object containing genomic sequences (required if show_seq=TRUE).}
+\item{FASTA}{A `BSgenome` object containing genomic sequences (required if show_seq=TRUE).}
 
 \item{dna_aa_height_ratio}{Numeric value to adjust the height of the DNA and amino acid sequence plot. Default is 0.5.}
 
@@ -86,7 +86,7 @@ ggRNA(
 
 \item{plot_genomic_direction}{Logical indicating whether to plot an arrow showing genomic direction. Default is FALSE.}
 
-\item{selected_isoforms}{Optional vector of transcript IDs to plot. If provided, only these isoforms (and \code{tx_id}) will be shown.}
+\item{selected_isoforms}{Optional vector of transcript IDs to plot. If provided, only these isoforms (and `tx_id`) will be shown.}
 
 \item{nucleotide_color_scheme}{If "default", uses bright colors for the nucleotides in plotDNAandAA. If "colorblind", uses a color‐blind friendly palette.}
 
@@ -96,7 +96,7 @@ ggRNA(
 A combined ggplot object displaying RNA-seq coverage, gene models, and optionally genomic sequences.
 }
 \description{
-The \code{ggRNA} function creates a plot displaying RNA-seq coverage for a specified gene and transcript.
+The `ggRNA` function creates a plot displaying RNA-seq coverage for a specified gene and transcript.
 It optionally includes genomic sequences (DNA and amino acids) and gene models (exons, UTRs, CDS).
-This function is simpler than \code{ggRibo} and \code{ggRibo_decom} as it focuses solely on RNA-seq coverage.
+This function is simpler than `ggRibo` and `ggRibo_decom` as it focuses solely on RNA-seq coverage.
 }

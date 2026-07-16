@@ -11,7 +11,7 @@ get_gene_tx(gene_id = NULL, tx_id = NULL, GRangeInfo)
 
 \item{tx_id}{Character string specifying the transcript ID to be used as the main isoform.}
 
-\item{GRangeInfo}{A genomic range information object (e.g., \code{Txome_Range}) containing annotations.}
+\item{GRangeInfo}{A genomic range information object (e.g., `Txome_Range`) containing annotations.}
 }
 \value{
 gene_id or tx_id

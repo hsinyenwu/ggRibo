@@ -27,6 +27,7 @@ ggRibo(
   oORF_coloring = "extend_mORF",
   frame_colors = c(`0` = "#FF0000", `1` = "#3366FF", `2` = "#009900"),
   plot_range = NULL,
+  eORF_zoom_in = 20,
   sample_color = rep("color", length(Riboseq)),
   show_seq = FALSE,
   FASTA = NULL,
@@ -53,7 +54,7 @@ ggRibo(
 
 \item{eORF.tx_id}{Optional. Vector of eORF transcript IDs to include in the plot.}
 
-\item{eORFRangeInfo}{Optional. eORF range information, e.g., an object like \code{eORF_Range}.}
+\item{eORFRangeInfo}{Optional. eORF range information, e.g., an object like `eORF_Range`.}
 
 \item{Extend}{Numeric value specifying the number of base pairs to extend the plot beyond the gene range. Default is 100.}
 
@@ -73,7 +74,7 @@ ggRibo(
 
 \item{SampleNames}{Vector of sample names corresponding to the RNAseq and Riboseq data.}
 
-\item{GRangeInfo}{Genomic range information, typically an object like \code{Txome_Range}.}
+\item{GRangeInfo}{Genomic range information, typically an object like `Txome_Range`.}
 
 \item{RNAseqBamPaired}{Vector indicating whether each RNA-seq BAM file is paired-end ("paired") or single-end ("single"), used only if RNAseq contains BAM paths.}
 
@@ -91,11 +92,18 @@ ggRibo(
 
 \item{plot_range}{Optional numeric vector specifying a custom genomic range to plot.}
 
+\item{eORF_zoom_in}{Integer. When an \code{eORF.tx_id} is supplied, the plotting window is
+restricted to the eORF span extended by \code{eORF_zoom_in} nucleotides on each side
+(in genomic coordinates), instead of the full gene range. For example, an eORF
+spanning 1000-1059 with \code{eORF_zoom_in = 30} yields a plot range of 970-1089.
+Default is 20. Set to \code{NULL} to disable zooming and use the full gene range.
+An explicit \code{plot_range} takes precedence over \code{eORF_zoom_in}.}
+
 \item{sample_color}{Vector specifying colors for each sample or "color" to use default coloring.}
 
 \item{show_seq}{Logical indicating whether to display the DNA and amino acid sequence. Default is FALSE.}
 
-\item{FASTA}{A \code{BSgenome} object with genomic sequences.}
+\item{FASTA}{A `BSgenome` object with genomic sequences.}
 
 \item{dna_aa_height_ratio}{Numeric value adjusting DNA/AA plot height. Default is 0.5.}
 
@@ -109,7 +117,7 @@ ggRibo(
 
 \item{data_types}{Vector of sample data type names for each sample (e.g., "Ribo-seq").}
 
-\item{selected_isoforms}{Optional vector of transcript IDs to plot. If provided, only these isoforms plus \code{tx_id} are shown.}
+\item{selected_isoforms}{Optional vector of transcript IDs to plot. If provided, only these isoforms plus `tx_id` are shown.}
 
 \item{nucleotide_color_scheme}{If "default", uses bright colors for the nucleotides in plotDNAandAA. If "colorblind", uses a color‐blind friendly palette.}
 
@@ -129,7 +137,7 @@ ggRibo(
 A combined ggplot object displaying RNA-seq coverage, Ribo-seq data, gene models, and optional sequences.
 }
 \description{
-The \code{ggRibo} function creates a comprehensive plot displaying RNA-seq coverage and Ribo-seq read counts
+The `ggRibo` function creates a comprehensive plot displaying RNA-seq coverage and Ribo-seq read counts
 for a specified gene and transcript. It includes options for displaying extended ORFs (eORFs), genomic sequences,
 and gene models, and can scale data according to various parameters.
 }
