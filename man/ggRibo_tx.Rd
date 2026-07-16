@@ -35,7 +35,7 @@ ggRibo_tx(
   plot_genomic_direction = FALSE,
   data_types = rep("Ribo-seq", length(SampleNames)),
   plot_range = NULL,
-  eORF_zoom_in = 20,
+  eORF_zoom_in = NULL,
   nucleotide_color_scheme = "default",
   oORF_coloring = "extend_mORF",
   ribo_linewidth = 0.5,
@@ -107,11 +107,11 @@ ggRibo_tx(
 
 \item{plot_range}{Optional numeric \code{c(start,end)} specifying the transcript coordinate range to plot.}
 
-\item{eORF_zoom_in}{Integer. When an \code{eORF.tx_id} is supplied, the plotting window is
-restricted to the eORF span (mapped into transcript coordinates) extended by
-\code{eORF_zoom_in} nucleotides on each side, instead of the full transcript range.
-Default is 20. Set to \code{NULL} to disable zooming and use the full transcript
-range. An explicit \code{plot_range} takes precedence over \code{eORF_zoom_in}.}
+\item{eORF_zoom_in}{Integer or \code{NULL}. When set to an integer and an \code{eORF.tx_id}
+is supplied, the plotting window is restricted to the eORF span (mapped into transcript
+coordinates) extended by \code{eORF_zoom_in} nucleotides on each side, instead of the
+full transcript range. Default is \code{NULL} (no zooming; the full transcript range is
+shown). An explicit \code{plot_range} takes precedence over \code{eORF_zoom_in}.}
 
 \item{nucleotide_color_scheme}{If \code{"colorblind"}, uses a color-blind-friendly palette for nucleotides in DNA/AA. Otherwise uses \code{"default"}.}
 

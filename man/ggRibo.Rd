@@ -27,7 +27,7 @@ ggRibo(
   oORF_coloring = "extend_mORF",
   frame_colors = c(`0` = "#FF0000", `1` = "#3366FF", `2` = "#009900"),
   plot_range = NULL,
-  eORF_zoom_in = 20,
+  eORF_zoom_in = NULL,
   sample_color = rep("color", length(Riboseq)),
   show_seq = FALSE,
   FASTA = NULL,
@@ -92,11 +92,11 @@ ggRibo(
 
 \item{plot_range}{Optional numeric vector specifying a custom genomic range to plot.}
 
-\item{eORF_zoom_in}{Integer. When an \code{eORF.tx_id} is supplied, the plotting window is
-restricted to the eORF span extended by \code{eORF_zoom_in} nucleotides on each side
-(in genomic coordinates), instead of the full gene range. For example, an eORF
-spanning 1000-1059 with \code{eORF_zoom_in = 30} yields a plot range of 970-1089.
-Default is 20. Set to \code{NULL} to disable zooming and use the full gene range.
+\item{eORF_zoom_in}{Integer or \code{NULL}. When set to an integer and an \code{eORF.tx_id}
+is supplied, the plotting window is restricted to the eORF span extended by
+\code{eORF_zoom_in} nucleotides on each side (in genomic coordinates), instead of the
+full gene range. For example, an eORF spanning 1000-1059 with \code{eORF_zoom_in = 30}
+yields a plot range of 970-1089. Default is \code{NULL} (no zooming; the full gene range is shown).
 An explicit \code{plot_range} takes precedence over \code{eORF_zoom_in}.}
 
 \item{sample_color}{Vector specifying colors for each sample or "color" to use default coloring.}
