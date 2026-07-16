@@ -21,6 +21,7 @@
 (6) New parameters: ribo_linewidth (adjust Ribo-seq linewidth) and rna_linewidth (adjust RNA-seq coverage linewidth) for all plotting functions.   
 (7) New tutorial for ***[Multiomics Visualization](https://github.com/hsinyenwu/ggRibo/blob/v2025.6.2/README_multiomics.md).***  
 (8) Update GenomicFeatures::makeTxDbFromGFF to txdbmaker::makeTxDbFromGFF()
+(9) New parameter: **eORF_zoom_in** (integer, default 20) for ggRibo and ggRibo_tx. When an eORF is provided (eORF.tx_id), the plot zooms to the eORF range extended by eORF_zoom_in nucleotides on each side. 
 
 Due to the intensive changes, we encourage the users to install the latest version of ggRibo.
 ```
