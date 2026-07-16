@@ -2151,10 +2151,16 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
     stop("No transcripts left after applying selected_isoforms in ggRibo().")
   }
 
+  # eff_plot_range is the window handed to the gene-model and sequence tracks so
+  # their features are CLIPPED to the view (like ggRibo_tx) rather than dropped
+  # when they extend beyond a narrow (e.g. eORF_zoom_in) window. It stays NULL
+  # for the default full-gene view, preserving the original behavior.
+  eff_plot_range <- NULL
   if (!is.null(plot_range)) {
     plot_range <- sort(plot_range)
     range_left <- plot_range[1]
     range_right <- plot_range[2]
+    eff_plot_range <- c(range_left, range_right)
     gene_ranges <- GRanges(seqnames=chr,
                            ranges=IRanges(range_left, range_right),
                            strand=strand_info)
@@ -2167,6 +2173,7 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
     zoom_right <- max(sapply(zoom_eORF, function(gr) max(end(gr))))
     range_left  <- zoom_left  - eORF_zoom_in
     range_right <- zoom_right + eORF_zoom_in
+    eff_plot_range <- c(range_left, range_right)
     gene_ranges <- GRanges(seqnames=chr,
                            ranges=IRanges(range_left, range_right),
                            strand=strand_info)
@@ -3027,7 +3034,7 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
   if (show_seq && !is.null(FASTA)) {
     dna_aa_plot <- plotDNAandAA(
       GeneTxInfo=GeneTxInfo,
-      plot_range=plot_range,
+      plot_range=eff_plot_range,
       FASTA=FASTA,
       nucleotide_color_scheme = nucleotide_color_scheme
     )
@@ -3039,7 +3046,7 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
     GeneTxInfo = GeneTxInfo,
     eORFTxInfo = eORFTxInfo,
     plot_ORF_ranges = plot_ORF_ranges,
-    plot_range = plot_range,
+    plot_range = eff_plot_range,
     transcript_label_font_size = transcript_label_font_size,
     gene_model_coord_font_size = gene_model_coord_font_size
   )
@@ -3124,6 +3131,11 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
 #' @param oORF_coloring Character, optional. Method for coloring overlapping ORFs. "oORF_colors" or "extend_mORF".
 #' @param frame_colors Named character vector. Colors for frames 0, 1, and 2. Defaults provided.
 #' @param plot_range Numeric vector of length 2, optional. Custom genomic range to plot.
+#' @param eORF_zoom_in Integer or \code{NULL}. When set to an integer and an \code{eORF.tx_id}
+#'   is supplied, the plotting window is restricted to the eORF span extended by
+#'   \code{eORF_zoom_in} nucleotides on each side (in genomic coordinates), instead of the
+#'   full gene range. Default is \code{NULL} (no zooming; the full gene range is shown).
+#'   An explicit \code{plot_range} takes precedence over \code{eORF_zoom_in}.
 #' @param sample_color Character. If "color", uses frame-specific colors. Otherwise, uses a single color for Ribo reads.
 #' @param show_seq Logical. If TRUE, displays DNA and AA sequences below the coverage plots. Defaults to FALSE.
 #' @param FASTA Optional. Path to a FASTA file or BSgenome object with genomic sequences.
@@ -3166,6 +3178,7 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                          oORF_coloring = NULL,
                          frame_colors = c("0"="#FF0000", "1"="#3366FF", "2"="#009900"),
                          plot_range = NULL,
+                         eORF_zoom_in = NULL,
                          sample_color = "color",
                          show_seq = FALSE,
                          FASTA = NULL,
@@ -3189,6 +3202,13 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
 
   if (!(Y_scale %in% c("all", "each"))) {
     stop("Invalid Y_scale value. Please choose either 'all' or 'each'.")
+  }
+
+  if (!is.null(eORF_zoom_in)) {
+    if (!is.numeric(eORF_zoom_in) || length(eORF_zoom_in) != 1 || is.na(eORF_zoom_in) || eORF_zoom_in < 0) {
+      stop("eORF_zoom_in must be a single non-negative integer, or NULL to disable zooming.")
+    }
+    eORF_zoom_in <- as.integer(round(eORF_zoom_in))
   }
 
   if (length(RNAbackground) == 1) {
@@ -3303,10 +3323,27 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
     stop("No transcripts left after applying selected_isoforms in ggRibo_decom().")
   }
 
+  # eff_plot_range is the window handed to the gene-model and sequence tracks so
+  # their features are CLIPPED to the view (like ggRibo_tx) rather than dropped
+  # when they extend beyond a narrow (e.g. eORF_zoom_in) window. It stays NULL
+  # for the default full-gene view, preserving the original behavior.
+  eff_plot_range <- NULL
   if (!is.null(plot_range)) {
     plot_range <- sort(plot_range)
     range_left <- plot_range[1]
     range_right <- plot_range[2]
+    eff_plot_range <- c(range_left, range_right)
+    gene_ranges <- GRanges(seqnames=chr, ranges=IRanges(range_left, range_right), strand=strand_info)
+  } else if (!is.null(eORF_zoom_in) && !is.null(eORF.tx_id) && !is.null(eORFRangeInfo)) {
+    # eORF_zoom_in: restrict the plotting window to the eORF span extended by
+    # `eORF_zoom_in` nucleotides on each side (genomic coordinates), instead of the
+    # full gene range. An explicit `plot_range` still takes precedence.
+    zoom_eORF <- eORFRangeInfo$eORFByTx[eORF.tx_id]
+    zoom_left  <- min(sapply(zoom_eORF, function(gr) min(start(gr))))
+    zoom_right <- max(sapply(zoom_eORF, function(gr) max(end(gr))))
+    range_left  <- zoom_left  - eORF_zoom_in
+    range_right <- zoom_right + eORF_zoom_in
+    eff_plot_range <- c(range_left, range_right)
     gene_ranges <- GRanges(seqnames=chr, ranges=IRanges(range_left, range_right), strand=strand_info)
   } else {
     gene_ranges <- GenomicRanges::reduce(txByYFG_subset)
@@ -3713,7 +3750,7 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
     if (show_seq && !is.null(FASTA)) {
       dna_aa_plot <- plotDNAandAA(
         GeneTxInfo=GeneTxInfo,
-        plot_range=plot_range,
+        plot_range=eff_plot_range,
         FASTA=FASTA
       )
     } else {
@@ -3724,7 +3761,7 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
       GeneTxInfo = GeneTxInfo,
       eORFTxInfo = eORFTxInfo,
       plot_ORF_ranges = plot_ORF_ranges,
-      plot_range = plot_range,
+      plot_range = eff_plot_range,
       transcript_label_font_size = transcript_label_font_size,
       gene_model_coord_font_size = gene_model_coord_font_size
     )
@@ -3919,12 +3956,12 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
       }
     }
 
-    dna_aa_plot <- if (show_seq && !is.null(FASTA)) plotDNAandAA(GeneTxInfo=GeneTxInfo, plot_range=plot_range, FASTA=FASTA) else NULL
+    dna_aa_plot <- if (show_seq && !is.null(FASTA)) plotDNAandAA(GeneTxInfo=GeneTxInfo, plot_range=eff_plot_range, FASTA=FASTA) else NULL
     gene_model_plot <- plotGeneTxModel(
       GeneTxInfo = GeneTxInfo,
       eORFTxInfo = eORFTxInfo,
       plot_ORF_ranges = plot_ORF_ranges,
-      plot_range = plot_range,
+      plot_range = eff_plot_range,
       transcript_label_font_size = transcript_label_font_size,
       gene_model_coord_font_size = gene_model_coord_font_size
     )
