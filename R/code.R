@@ -1971,11 +1971,12 @@ ggRNA <- function(gene_id = NULL, tx_id = NULL, Extend = 100, NAME = "",
 #' @param oORF_coloring Character string specifying coloring method for overlapping ORFs ("oORF_colors" or "extend_mORF").
 #' @param frame_colors Named vector of colors for the reading frames (0,1,2). Default is c("0"="#FF0000", "1"="#3366FF", "2"="#009900").
 #' @param plot_range Optional numeric vector specifying a custom genomic range to plot.
-#' @param eORF_zoom_in Integer. When an \code{eORF.tx_id} is supplied, the plotting window is
-#'   restricted to the eORF span extended by \code{eORF_zoom_in} nucleotides on each side
-#'   (in genomic coordinates), instead of the full gene range. For example, an eORF
-#'   spanning 1000-1059 with \code{eORF_zoom_in = 30} yields a plot range of 970-1089.
-#'   Default is 20. Set to \code{NULL} to disable zooming and use the full gene range.
+#' @param eORF_zoom_in Integer or \code{NULL}. When set to an integer and an \code{eORF.tx_id}
+#'   is supplied, the plotting window is restricted to the eORF span extended by
+#'   \code{eORF_zoom_in} nucleotides on each side (in genomic coordinates), instead of the
+#'   full gene range. For example, an eORF spanning 1000-1059 with \code{eORF_zoom_in = 30}
+#'   yields a plot range of 970-1089. Default is \code{NULL} (no zooming; the full gene
+#'   range is shown).
 #'   An explicit \code{plot_range} takes precedence over \code{eORF_zoom_in}.
 #' @param sample_color Vector specifying colors for each sample or "color" to use default coloring.
 #' @param show_seq Logical indicating whether to display the DNA and amino acid sequence. Default is FALSE.
@@ -2014,7 +2015,7 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                    oORF_coloring = "extend_mORF",
                    frame_colors = c("0"="#FF0000", "1"="#3366FF", "2"="#009900"),
                    plot_range = NULL,
-                   eORF_zoom_in = 20,
+                   eORF_zoom_in = NULL,
                    sample_color = rep("color", length(Riboseq)),
                    show_seq = FALSE,
                    FASTA = NULL,
@@ -3987,11 +3988,11 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
 #' @param plot_genomic_direction If \code{TRUE}, attempts to draw an arrow for the genomic direction in coverage plots.
 #' @param data_types Vector describing the type of each sample (e.g. \code{"Ribo-seq"} or \code{"RNA-seq"}). Must match \code{SampleNames} length.
 #' @param plot_range Optional numeric \code{c(start,end)} specifying the transcript coordinate range to plot.
-#' @param eORF_zoom_in Integer. When an \code{eORF.tx_id} is supplied, the plotting window is
-#'   restricted to the eORF span (mapped into transcript coordinates) extended by
-#'   \code{eORF_zoom_in} nucleotides on each side, instead of the full transcript range.
-#'   Default is 20. Set to \code{NULL} to disable zooming and use the full transcript
-#'   range. An explicit \code{plot_range} takes precedence over \code{eORF_zoom_in}.
+#' @param eORF_zoom_in Integer or \code{NULL}. When set to an integer and an \code{eORF.tx_id}
+#'   is supplied, the plotting window is restricted to the eORF span (mapped into transcript
+#'   coordinates) extended by \code{eORF_zoom_in} nucleotides on each side, instead of the
+#'   full transcript range. Default is \code{NULL} (no zooming; the full transcript range is
+#'   shown). An explicit \code{plot_range} takes precedence over \code{eORF_zoom_in}.
 #' @param nucleotide_color_scheme If \code{"colorblind"}, uses a color-blind-friendly palette for nucleotides in DNA/AA. Otherwise uses \code{"default"}.
 #' @param oORF_coloring Coloring scheme for overlapping ORFs: \code{"extend_mORF"} (use main CDS frame for overlapping eORFs) or \code{"oORF_colors"} (use eORF-specific frames). Default is \code{"extend_mORF"}.
 #' @param ribo_linewidth Numeric value to control the thickness of Ribo-seq read count lines. Default is \code{0.5}.
@@ -4029,7 +4030,7 @@ ggRibo_tx <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                       plot_genomic_direction = FALSE,
                       data_types = rep("Ribo-seq", length(SampleNames)),
                       plot_range = NULL,
-                      eORF_zoom_in = 20,
+                      eORF_zoom_in = NULL,
                       nucleotide_color_scheme = "default",
                       oORF_coloring = "extend_mORF",
                       ribo_linewidth = 0.5,
