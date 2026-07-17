@@ -5046,6 +5046,7 @@ plotGeneTxModel_tx <- function(GeneTxInfo,
     scale_fill_manual(values = feature_colors, breaks = legend_features) +
     scale_x_continuous(limits = c(x_min - 0.5, x_max + 0.5), name = "Transcript Position") +
     scale_y_continuous(limits = y_limits, breaks = y_breaks, labels = y_labels) +
+    ylab("") +
     theme_minimal() +
     theme(
       axis.text.y = element_text(size = transcript_label_font_size),
