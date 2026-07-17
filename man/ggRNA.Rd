@@ -31,6 +31,7 @@ ggRNA(
   title_font_size = 5,
   plot_genomic_direction = FALSE,
   selected_isoforms = NULL,
+  num_isoform_shown = "all",
   nucleotide_color_scheme = "default",
   rna_linewidth = 0.5
 )
@@ -87,6 +88,10 @@ ggRNA(
 \item{plot_genomic_direction}{Logical indicating whether to plot an arrow showing genomic direction. Default is FALSE.}
 
 \item{selected_isoforms}{Optional vector of transcript IDs to plot. If provided, only these isoforms (and `tx_id`) will be shown.}
+
+\item{num_isoform_shown}{Integer or \code{"all"}. Maximum number of isoforms to draw in the
+gene model, ranked by GTF order (the main \code{tx_id} is always kept). \code{"all"}
+(default) draws every isoform.}
 
 \item{nucleotide_color_scheme}{If "default", uses bright colors for the nucleotides in plotDNAandAA. If "colorblind", uses a color‐blind friendly palette.}
 

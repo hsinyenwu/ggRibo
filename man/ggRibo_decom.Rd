@@ -41,6 +41,7 @@ ggRibo_decom(
   data_types = "Ribo-seq",
   plot_unassigned_reads = TRUE,
   selected_isoforms = NULL,
+  num_isoform_shown = "all",
   frame_logic = NULL,
   nth_sample = 1,
   ribo_linewidth = 0.5,
@@ -123,6 +124,10 @@ An explicit \code{plot_range} takes precedence over \code{eORF_zoom_in}.}
 \item{plot_unassigned_reads}{Logical. If TRUE, plots Ribo-Seq reads not assigned to any ORF as grey segments.}
 
 \item{selected_isoforms}{Optional. Vector of transcript IDs to plot. If specified, only these isoforms and tx_id are shown.}
+
+\item{num_isoform_shown}{Integer or \code{"all"}. Maximum number of isoforms to draw in the
+gene model, ranked by GTF order (the main \code{tx_id} is always kept). \code{"all"}
+(default) draws every isoform.}
 
 \item{frame_logic}{Character. Determines how reading frames are assigned:
 - "tx_start": Frame 0 starts at the beginning of the transcript.

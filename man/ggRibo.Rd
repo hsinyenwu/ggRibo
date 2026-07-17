@@ -38,6 +38,7 @@ ggRibo(
   plot_genomic_direction = FALSE,
   data_types = rep("Ribo-seq", length(SampleNames)),
   selected_isoforms = NULL,
+  num_isoform_shown = "all",
   nucleotide_color_scheme = "default",
   ribo_linewidth = 0.5,
   rna_linewidth = 0.5,
@@ -96,7 +97,8 @@ ggRibo(
 is supplied, the plotting window is restricted to the eORF span extended by
 \code{eORF_zoom_in} nucleotides on each side (in genomic coordinates), instead of the
 full gene range. For example, an eORF spanning 1000-1059 with \code{eORF_zoom_in = 30}
-yields a plot range of 970-1089. Default is \code{NULL} (no zooming; the full gene range is shown).
+yields a plot range of 970-1089. Default is \code{NULL} (no zooming; the full gene
+range is shown).
 An explicit \code{plot_range} takes precedence over \code{eORF_zoom_in}.}
 
 \item{sample_color}{Vector specifying colors for each sample or "color" to use default coloring.}
@@ -118,6 +120,10 @@ An explicit \code{plot_range} takes precedence over \code{eORF_zoom_in}.}
 \item{data_types}{Vector of sample data type names for each sample (e.g., "Ribo-seq").}
 
 \item{selected_isoforms}{Optional vector of transcript IDs to plot. If provided, only these isoforms plus `tx_id` are shown.}
+
+\item{num_isoform_shown}{Integer or \code{"all"}. Maximum number of isoforms to draw in the
+gene model, ranked by GTF order (the main \code{tx_id} is always kept). \code{"all"}
+(default) draws every isoform.}
 
 \item{nucleotide_color_scheme}{If "default", uses bright colors for the nucleotides in plotDNAandAA. If "colorblind", uses a color‐blind friendly palette.}
 
