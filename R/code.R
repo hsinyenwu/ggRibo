@@ -4072,8 +4072,6 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
 #'   coordinates) extended by \code{eORF_zoom_in} nucleotides on each side, instead of the
 #'   full transcript range. Default is \code{NULL} (no zooming; the full transcript range is
 #'   shown). An explicit \code{plot_range} takes precedence over \code{eORF_zoom_in}.
-#' @param num_isoform_shown Integer or \code{"all"}. Accepted for API consistency; \code{ggRibo_tx}
-#'   shows a single transcript, so this has no visual effect. \code{"all"} is the default.
 #' @param nucleotide_color_scheme If \code{"colorblind"}, uses a color-blind-friendly palette for nucleotides in DNA/AA. Otherwise uses \code{"default"}.
 #' @param oORF_coloring Coloring scheme for overlapping ORFs: \code{"extend_mORF"} (use main CDS frame for overlapping eORFs) or \code{"oORF_colors"} (use eORF-specific frames). Default is \code{"extend_mORF"}.
 #' @param ribo_linewidth Numeric value to control the thickness of Ribo-seq read count lines. Default is \code{0.5}.
@@ -4112,7 +4110,6 @@ ggRibo_tx <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                       data_types = rep("Ribo-seq", length(SampleNames)),
                       plot_range = NULL,
                       eORF_zoom_in = NULL,
-                      num_isoform_shown = "all",
                       nucleotide_color_scheme = "default",
                       oORF_coloring = "extend_mORF",
                       ribo_linewidth = 0.5,
@@ -4138,11 +4135,6 @@ ggRibo_tx <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
     }
     eORF_zoom_in <- as.integer(round(eORF_zoom_in))
   }
-  if (!(identical(num_isoform_shown, "all") || (is.numeric(num_isoform_shown) &&
-        length(num_isoform_shown) == 1 && !is.na(num_isoform_shown) && num_isoform_shown >= 1))) {
-    stop('num_isoform_shown must be a positive integer or "all".')
-  }
-
   if (length(RNAbackground) == 1) {
     RNAbackground <- rep(RNAbackground, length(SampleNames))
   } else if (length(RNAbackground) != length(SampleNames)) {
