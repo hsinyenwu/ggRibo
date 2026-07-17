@@ -1468,6 +1468,9 @@ get_gene_tx <- function(gene_id = NULL, tx_id = NULL, GRangeInfo) {
 #' @param transcript_label_font_size Numeric controlling the font size of the transcript ID labels in the gene model plot.
 #' @param gene_model_coord_font_size Numeric font size for X-axis genomic coordinate labels in the gene model panel. Default is 8.8.
 #' @param selected_isoforms Optional vector of transcript IDs to plot. If provided, only these isoforms (and `tx_id`) will be shown.
+#' @param num_isoform_shown Integer or \code{"all"}. Maximum number of isoforms to draw in the
+#'   gene model, ranked by GTF order (the main \code{tx_id} is always kept). \code{"all"}
+#'   (default) draws every isoform.
 #' @param nucleotide_color_scheme If "default", uses bright colors for the nucleotides in plotDNAandAA. If "colorblind", uses a color‐blind friendly palette.
 #' @param rna_linewidth Numeric value to control the thickness of RNA-seq step lines. Default is \code{0.5}.
 #' @param axis_label_font_size Numeric controlling axis tick label size in coverage panels. Default is 11.
@@ -1499,6 +1502,7 @@ ggRNA <- function(gene_id = NULL, tx_id = NULL, Extend = 100, NAME = "",
                   title_font_size = 5,
                   plot_genomic_direction = FALSE,
                   selected_isoforms = NULL,
+                  num_isoform_shown = "all",
                   nucleotide_color_scheme = "default",
                   rna_linewidth = 0.5
 ) {
@@ -1570,6 +1574,16 @@ ggRNA <- function(gene_id = NULL, tx_id = NULL, Extend = 100, NAME = "",
 
   # Order transcripts: main first, then others sorted
   other_tx_names <- setdiff(tx_names, tx_id)
+  # num_isoform_shown: cap the isoforms drawn, ranked by GTF order, always
+  # keeping the main tx_id. "all" (default) keeps every isoform.
+  if (!identical(num_isoform_shown, "all")) {
+    if (!is.numeric(num_isoform_shown) || length(num_isoform_shown) != 1 ||
+        is.na(num_isoform_shown) || num_isoform_shown < 1) {
+      stop('num_isoform_shown must be a positive integer or "all".')
+    }
+    ranked <- intersect(txByYFG[[1]]$tx_name, other_tx_names)
+    other_tx_names <- head(ranked, as.integer(num_isoform_shown) - 1L)
+  }
   tx_names <- c(tx_id, sort(other_tx_names))
 
   # Extract CDS and exon information for the chosen transcripts
@@ -1988,6 +2002,9 @@ ggRNA <- function(gene_id = NULL, tx_id = NULL, Extend = 100, NAME = "",
 #' @param gene_model_coord_font_size Numeric font size for X-axis genomic coordinate labels in the gene model panel. Default is 8.8.
 #' @param data_types Vector of sample data type names for each sample (e.g., "Ribo-seq").
 #' @param selected_isoforms Optional vector of transcript IDs to plot. If provided, only these isoforms plus `tx_id` are shown.
+#' @param num_isoform_shown Integer or \code{"all"}. Maximum number of isoforms to draw in the
+#'   gene model, ranked by GTF order (the main \code{tx_id} is always kept). \code{"all"}
+#'   (default) draws every isoform.
 #' @param nucleotide_color_scheme If "default", uses bright colors for the nucleotides in plotDNAandAA. If "colorblind", uses a color‐blind friendly palette.
 #' @param ribo_linewidth Numeric value to control the thickness of Ribo-seq read count lines. Default is \code{0.5}.
 #' @param rna_linewidth Numeric value to control the thickness of RNA-seq step lines. Default is \code{0.5}.
@@ -2026,6 +2043,7 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                    plot_genomic_direction = FALSE,
                    data_types = rep("Ribo-seq", length(SampleNames)),
                    selected_isoforms = NULL,
+                   num_isoform_shown = "all",
                    nucleotide_color_scheme = "default",
                    ribo_linewidth = 0.5,
                    rna_linewidth = 0.5,
@@ -2111,6 +2129,16 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
   chr <- as.character(seqnames(unlist(txByYFG)))[1]
 
   other_tx_names <- setdiff(tx_names, tx_id)
+  # num_isoform_shown: cap the isoforms drawn, ranked by GTF order, always
+  # keeping the main tx_id. "all" (default) keeps every isoform.
+  if (!identical(num_isoform_shown, "all")) {
+    if (!is.numeric(num_isoform_shown) || length(num_isoform_shown) != 1 ||
+        is.na(num_isoform_shown) || num_isoform_shown < 1) {
+      stop('num_isoform_shown must be a positive integer or "all".')
+    }
+    ranked <- intersect(txByYFG[[1]]$tx_name, other_tx_names)
+    other_tx_names <- head(ranked, as.integer(num_isoform_shown) - 1L)
+  }
   tx_names <- c(tx_id, sort(other_tx_names))
 
   cdsByYFGtx_all <- GRangeInfo$cdsByTx
@@ -3147,6 +3175,9 @@ ggRibo <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
 #' @param data_types Character vector. Describes data type(s) for samples (e.g., "Ribo-seq"). Must match SampleNames length.
 #' @param plot_unassigned_reads Logical. If TRUE, plots Ribo-Seq reads not assigned to any ORF as grey segments.
 #' @param selected_isoforms Optional. Vector of transcript IDs to plot. If specified, only these isoforms and tx_id are shown.
+#' @param num_isoform_shown Integer or \code{"all"}. Maximum number of isoforms to draw in the
+#'   gene model, ranked by GTF order (the main \code{tx_id} is always kept). \code{"all"}
+#'   (default) draws every isoform.
 #' @param frame_logic Character. Determines how reading frames are assigned:
 #'   - "tx_start": Frame 0 starts at the beginning of the transcript.
 #'   - "CDS_start": Frame 0 starts at the annotated ORF start.
@@ -3190,6 +3221,7 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
                          data_types = "Ribo-seq",
                          plot_unassigned_reads = TRUE,
                          selected_isoforms = NULL,
+                         num_isoform_shown = "all",
                          frame_logic = NULL,
                          nth_sample = 1,
                          ribo_linewidth = 0.5,
@@ -3283,6 +3315,16 @@ ggRibo_decom <- function(gene_id = NULL, tx_id = NULL, eORF.tx_id = NULL,
   chr <- as.character(seqnames(unlist(txByYFG)))[1]
 
   other_tx_names <- setdiff(tx_names, tx_id)
+  # num_isoform_shown: cap the isoforms drawn, ranked by GTF order, always
+  # keeping the main tx_id. "all" (default) keeps every isoform.
+  if (!identical(num_isoform_shown, "all")) {
+    if (!is.numeric(num_isoform_shown) || length(num_isoform_shown) != 1 ||
+        is.na(num_isoform_shown) || num_isoform_shown < 1) {
+      stop('num_isoform_shown must be a positive integer or "all".')
+    }
+    ranked <- intersect(txByYFG[[1]]$tx_name, other_tx_names)
+    other_tx_names <- head(ranked, as.integer(num_isoform_shown) - 1L)
+  }
   tx_names <- c(tx_id, sort(other_tx_names))
 
   cdsByYFGtx_all <- GRangeInfo$cdsByTx
